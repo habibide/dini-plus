@@ -11,7 +11,7 @@ export type Database = {
     Tables: {
       availability_rules: Table<{ end_min: number; id: number; start_min: number; teacher_id: string; weekday: number }>
       bookings: Table<{
-        amount: number; created_at: string; currency: string; delivered_at: string | null; id: string; kind: string; learner_id: string
+        amount: number; created_at: string; currency: string; delivered_at: string | null; id: string; is_demo: boolean; kind: string; learner_id: string
         minutes: number; starts_at: string; status: string; subject: string; subscription_id: string | null; teacher_id: string
       }>
       countries: Table<{ code: string; currency: string; payments: string[] }>
