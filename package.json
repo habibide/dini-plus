@@ -1,24 +1,21 @@
 {
-  "name": "dini-prototype",
+  "name": "dini",
   "private": true,
-  "version": "0.1.0",
-  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "vite",
-    "typecheck": "tsc --noEmit",
-    "build": "tsc --noEmit && vite build",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "react": "18.3.1",
-    "react-dom": "18.3.1"
+    "dev:web": "npm run dev -w @dini/web",
+    "dev:mobile": "npm run start -w @dini/mobile",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
+    "build": "turbo run build"
   },
   "devDependencies": {
-    "@types/react": "18.3.12",
-    "@types/react-dom": "18.3.1",
-    "@vitejs/plugin-react": "4.3.4",
-    "typescript": "5.6.3",
-    "vite": "5.4.11",
-    "vite-plugin-singlefile": "2.0.3"
-  }
+    "turbo": "2.11.10",
+    "typescript": "~6.0.3",
+    "vitest": "4.1.12"
+  },
+  "packageManager": "npm@10.8.2"
 }

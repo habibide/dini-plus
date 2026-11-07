@@ -1,0 +1,101 @@
+'use client'
+
+import { AGE_GROUPS, LANGUAGES, LEVELS, RIWAYAT, SUBJECTS, subject, type LanguageId, type SubjectId } from '@dini/core'
+import type { TeacherCard, TeacherFilters } from '@dini/data'
+import { useFamily, useTeachers } from '@dini/data/react'
+import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
+import { useState, type ReactNode } from 'react'
+import { Badge, Modal, Money, Monogram, RecitationPreview, Stars, badgesOf, buttonCls, cx } from '@/components/ui'
+
+function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; children: ReactNode }) {
+  return (
+    <button type="button" aria-pressed={on} onClick={onClick}
+      className={cx('min-h-9 cursor-pointer rounded-sm border px-3 text-sm', on ? 'border-green bg-green text-white' : 'border-line bg-white hover:border-green')}>{children}</button>
+  )
+}
+
+function Group({ label, children }: { label: string; children: ReactNode }) {
+  return <div className="flex flex-col gap-2"><span className="text-sm font-semibold">{label}</span><div className="flex flex-wrap gap-1.5">{children}</div></div>
+}
+
+export function SearchScreen() {
+  const params = useSearchParams()
+  const [f, setF] = useState<TeacherFilters>(() => ({ subject: (params.get('matiere') as SubjectId) || undefined }))
+  const [sheet, setSheet] = useState(false)
+  const toggle = <K extends keyof TeacherFilters>(k: K, v: TeacherFilters[K]) => setF((x) => ({ ...x, [k]: x[k] === v ? undefined : v }))
+  const teachers = useTeachers(f)
+  const family = useFamily()
+  const active = Object.values(f).filter(Boolean).length
+  const tzLabel = family.data ? family.data.country.timezones.find((t) => t.id === family.data.family.timezone)?.label : ''
+
+  const filters = (
+    <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-2">
+        <label htmlFor="f-subject" className="text-sm font-semibold">Matière</label>
+        <select id="f-subject" value={f.subject ?? ''} onChange={(e) => setF({ ...f, subject: (e.target.value || undefined) as SubjectId })} className="min-h-10 rounded-sm border border-line bg-white px-2">
+          <option value="">Toutes les matières</option>
+          {SUBJECTS.map((s) => <option key={s.id} value={s.id}>{s.label.fr}</option>)}
+        </select>
+      </div>
+      <Group label="Langue du cours">{LANGUAGES.map((l) => <Chip key={l.id} on={f.language === l.id} onClick={() => toggle('language', l.id as LanguageId)}>{l.label.fr}</Chip>)}</Group>
+      <Group label="Riwaya">{RIWAYAT.map((r) => <Chip key={r} on={f.riwaya === r} onClick={() => toggle('riwaya', r)}>{r}</Chip>)}</Group>
+      <Group label="Enseignant">{[['F', 'Une femme'], ['M', 'Un homme']].map(([g, l]) => <Chip key={g} on={f.gender === g} onClick={() => toggle('gender', g as 'F' | 'M')}>{l}</Chip>)}</Group>
+      <Group label={`Disponible (heure de ${tzLabel})`}>{[['morning', 'Matin'], ['afternoon', 'Après-midi'], ['evening', 'Soir']].map(([k, l]) => <Chip key={k} on={f.timeOfDay === k} onClick={() => toggle('timeOfDay', k as TeacherFilters['timeOfDay'])}>{l}</Chip>)}</Group>
+      <Group label="Âge de l’élève">{AGE_GROUPS.map((a) => <Chip key={a.id} on={f.ageGroup === a.id} onClick={() => toggle('ageGroup', a.id)}>{a.label.fr}</Chip>)}</Group>
+      <Group label="Niveau">{LEVELS.map((l) => <Chip key={l.id} on={f.level === l.id} onClick={() => toggle('level', l.id)}>{l.label.fr}</Chip>)}</Group>
+      {active > 0 && <button type="button" className={buttonCls.ghost} onClick={() => setF({})}>Effacer les filtres</button>}
+    </div>
+  )
+
+  const list = teachers.data ?? []
+  return (
+    <div className="mx-auto grid max-w-6xl items-start gap-10 px-5 py-8 lg:grid-cols-[260px_minmax(0,1fr)]">
+      <aside className="hidden lg:sticky lg:top-4 lg:block">{filters}</aside>
+      <div className="flex min-w-0 flex-col gap-4">
+        <div className="flex flex-wrap items-baseline justify-between gap-3">
+          <h1 className="font-display text-3xl">
+            {teachers.isPending ? 'Recherche…' : `${list.length} ${list.length > 1 ? 'enseignants vérifiés' : 'enseignant vérifié'}`}
+            {f.subject && <span className="text-muted"> en {subject(f.subject).label.fr}</span>}
+          </h1>
+          <button type="button" className={cx(buttonCls.ghost, 'min-h-10 lg:hidden')} onClick={() => setSheet(true)}>Filtres{active ? ` (${active})` : ''}</button>
+        </div>
+        {!teachers.isPending && list.length === 0 && (
+          <div className="flex flex-col items-start gap-3 bg-leaf p-6">
+            <strong>Aucun enseignant ne correspond à tous ces filtres.</strong>
+            <span>Retirez un filtre, par exemple la langue du cours ou l’horaire.</span>
+            <button type="button" className={buttonCls.ghost} onClick={() => setF({})}>Effacer les filtres</button>
+          </div>
+        )}
+        <ul className={cx('border-t border-line transition-opacity', teachers.isFetching && 'opacity-60')}>
+          {list.map((t) => <li key={t.id}><TeacherRow t={t} /></li>)}
+        </ul>
+      </div>
+      {sheet && <Modal title="Filtres" onClose={() => setSheet(false)}>{filters}<button type="button" className={buttonCls.primary} onClick={() => setSheet(false)}>Voir {list.length} résultats</button></Modal>}
+    </div>
+  )
+}
+
+function TeacherRow({ t }: { t: TeacherCard }) {
+  return (
+    <article className="grid grid-cols-[64px_minmax(0,1fr)] gap-x-5 gap-y-3 border-b border-line py-6 sm:grid-cols-[84px_minmax(0,1fr)_200px]">
+      <Monogram name={t.name} size="md" />
+      <div className="flex min-w-0 flex-col gap-2">
+        <h2 className="font-display text-xl"><Link href={`/enseignants/${t.id}`} className="hover:underline">{t.name}</Link></h2>
+        <div className="flex flex-wrap gap-1.5">{badgesOf(t).map((k) => <Badge key={k} k={k} gender={t.gender} />)}</div>
+        <p className="font-medium">{t.headline}</p>
+        <dl className="grid grid-cols-[90px_minmax(0,1fr)] gap-x-2 text-sm">
+          <dt className="text-muted">Matières</dt><dd>{t.subjects.map((s) => subject(s).label.fr).join(', ')}</dd>
+          <dt className="text-muted">Langues</dt><dd>{t.languages.map((l) => LANGUAGES.find((x) => x.id === l)!.label.fr).join(', ')}</dd>
+          <dt className="text-muted">Depuis</dt><dd>{t.city}, {t.countryLabel}</dd>
+        </dl>
+      </div>
+      <div className="col-span-2 flex flex-col items-start gap-2 sm:col-span-1">
+        <span><strong className="font-display text-2xl text-green"><Money {...t.price} /></strong> <span className="text-sm text-muted">la séance de 30 min</span></span>
+        <Stars value={t.rating} count={t.reviews.length} />
+        <RecitationPreview seed={t.id} />
+        <Link href={`/enseignants/${t.id}`} className={cx(buttonCls.ghost, 'min-h-10 w-full')}>Voir le profil</Link>
+      </div>
+    </article>
+  )
+}

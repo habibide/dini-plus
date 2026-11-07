@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+/* Identité DINI : mêmes valeurs que packages/core/src/theme.ts. */
+@theme {
+  --color-paper: #fafaf5;
+  --color-leaf: #f1ecdd;
+  --color-sand: #e4d7b8;
+  --color-ochre: #96661a;
+  --color-green: #0f3d32;
+  --color-green2: #1b5a49;
+  --color-ink: #1b2522;
+  --color-muted: #5d6a63;
+  --color-line: #dcd8c8;
+  --color-warnbg: #f7ecd5;
+  --color-warn: #8a5a10;
+  --color-bad: #97362b;
+
+  --font-sans: var(--font-hanken), Arial, sans-serif;
+  --font-display: var(--font-young), Georgia, serif;
+  --font-arabic: var(--font-amiri), 'Geeza Pro', serif;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-ochre);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
