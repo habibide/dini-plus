@@ -30,7 +30,7 @@ export default function BookScreen() {
   async function confirm() {
     setError(undefined)
     try {
-      await create.mutateAsync({ familyId: fam.id, learnerId: learnerId!, teacherId: t.id, subject: t.subjects[0], startsAt: at, choice })
+      await create.mutateAsync({ familyId: fam.id, learnerId: learnerId!, teacherId: t.id, subject: t.subjects[0], startsAt: at, choice, method: pay })
       router.dismissAll()
       router.navigate('/suivi')
     } catch (e) {

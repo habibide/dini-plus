@@ -1,11 +1,14 @@
 import {
-  DAY, HOUR, PLANS, cancellationOutcome, canDispute, country, escrowState, generateSlots, sessionPrice, trialPrice, zonedParts,
-  type Booking, type Country, type CurrencyCode, type Family, type LanguageId, type Learner, type PlanId, type Report, type SubjectId, type Subscription, type Teacher,
+  DAY, HOUR, PLANS, cancellationOutcome, canDispute, country, escrowState, generateSlots, sessionPrice, trialPrice,
+  type Booking, type Country, type CurrencyCode, type Family, type Learner, type Report, type Subscription, type Teacher,
 } from '@dini/core'
+import { buildDashboard, filterTeachers, SlotTakenError, type BookingDraft, type LearnerDashboard, type TeacherCard, type TeacherFilters } from './logic'
 import { SEED_FAMILIES, SEED_LEARNERS, SEED_TEACHERS, seedActivity } from './seed'
 
-// Implémentation fictive de l'API DINI. Les écrans ne connaissent que le type `DiniApi` :
-// le jour où Supabase arrive, on écrit une seconde implémentation, sans toucher aux écrans.
+export * from './logic'
+
+// Implémentation fictive de l'API DINI, sans réseau. Les écrans ne connaissent que le type `DiniApi` ;
+// createSupabaseApi (./supabase) en est la seconde implémentation, branchée sur la vraie base.
 
 export interface KeyValueStorage {
   getItem(key: string): Promise<string | null> | string | null
@@ -30,45 +33,6 @@ type Db = {
 
 const DB_VERSION = 1
 const KEY = 'dini-mock-db'
-
-export type TeacherFilters = {
-  subject?: SubjectId
-  riwaya?: string
-  gender?: 'F' | 'M'
-  language?: LanguageId
-  level?: string
-  ageGroup?: string
-  maxPrice?: number
-  timeOfDay?: 'morning' | 'afternoon' | 'evening'
-}
-
-export type TeacherCard = Teacher & { price: { amount: number; currency: CurrencyCode } }
-
-export type BookingChoice = 'trial' | 'credit' | PlanId
-
-export type BookingDraft = {
-  familyId: string
-  learnerId: string
-  teacherId: string
-  subject: SubjectId
-  startsAt: number
-  choice: BookingChoice
-}
-
-export class SlotTakenError extends Error {
-  constructor() { super('Ce créneau vient d’être réservé par quelqu’un d’autre.') }
-}
-
-export type LearnerDashboard = {
-  learner: Learner
-  next?: Booking
-  attendance: { present: number; held: number; marks: ('present' | 'missed')[] }
-  progress: { surah: number; reached: number }[]
-  lastReport?: Booking
-  awaitingValidation: (Booking & { releaseAt: number })[]
-  disputed: Booking[]
-  subscription?: Subscription
-}
 
 const latency = () => new Promise((r) => setTimeout(r, 120))
 
@@ -131,20 +95,7 @@ export function createMockApi(storage: KeyValueStorage = memoryStorage()) {
     async listTeachers(familyId: string, f: TeacherFilters = {}): Promise<TeacherCard[]> {
       const d = await load(); await latency()
       const fam = familyOf(d, familyId)
-      return d.teachers
-        .map((t) => ({ ...t, price: sessionPrice(t.rates, fam.country) }))
-        .filter((t) =>
-          (!f.subject || t.subjects.includes(f.subject)) &&
-          (!f.riwaya || t.riwayat.includes(f.riwaya as never)) &&
-          (!f.gender || t.gender === f.gender) &&
-          (!f.language || t.languages.includes(f.language)) &&
-          (!f.level || t.levels.includes(f.level as never)) &&
-          (!f.ageGroup || t.ageGroups.includes(f.ageGroup as never)) &&
-          (!f.maxPrice || t.price.amount <= f.maxPrice) &&
-          (!f.timeOfDay || generateSlots(t.availability, t.timezone, now(), 7, { leadMs: 0 }).some((at) => {
-            const hour = zonedParts(at, fam.timezone).minutes / 60
-            return f.timeOfDay === 'morning' ? hour < 12 : f.timeOfDay === 'afternoon' ? hour >= 12 && hour < 18 : hour >= 18
-          })))
+      return filterTeachers(d.teachers.map((t) => ({ ...t, price: sessionPrice(t.rates, fam.country) })), f, fam.timezone, now())
     },
 
     async getTeacher(familyId: string, id: string): Promise<TeacherCard | null> {
@@ -270,23 +221,7 @@ export function createMockApi(storage: KeyValueStorage = memoryStorage()) {
     async getDashboard(familyId: string): Promise<LearnerDashboard[]> {
       const d = await load(); await latency()
       settle(d)
-      const t = now()
-      return d.learners.filter((l) => l.familyId === familyId).map((learner) => {
-        const mine = d.bookings.filter((b) => b.learnerId === learner.id).sort((a, b) => a.startsAt - b.startsAt)
-        const held = mine.filter((b) => ['delivered', 'validated', 'disputed', 'missed'].includes(b.status) && b.startsAt > t - 30 * DAY)
-        const best = new Map<number, number>()
-        for (const b of mine) if (b.report?.surah && b.report.ayahTo) best.set(b.report.surah, Math.max(best.get(b.report.surah) ?? 0, b.report.ayahTo))
-        return {
-          learner,
-          next: mine.find((b) => b.status === 'scheduled' && b.startsAt + b.minutes * 60_000 > t),
-          attendance: { present: held.filter((b) => b.status !== 'missed').length, held: held.length, marks: held.map((b) => (b.status === 'missed' ? 'missed' : 'present')) },
-          progress: [...best.entries()].map(([surah, reached]) => ({ surah, reached })),
-          lastReport: [...mine].reverse().find((b) => b.report),
-          awaitingValidation: mine.filter((b) => b.status === 'delivered').map((b) => ({ ...b, releaseAt: escrowState(b, t).releaseAt! })),
-          disputed: mine.filter((b) => b.status === 'disputed'),
-          subscription: d.subscriptions.find((s) => s.learnerId === learner.id),
-        }
-      })
+      return buildDashboard(d.learners.filter((l) => l.familyId === familyId), d.bookings, d.subscriptions, now())
     },
 
     /** Démo : l'enseignant marque la séance effectuée avec son compte rendu. */
@@ -302,14 +237,14 @@ export function createMockApi(storage: KeyValueStorage = memoryStorage()) {
     },
 
     /** Démo : avance l'horloge, par exemple de 48 h pour libérer le séquestre. */
-    async advanceClock(hours: number) {
+    async advanceClock(_familyId: string, hours: number) {
       const d = await load()
       d.clockOffset += hours * HOUR
       settle(d)
       await save()
     },
 
-    async reset() {
+    async reset(_familyId: string) {
       db = fresh()
       await save()
     },

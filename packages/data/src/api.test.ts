@@ -49,7 +49,7 @@ describe('API fictive', () => {
     const api = createMockApi(memoryStorage())
     let [awa] = await api.getDashboard('fam-diop')
     expect(awa.awaitingValidation).toHaveLength(1)
-    await api.advanceClock(48)
+    await api.advanceClock('fam-diop', 48)
     ;[awa] = await api.getDashboard('fam-diop')
     expect(awa.awaitingValidation).toHaveLength(0)
     expect(awa.progress.find((p) => p.surah === 111)?.reached).toBe(3)
@@ -61,5 +61,16 @@ describe('API fictive', () => {
     await a.addLearner('fam-diop', 'Moussa Diop', 2019)
     const b = createMockApi(storage)
     expect((await b.getFamily('fam-diop')).learners.map((l) => l.name)).toContain('Moussa Diop')
+  })
+})
+
+describe('intervalMs', () => {
+  it('lit les intervalles renvoyés par Postgres', async () => {
+    const { intervalMs } = await import('./supabase/api')
+    expect(intervalMs('00:00:00')).toBe(0)
+    expect(intervalMs('48:00:00')).toBe(48 * 3_600_000)
+    expect(intervalMs('2 days 01:30:00')).toBe(49.5 * 3_600_000)
+    expect(intervalMs('1 day')).toBe(24 * 3_600_000)
+    expect(intervalMs('19:42:10.5')).toBe((19 * 3600 + 42 * 60 + 10.5) * 1000)
   })
 })

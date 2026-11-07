@@ -8,7 +8,7 @@ import { Suspense, useEffect, useState } from 'react'
 import { cx } from './ui'
 
 export function DemoBar() {
-  const { api, familyId, setFamilyId } = useDini()
+  const { api, familyId, setFamilyId, error, clearError } = useDini()
   const family = useFamily()
   const advance = useAdvanceClock()
   const reset = useResetDemo()
@@ -21,7 +21,7 @@ export function DemoBar() {
     const id = setInterval(read, 1000)
     return () => clearInterval(id)
   }, [api])
-  return (
+  return (<>
     <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 bg-ink px-4 py-1.5 text-[13px] text-[#e8e6da]">
       <span className="text-sand">Démo : personnes, avis et paiements fictifs.</span>
       <label className="flex items-center gap-1.5">Compte
@@ -36,7 +36,13 @@ export function DemoBar() {
         <button type="button" className="cursor-pointer rounded-sm border border-[#46544f] px-2 py-0.5 hover:bg-[#2c3935]" onClick={() => reset.mutate(undefined)}>Réinitialiser</button>
       </span>
     </div>
-  )
+    {error && (
+      <div role="alert" className="flex items-start gap-3 bg-warnbg px-4 py-2 text-[14px] text-warn">
+        <span className="flex-1">Chargement impossible : {error}</span>
+        <button type="button" className="cursor-pointer underline" onClick={clearError}>Fermer</button>
+      </div>
+    )}
+  </>)
 }
 
 const NAV = [

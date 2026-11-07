@@ -1,4 +1,5 @@
 import { colors, formatMoney, isConfirmed, type CurrencyCode, type Teacher } from '@dini/core'
+import { useDini } from '@dini/data/react'
 import type { ReactNode } from 'react'
 import { Pressable, StyleSheet, Text, View, type TextProps, type ViewStyle } from 'react-native'
 
@@ -97,6 +98,18 @@ export function Sanad({ chain }: { chain: string[] }) {
     <View style={{ borderLeftWidth: 1, borderColor: colors.ochre, paddingLeft: 14, gap: 6 }}>
       {chain.map((n, i) => <T key={n} style={i === 0 ? { fontFamily: font.semibold } : undefined}>{n}</T>)}
     </View>
+  )
+}
+
+/** Erreur de chargement (réseau, accès refusé), affichée au-dessus de la barre d'onglets. */
+export function ErrorBanner() {
+  const { error, clearError } = useDini()
+  if (!error) return null
+  return (
+    <Pressable accessibilityRole="alert" onPress={clearError} style={{ position: 'absolute', left: 12, right: 12, bottom: 104, padding: 12, borderRadius: 4, backgroundColor: colors.warnBg, borderWidth: 1, borderColor: colors.sand }}>
+      <T style={{ color: colors.warn, fontSize: 15 }}>Chargement impossible : {error}</T>
+      <T tone="muted" style={{ marginTop: 4 }}>Touchez pour fermer.</T>
+    </Pressable>
   )
 }
 

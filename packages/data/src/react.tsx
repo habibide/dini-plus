@@ -1,15 +1,22 @@
-import { QueryClient, QueryClientProvider, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { MutationCache, QueryCache, QueryClient, QueryClientProvider, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createContext, useContext, useMemo, useState, type ReactNode } from 'react'
 import type { DiniApi, BookingDraft, TeacherFilters } from './api'
 import type { Report } from '@dini/core'
 
-type Session = { api: DiniApi; familyId: string; setFamilyId: (id: string) => void }
+type Session = { api: DiniApi; familyId: string; setFamilyId: (id: string) => void; error: string | null; clearError: () => void }
 const Ctx = createContext<Session | null>(null)
 
 export function DiniProvider({ api, initialFamilyId = 'fam-diop', children }: { api: DiniApi; initialFamilyId?: string; children: ReactNode }) {
-  const [client] = useState(() => new QueryClient({ defaultOptions: { queries: { staleTime: 30_000, retry: false } } }))
+  // Dernière erreur de chargement, affichée par l'application (réseau coupé, accès refusé…).
+  // Les erreurs d'écriture sont aussi montrées par l'écran qui les déclenche, avec un message adapté.
+  const [error, setError] = useState<string | null>(null)
+  const [client] = useState(() => new QueryClient({
+    defaultOptions: { queries: { staleTime: 30_000, retry: false } },
+    queryCache: new QueryCache({ onError: (e) => setError(e.message), onSuccess: () => setError(null) }),
+    mutationCache: new MutationCache({ onSuccess: () => setError(null) }),
+  }))
   const [familyId, setFamilyId] = useState(initialFamilyId)
-  const value = useMemo(() => ({ api, familyId, setFamilyId }), [api, familyId])
+  const value = useMemo(() => ({ api, familyId, setFamilyId, error, clearError: () => setError(null) }), [api, familyId, error])
   return (
     <QueryClientProvider client={client}>
       <Ctx.Provider value={value}>{children}</Ctx.Provider>
@@ -58,7 +65,7 @@ export function useBookingDetails(id: string) {
   return useQuery({ queryKey: ['booking', id], queryFn: () => api.getBooking(id) })
 }
 
-/** Toute écriture invalide l'ensemble du cache : avec des données fictives, c'est simple et sûr. */
+/** Toute écriture invalide l'ensemble du cache : simple et sûr tant que les volumes restent petits. */
 function useWrite<A, R>(fn: (api: DiniApi, familyId: string, arg: A) => Promise<R>) {
   const { api, familyId } = useDini()
   const qc = useQueryClient()
@@ -71,5 +78,5 @@ export const useDisputeBooking = () => useWrite((api, _f, id: string) => api.dis
 export const useAddLearner = () => useWrite((api, familyId, a: { name: string; birthYear: number }) => api.addLearner(familyId, a.name, a.birthYear))
 export const useSetResidence = () => useWrite((api, familyId, a: { country: 'SN' | 'GM' | 'FR' | 'US' | 'CA'; timezone: string }) => api.setResidence(familyId, a.country, a.timezone))
 export const useDeliverBooking = () => useWrite((api, _f, a: { id: string; report: Report }) => api.deliverBooking(a.id, a.report))
-export const useAdvanceClock = () => useWrite((api, _f, hours: number) => api.advanceClock(hours))
-export const useResetDemo = () => useWrite((api) => api.reset())
+export const useAdvanceClock = () => useWrite((api, familyId, hours: number) => api.advanceClock(familyId, hours))
+export const useResetDemo = () => useWrite((api, familyId) => api.reset(familyId))

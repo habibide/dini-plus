@@ -7,14 +7,16 @@
   "types": "src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./react": "./src/react.tsx"
+    "./react": "./src/react.tsx",
+    "./supabase": "./src/supabase/index.ts"
   },
   "scripts": {
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@dini/core": "*"
+    "@dini/core": "*",
+    "@supabase/supabase-js": "^2.119.0"
   },
   "peerDependencies": {
     "@tanstack/react-query": "^5",
