@@ -20,7 +20,7 @@ export default function Login() {
           {' ou '}
           <T style={{ color: colors.green, textDecorationLine: 'underline' }} onPress={() => router.push({ pathname: '/signup', params: { teacher: '1' } })}>créer un compte enseignant</T>
         </T>
-        <OAuthButtons providers={['google', 'facebook', 'apple']} onDone={() => leave(next)} />
+        <OAuthButtons providers={['google', 'apple']} onDone={() => leave(next)} />
         <Divider />
         <Input label="E-mail" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoComplete="email" textContentType="emailAddress" placeholder="Votre e-mail" />
         <PasswordInput value={password} onChangeText={setPassword} />

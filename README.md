@@ -46,7 +46,7 @@ Taux de change fixes, à remplacer : FCFA ↔ dalasi, euro ↔ dollar américain
 
 Le schéma vit dans `supabase/migrations/` (appliqué au projet « Dine App »). Les apps web et mobile exigent `apps/web/.env.local` et `apps/mobile/.env.local` (modèles dans les `.env.example`).
 
-- **Comptes** : e-mail et mot de passe, Google, Facebook, Apple (à activer dans Supabase, Authentication, Providers). Un profil par compte, avec un rôle : famille, enseignant, modérateur, administrateur. Le rôle de modérateur se donne en base.
+- **Comptes** : e-mail et mot de passe, Google, Apple (à activer dans Supabase, Authentication, Providers ; connexion Apple native sur iPhone). Un profil par compte, avec un rôle : famille, enseignant, modérateur, administrateur. Le rôle de modérateur se donne en base.
 - **Familles** : créées à la première connexion avec le pays et le fuseau choisis. Une famille ne lit que ses propres données.
 - **Enseignants** : candidature en ligne (profil, matières, tarifs, diplômes, ijaza et sanad, disponibilités), envoyée puis approuvée ou refusée par un modérateur. Seuls les profils approuvés sont publiés.
 - **Espace enseignant** : séances à venir, compte rendu après chaque séance (ou absence de l'élève), disponibilités, gains et palier de commission.

@@ -30,7 +30,7 @@ export default function Signup() {
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 20, gap: 16 }}>
         <T tone="h1">{asTeacher ? 'Devenir enseignant sur DINI' : 'Créer un compte élève ou parent'}</T>
         <T>Déjà un compte&nbsp;? <T style={{ color: colors.green, textDecorationLine: 'underline' }} onPress={() => router.replace('/login')}>Se connecter</T></T>
-        <OAuthButtons providers={asTeacher ? ['google', 'facebook'] : ['google', 'apple']} verb={asTeacher ? 'S’inscrire' : 'Continuer'} asTeacher={asTeacher} onDone={done} />
+        <OAuthButtons providers={['google', 'apple']} verb={asTeacher ? 'S’inscrire' : 'Continuer'} asTeacher={asTeacher} onDone={done} />
         <Divider />
         <Input label="Nom" value={name} onChangeText={setName} autoComplete="name" textContentType="name" placeholder="Votre nom" />
         <Input label="E-mail" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoComplete="email" textContentType="emailAddress" placeholder="Votre e-mail" />

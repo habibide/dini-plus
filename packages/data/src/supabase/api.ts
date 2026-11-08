@@ -15,7 +15,7 @@ export type DiniClient = SupabaseClient<Database>
 export type Role = 'family' | 'teacher' | 'moderator' | 'admin'
 export type Account = { userId: string; email: string; name: string; role: Role }
 export type Place = { country: Country['code']; timezone: string }
-export type OAuthProvider = 'google' | 'facebook' | 'apple'
+export type OAuthProvider = 'google' | 'apple'
 export type TeacherStatus = 'draft' | 'submitted' | 'approved' | 'rejected'
 
 /** Profil de l'enseignant connecté, y compris pendant la candidature (champs encore vides possibles). */
@@ -262,7 +262,7 @@ export function createSupabaseApi(client: DiniClient, storage: KeyValueStorage) 
     },
 
     /**
-     * Adresse de connexion Google, Facebook ou Apple. Le web y redirige la page ;
+     * Adresse de connexion Google ou Apple. Le web y redirige la page ;
      * le mobile l'ouvre dans un navigateur intégré puis appelle completeOAuth avec l'adresse de retour.
      */
     async oauthUrl(provider: OAuthProvider, redirectTo: string, asTeacher = false): Promise<string> {
@@ -270,6 +270,16 @@ export function createSupabaseApi(client: DiniClient, storage: KeyValueStorage) 
       const { data, error } = await client.auth.signInWithOAuth({ provider, options: { redirectTo, skipBrowserRedirect: true } })
       if (error) fail(error)
       return data.url!
+    },
+
+    /** Connexion Apple native (iPhone) : jeton fourni par le système. Apple ne donne le nom qu'à la première connexion. */
+    async signInWithApple(identityToken: string, fullName: string | null, asTeacher = false) {
+      await storage.setItem(INTENT_KEY, asTeacher ? 'teacher' : '')
+      const { data, error } = await client.auth.signInWithIdToken({ provider: 'apple', token: identityToken })
+      if (error) fail(error)
+      if (fullName?.trim() && data.user) {
+        await client.from('profiles').update({ full_name: fullName.trim().slice(0, 120) }).eq('id', data.user.id).eq('full_name', '')
+      }
     },
 
     async completeOAuth(callbackUrl: string) {

@@ -33,7 +33,7 @@ function Signup({ asTeacher }: { asTeacher: boolean }) {
   return (
     <AuthLayout title={asTeacher ? 'Devenir enseignant sur DINI' : 'Créer un compte élève ou parent'}>
       <p className="text-lg">Déjà un compte&nbsp;? <Link href="/connexion" className="underline">Se connecter</Link></p>
-      <OAuthButtons providers={asTeacher ? ['google', 'facebook'] : ['google', 'apple']} verb={asTeacher ? 'S’inscrire' : 'Continuer'} asTeacher={asTeacher} next={next} />
+      <OAuthButtons providers={['google', 'apple']} verb={asTeacher ? 'S’inscrire' : 'Continuer'} asTeacher={asTeacher} next={next} />
       <Divider />
       <form className="flex flex-col gap-4" onSubmit={(e) => {
         e.preventDefault()

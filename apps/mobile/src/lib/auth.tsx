@@ -1,11 +1,12 @@
 import { colors } from '@dini/core'
 import type { OAuthProvider } from '@dini/data/supabase'
 import { useDini } from '@dini/data/react'
+import * as AppleAuthentication from 'expo-apple-authentication'
 import * as Linking from 'expo-linking'
 import { router } from 'expo-router'
 import { SymbolView } from 'expo-symbols'
 import * as WebBrowser from 'expo-web-browser'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Platform, Pressable, Text, TextInput, View, type TextInputProps } from 'react-native'
 import { Button, T, font } from './ui'
 
@@ -48,39 +49,69 @@ export function Divider() {
   )
 }
 
-const LABELS: Record<OAuthProvider, string> = { google: 'Google', facebook: 'Facebook', apple: 'Apple' }
+const LABELS: Record<OAuthProvider, string> = { google: 'Google', apple: 'Apple' }
 
 function ProviderIcon({ p }: { p: OAuthProvider }) {
-  if (p === 'apple' && Platform.OS === 'ios') return <SymbolView name="apple.logo" size={20} tintColor={colors.ink} />
-  const bg = p === 'facebook' ? '#1877F2' : p === 'google' ? colors.white : colors.ink
+  if (p === 'apple') return <SymbolView name="apple.logo" size={20} tintColor={colors.ink} />
   return (
-    <View style={{ width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center', backgroundColor: bg, borderWidth: p === 'google' ? 1 : 0, borderColor: colors.line }}>
-      <Text style={{ fontFamily: font.bold, fontSize: 13, color: p === 'google' ? '#4285F4' : colors.white }}>{p === 'google' ? 'G' : p === 'facebook' ? 'f' : ''}</Text>
+    <View style={{ width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.white, borderWidth: 1, borderColor: colors.line }}>
+      <Text style={{ fontFamily: font.bold, fontSize: 13, color: '#4285F4' }}>G</Text>
     </View>
   )
 }
 
-/** Connexion via le navigateur du système, puis retour dans l'app (dini://auth-callback). */
+/** Nom complet transmis par Apple (première connexion uniquement). */
+const appleName = (n: AppleAuthentication.AppleAuthenticationFullName | null) =>
+  n ? [n.givenName, n.middleName, n.familyName].filter(Boolean).join(' ') : null
+
+/**
+ * Boutons « Continuer avec ». Sur iPhone, Apple passe par la connexion native du système (bouton officiel d'Apple) ;
+ * Google, et Apple ailleurs, passent par le navigateur du système puis reviennent dans l'app (dini://auth-callback).
+ */
 export function OAuthButtons({ providers, verb = 'Continuer', asTeacher = false, onDone }: { providers: OAuthProvider[]; verb?: string; asTeacher?: boolean; onDone: () => void }) {
   const { api } = useDini()
   const [pending, setPending] = useState<OAuthProvider | null>(null)
   const [error, setError] = useState<string | null>(null)
-  async function go(p: OAuthProvider) {
+  const [nativeApple, setNativeApple] = useState(false)
+  useEffect(() => { if (Platform.OS === 'ios') void AppleAuthentication.isAvailableAsync().then(setNativeApple) }, [])
+
+  async function run(p: OAuthProvider, flow: () => Promise<boolean>) {
     setPending(p); setError(null)
     try {
-      const redirect = Linking.createURL('auth-callback')
-      const result = await WebBrowser.openAuthSessionAsync(await api.oauthUrl(p, redirect, asTeacher), redirect)
-      if (result.type === 'success') { await api.completeOAuth(result.url); onDone() }
+      if (await flow()) onDone()
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e))
+      // L'utilisateur a fermé la fenêtre Apple : ce n'est pas une erreur à afficher.
+      if ((e as { code?: string }).code !== 'ERR_REQUEST_CANCELED') setError(e instanceof Error ? e.message : String(e))
     } finally {
       setPending(null)
     }
   }
+
+  const browser = (p: OAuthProvider) => run(p, async () => {
+    const redirect = Linking.createURL('auth-callback')
+    const result = await WebBrowser.openAuthSessionAsync(await api.oauthUrl(p, redirect, asTeacher), redirect)
+    if (result.type !== 'success') return false
+    await api.completeOAuth(result.url)
+    return true
+  })
+
+  const apple = () => run('apple', async () => {
+    const credential = await AppleAuthentication.signInAsync({
+      requestedScopes: [AppleAuthentication.AppleAuthenticationScope.FULL_NAME, AppleAuthentication.AppleAuthenticationScope.EMAIL],
+    })
+    if (!credential.identityToken) throw new Error('Apple n’a pas renvoyé d’identifiant. Réessayez.')
+    await api.signInWithApple(credential.identityToken, appleName(credential.fullName), asTeacher)
+    return true
+  })
+
   return (
     <View style={{ gap: 10 }}>
-      {providers.map((p) => (
-        <Pressable key={p} accessibilityRole="button" disabled={!!pending} onPress={() => go(p)}
+      {providers.map((p) => p === 'apple' && nativeApple ? (
+        <AppleAuthentication.AppleAuthenticationButton key={p} onPress={apple} cornerRadius={4} style={{ height: 52, opacity: pending ? 0.5 : 1 }}
+          buttonType={verb === 'Continuer' ? AppleAuthentication.AppleAuthenticationButtonType.CONTINUE : AppleAuthentication.AppleAuthenticationButtonType.SIGN_UP}
+          buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.WHITE_OUTLINE} />
+      ) : (
+        <Pressable key={p} accessibilityRole="button" disabled={!!pending} onPress={() => browser(p)}
           style={({ pressed }) => ({ minHeight: 52, flexDirection: 'row', gap: 10, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: colors.ink, borderRadius: 4, backgroundColor: pressed ? colors.leaf : colors.white, opacity: pending && pending !== p ? 0.5 : 1 })}>
           <ProviderIcon p={p} />
           <T style={{ fontFamily: font.semibold, fontSize: 17 }}>{pending === p ? 'Connexion…' : `${verb} avec ${LABELS[p]}`}</T>
