@@ -51,18 +51,20 @@ export function ProfileScreen() {
           </dl>
         </section>
         <section className="flex flex-col gap-4">
-          <h2 className="font-display text-2xl">Parcours vérifié</h2>
+          <h2 className="font-display text-2xl">Diplômes et ijaza</h2>
           <ul className="flex flex-col gap-4">
             {t.credentials.map((c) => (
               <li key={c.title} className="grid grid-cols-[80px_minmax(0,1fr)] gap-3 border-b border-line pb-4">
                 <span className="text-sm font-semibold text-ochre">{c.kind === 'ijaza' ? 'Ijaza' : 'Diplôme'}</span>
-                <div className="flex flex-col gap-1"><strong>{c.title}</strong><span className="text-sm text-muted">{c.institution}, {c.year}</span>{c.sanad && <div className="mt-2"><Sanad chain={c.sanad} /></div>}</div>
+                <div className="flex flex-col gap-1"><strong>{c.title}</strong><span className="text-sm text-muted">{c.institution}, {c.year}</span>
+                  <span className={cx('text-sm', (c.kind === 'ijaza' ? t.verification.ijaza : t.verification.diploma) ? 'text-green' : 'text-muted')}>{(c.kind === 'ijaza' ? t.verification.ijaza : t.verification.diploma) ? '✓ Vérifié par DINI' : 'Déclaré, pas encore vérifié'}</span>{c.sanad && <div className="mt-2"><Sanad chain={c.sanad} /></div>}</div>
               </li>
             ))}
           </ul>
         </section>
         <section className="flex flex-col gap-4">
           <h2 className="font-display text-2xl">Avis des familles</h2>
+          {t.reviews.length === 0 && <p className="text-muted">Pas encore d’avis : les familles pourront en laisser après leurs séances.</p>}
           <ul className="flex flex-col gap-5">{t.reviews.map((r) => <li key={r.text} className="flex flex-col gap-1"><Stars value={r.rating} /><p>{r.text}</p><span className="text-sm text-muted">{r.author}, {r.date}</span></li>)}</ul>
         </section>
       </div>

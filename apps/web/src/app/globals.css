@@ -23,6 +23,8 @@
 body {
   background: var(--color-paper);
   color: var(--color-ink);
+  /* Les textes saisis par les enseignants peuvent contenir de très longs mots : on les coupe plutôt que de déborder. */
+  overflow-wrap: anywhere;
 }
 
 :focus-visible {
