@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* Identité DINI : mêmes valeurs que packages/core/src/theme.ts. */
+/* Identité DINE : mêmes valeurs que packages/core/src/theme.ts. */
 @theme {
   --color-paper: #fafaf5;
   --color-leaf: #f1ecdd;

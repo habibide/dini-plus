@@ -9,9 +9,9 @@ import { Section, T, font } from '@/lib/ui'
 import { JoinButton } from '@/lib/video'
 
 const STATUS = {
-  draft: ['Candidature à compléter', 'Remplissez votre profil sur le site DINI (matières, tarifs, diplômes, disponibilités), puis envoyez-le.'],
+  draft: ['Candidature à compléter', 'Remplissez votre profil sur le site DINE (matières, tarifs, diplômes, disponibilités), puis envoyez-le.'],
   submitted: ['Candidature en cours d’examen', 'Notre équipe vérifie votre identité, vos diplômes et votre ijaza, en général sous 3 jours ouvrés.'],
-  rejected: ['Candidature à reprendre', 'Corrigez votre profil sur le site DINI selon le message ci-dessous, puis renvoyez-le.'],
+  rejected: ['Candidature à reprendre', 'Corrigez votre profil sur le site DINE selon le message ci-dessous, puis renvoyez-le.'],
 } as const
 
 const euros = (n: number) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(n)
@@ -61,7 +61,7 @@ export default function Agenda() {
         <Section title="Gains">
           <T><T style={{ fontFamily: font.display, fontSize: 26, color: colors.green }}>{euros(earnings.data?.releasedEur ?? 0)}</T> acquis, net de commission</T>
           <T tone="muted">{earnings.data?.pending.count ?? 0} séance(s) en attente des 48 h sans litige.</T>
-          <T tone="muted">Commission DINI : {Math.round(commissionRate(hours) * 100)} % ({Math.round(hours)} h enseignées){next ? `, ${Math.round(next.rate * 100)} % dès ${next.fromHours} h` : ''}.</T>
+          <T tone="muted">Commission DINE : {Math.round(commissionRate(hours) * 100)} % ({Math.round(hours)} h enseignées){next ? `, ${Math.round(next.rate * 100)} % dès ${next.fromHours} h` : ''}.</T>
         </Section>
       </>}
     </ScrollView>

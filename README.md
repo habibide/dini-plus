@@ -1,4 +1,4 @@
-# DINI
+# DINE
 
 Marketplace d’enseignement religieux en ligne : site web et application mobile sur un backend Supabase, avec de vrais comptes.
 

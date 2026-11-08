@@ -73,7 +73,7 @@ export default function BookScreen() {
           <T tone="h2">{total ? 'Paiement' : 'Vérifiez avant de confirmer'}</T>
           {total > 0 && q.payments.map((m) => <Option key={m} on={pay === m} onPress={() => setMethod(m)} title={PAYMENT_LABELS[m]} detail={m === 'card' ? 'Visa, Mastercard' : 'Validation sur le téléphone'} />)}
           {total > 0 && <T tone="muted">Paiement simulé : aucune donnée bancaire n’est demandée.</T>}
-          <T>{total ? 'Le montant reste bloqué chez DINI. Vous avez 48 h après chaque séance pour signaler un problème.' : 'Une séance de votre forfait sera utilisée.'}</T>
+          <T>{total ? 'Le montant reste bloqué chez DINE. Vous avez 48 h après chaque séance pour signaler un problème.' : 'Une séance de votre forfait sera utilisée.'}</T>
           <T tone="muted">Annulation gratuite jusqu’à 24 h avant la séance.</T>
           {error ? <T style={{ color: colors.warn, backgroundColor: colors.warnBg, padding: 10 }}>{error}</T> : null}
         </>}

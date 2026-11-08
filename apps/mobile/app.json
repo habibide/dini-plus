@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "DINI",
-    "slug": "dini",
+    "name": "DINE",
+    "slug": "dine",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "dini",
+    "scheme": "dine",
     "userInterfaceStyle": "light",
     "ios": {
       "icon": "./assets/expo.icon",

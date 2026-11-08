@@ -32,7 +32,7 @@ export const BADGE_INFO: Record<BadgeKey, { label: string; detail: string }> = {
   identity: { label: 'Identité vérifiée', detail: 'Pièce d’identité contrôlée, téléphone confirmé par SMS et entretien vidéo avec un modérateur.' },
   diploma: { label: 'Diplôme vérifié', detail: 'Attestation d’un institut reconnu, contrôlée auprès de l’établissement lorsque c’est possible.' },
   ijaza: { label: 'Ijaza vérifiée', detail: 'Chaîne de transmission (sanad) documentée, riwaya précisée, maître référent joint.' },
-  confirmed: { label: 'Enseignant confirmé', detail: 'Plus de 100 heures sur DINI, note supérieure à 4,5 et aucun litige.' },
+  confirmed: { label: 'Enseignant confirmé', detail: 'Plus de 100 heures sur DINE, note supérieure à 4,5 et aucun litige.' },
 }
 
 export function badgesOf(t: Teacher): BadgeKey[] {

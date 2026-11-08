@@ -1,4 +1,4 @@
-// Identité DINI (§11), commune au web et au mobile.
+// Identité DINE (§11), commune au web et au mobile.
 export const colors = {
   paper: '#FAFAF5',
   leaf: '#F1ECDD',

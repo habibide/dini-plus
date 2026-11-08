@@ -28,7 +28,7 @@ export default function Signup() {
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, backgroundColor: colors.paper }}>
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 20, gap: 16 }}>
-        <T tone="h1">{asTeacher ? 'Devenir enseignant sur DINI' : 'Créer un compte élève ou parent'}</T>
+        <T tone="h1">{asTeacher ? 'Devenir enseignant sur DINE' : 'Créer un compte élève ou parent'}</T>
         <T>Déjà un compte&nbsp;? <T style={{ color: colors.green, textDecorationLine: 'underline' }} onPress={() => router.replace('/login')}>Se connecter</T></T>
         <OAuthButtons providers={['google', 'apple']} verb={asTeacher ? 'S’inscrire' : 'Continuer'} asTeacher={asTeacher} onDone={done} />
         <Divider />
@@ -39,7 +39,7 @@ export default function Signup() {
         <FormError message={signUp.error?.message} />
         <Button title={signUp.isPending ? 'Création du compte…' : asTeacher ? 'Commencer' : 'Créer mon compte'} disabled={signUp.isPending || !name.trim() || !email || password.length < 8}
           onPress={() => signUp.mutate({ name, email, password, asTeacher }, { onSuccess: (r) => { if (!r.needsConfirmation) done() } })} />
-        <T tone="muted" style={{ textAlign: 'center' }}>En continuant, vous acceptez les conditions d’utilisation et la politique de confidentialité de DINI.</T>
+        <T tone="muted" style={{ textAlign: 'center' }}>En continuant, vous acceptez les conditions d’utilisation et la politique de confidentialité de DINE.</T>
       </ScrollView>
     </KeyboardAvoidingView>
   )

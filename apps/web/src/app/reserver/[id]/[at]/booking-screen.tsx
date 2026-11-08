@@ -145,7 +145,7 @@ export function BookingScreen() {
                 <p className="bg-leaf px-3 py-2 text-sm">Paiement simulé : aucune donnée bancaire n’est demandée.</p>
               </div>
             )}
-            <p>{total ? `Le montant reste bloqué chez DINI. Vous avez ${ESCROW_HOURS} h après chaque séance pour signaler un problème.` : 'Une séance de votre forfait sera utilisée.'}</p>
+            <p>{total ? `Le montant reste bloqué chez DINE. Vous avez ${ESCROW_HOURS} h après chaque séance pour signaler un problème.` : 'Une séance de votre forfait sera utilisée.'}</p>
             <p className="text-sm text-muted">Annulation gratuite jusqu’à {FREE_CANCEL_HOURS} h avant la séance. Ensuite, la séance reste due à l’enseignant.</p>
             {error && <p role="alert" className="bg-warnbg px-3 py-2 text-warn">{error} <Link href={`/enseignants/${t.id}`} className="font-semibold underline">Choisir un autre créneau</Link></p>}
             <div className="flex gap-2">

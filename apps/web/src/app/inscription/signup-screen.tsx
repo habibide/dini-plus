@@ -31,7 +31,7 @@ function Signup({ asTeacher }: { asTeacher: boolean }) {
 
   const action = asTeacher ? 'Commencer' : 'Créer mon compte'
   return (
-    <AuthLayout title={asTeacher ? 'Devenir enseignant sur DINI' : 'Créer un compte élève ou parent'}>
+    <AuthLayout title={asTeacher ? 'Devenir enseignant sur DINE' : 'Créer un compte élève ou parent'}>
       <p className="text-lg">Déjà un compte&nbsp;? <Link href="/connexion" className="underline">Se connecter</Link></p>
       <OAuthButtons providers={['google', 'apple']} verb={asTeacher ? 'S’inscrire' : 'Continuer'} asTeacher={asTeacher} next={next} />
       <Divider />

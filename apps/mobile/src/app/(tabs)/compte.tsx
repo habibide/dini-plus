@@ -16,7 +16,7 @@ export default function Compte() {
   const insets = useSafeAreaInsets()
   return (
     <ScrollView style={{ backgroundColor: colors.paper }} contentInsetAdjustmentBehavior="never" contentContainerStyle={{ paddingTop: insets.top, paddingBottom: 110 }}>
-      {account === null && <SignInPrompt title="Mon compte" text="Connectez-vous pour réserver, suivre les progrès de vos enfants ou enseigner sur DINI." next="/compte" />}
+      {account === null && <SignInPrompt title="Mon compte" text="Connectez-vous pour réserver, suivre les progrès de vos enfants ou enseigner sur DINE." next="/compte" />}
       {account && (
         <Section title="Mon compte" style={{ paddingTop: 10 }}>
           <T tone="h1">{account.name || account.email}</T>
@@ -33,7 +33,7 @@ export default function Compte() {
         </View>
       </Section>
       {account?.role === 'family' && (
-        <Section title="Enseigner sur DINI">
+        <Section title="Enseigner sur DINE">
           <T>Diplômé, porteur d’une ijaza, imam ou maître de daara : proposez vos cours aux familles.</T>
           <Button title="Devenir enseignant" kind="ghost" disabled={start.isPending} onPress={() => start.mutate(undefined, { onSuccess: () => router.navigate('/agenda') })} />
         </Section>

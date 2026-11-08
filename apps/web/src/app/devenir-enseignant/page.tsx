@@ -48,7 +48,7 @@ export default function Page() {
           </div>
           <div className="flex flex-col gap-3">
             <h2 className="font-display text-3xl">Gagnez plus en enseignant plus</h2>
-            <p>La commission de DINI baisse avec vos heures : {COMMISSION_TIERS.map((t) => pct(t.rate)).join(', ')}. Vous êtes payé 48 h après chaque séance sans litige.</p>
+            <p>La commission de DINE baisse avec vos heures : {COMMISSION_TIERS.map((t) => pct(t.rate)).join(', ')}. Vous êtes payé 48 h après chaque séance sans litige.</p>
           </div>
         </div>
       </section>

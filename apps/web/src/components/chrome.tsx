@@ -97,9 +97,8 @@ export function SiteHeader() {
   return (
     <header className="border-b border-line bg-paper">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-8 gap-y-2 px-5 py-3">
-        <Link href="/" className="flex items-baseline gap-2" aria-label="DINI, accueil">
-          <span className="font-display text-[26px] text-green">DINI</span>
-          <span lang="ar" dir="rtl" className="font-arabic text-2xl text-ochre">ديني</span>
+        <Link href="/" className="flex items-baseline" aria-label="DINE, accueil">
+          <span className="font-display text-[26px] text-green">DINE</span>
         </Link>
         <nav aria-label="Navigation principale" className="flex flex-1 flex-wrap gap-x-6">
           <ClientOnly fallback={null}><Suspense fallback={<NavLinks path="" />}><ActiveNavLinks /></Suspense></ClientOnly>
@@ -117,8 +116,8 @@ export function SiteFooter() {
     <footer className="mt-16 bg-ink text-[#c9cfc9]">
       <div className="mx-auto flex max-w-6xl flex-wrap justify-between gap-6 px-5 py-10 text-sm">
         <div className="flex max-w-prose flex-col gap-2">
-          <span className="font-display text-xl text-paper">DINI</span>
-          <p>DINI met en relation et ne prend pas position doctrinale. Tous les madhahib et toutes les riwayat sont accueillis, affichés en toute transparence.</p>
+          <span className="font-display text-xl text-paper">DINE</span>
+          <p>DINE met en relation et ne prend pas position doctrinale. Tous les madhahib et toutes les riwayat sont accueillis, affichés en toute transparence.</p>
         </div>
         <nav aria-label="Informations" className="flex flex-col gap-1 self-end">
           <Link href="/devenir-enseignant" className="hover:text-paper">Devenir enseignant</Link>

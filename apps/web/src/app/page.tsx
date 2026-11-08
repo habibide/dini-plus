@@ -56,7 +56,7 @@ export default function Home() {
 
       <section id="comment" className="bg-leaf">
         <div className="mx-auto flex max-w-6xl flex-col gap-9 px-5 py-16">
-          <h2 className="font-display text-3xl">Comment fonctionne DINI&nbsp;?</h2>
+          <h2 className="font-display text-3xl">Comment fonctionne DINE&nbsp;?</h2>
           <ol className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-8">
             {[
               ['Choisissez votre enseignant.', 'Comparez les profils, écoutez un extrait de récitation, vérifiez les diplômes et le sanad.'],
@@ -76,7 +76,7 @@ export default function Home() {
       <section className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-8 px-5 py-16">
         <div className="flex min-w-0 flex-[1_1_480px] flex-col gap-3">
           <h2 className="font-display text-3xl">Vous ne payez que les séances qui ont eu lieu.</h2>
-          <p className="max-w-[56ch] text-lg">Votre argent reste bloqué chez DINI. L’enseignant n’est payé que 48 h après la séance, si vous n’avez rien signalé. Carte, Wave, Orange Money ou Afrimoney selon votre pays.</p>
+          <p className="max-w-[56ch] text-lg">Votre argent reste bloqué chez DINE. L’enseignant n’est payé que 48 h après la séance, si vous n’avez rien signalé. Carte, Wave, Orange Money ou Afrimoney selon votre pays.</p>
         </div>
         <Link href="/enseignants" className={buttonCls.primary}>Réserver une séance d’essai</Link>
       </section>
@@ -84,7 +84,7 @@ export default function Home() {
       <section id="enseigner" className="bg-green text-[#f4f0e2]">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-12 px-5 py-16">
           <div className="flex min-w-0 flex-[1_1_440px] flex-col gap-4">
-            <h2 className="font-display text-4xl">Devenez enseignant sur DINI</h2>
+            <h2 className="font-display text-4xl">Devenez enseignant sur DINE</h2>
             <p className="max-w-[50ch] text-lg text-[#d6dde5]">Diplômé d’institut, porteur d’une ijaza, imam ou maître de daara : rendez-vous visible auprès des familles qui vous cherchent.</p>
             <Link href="/devenir-enseignant" className={`${buttonCls.sand} self-start`}>Créer mon profil enseignant</Link>
           </div>

@@ -67,7 +67,7 @@ const appleName = (n: AppleAuthentication.AppleAuthenticationFullName | null) =>
 
 /**
  * Boutons « Continuer avec ». Sur iPhone, Apple passe par la connexion native du système (bouton officiel d'Apple) ;
- * Google, et Apple ailleurs, passent par le navigateur du système puis reviennent dans l'app (dini://auth-callback).
+ * Google, et Apple ailleurs, passent par le navigateur du système puis reviennent dans l'app (dine://auth-callback).
  */
 export function OAuthButtons({ providers, verb = 'Continuer', asTeacher = false, onDone }: { providers: OAuthProvider[]; verb?: string; asTeacher?: boolean; onDone: () => void }) {
   const { api } = useDini()

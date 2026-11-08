@@ -9,8 +9,7 @@ export default function Home() {
       <View style={{ backgroundColor: colors.green }}>
         <View style={{ paddingHorizontal: 20, paddingTop: 12, paddingBottom: 28, gap: 18 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <T style={{ fontFamily: font.display, fontSize: 26, lineHeight: 34, color: colors.paper }}>DINI</T>
-            <T tone="arabic" style={{ color: colors.sand, fontSize: 22 }}>ديني</T>
+            <T style={{ fontFamily: font.display, fontSize: 26, lineHeight: 34, color: colors.paper }}>DINE</T>
           </View>
           <T style={{ fontFamily: font.display, fontSize: 30, lineHeight: 34, color: '#F4F0E2' }}>Choisissez vous-même qui enseignera le Coran.</T>
           <T style={{ color: '#D6DDD5' }}>Des enseignants vérifiés un par un. Leurs diplômes, leur sanad et leurs prix sont visibles avant de réserver.</T>

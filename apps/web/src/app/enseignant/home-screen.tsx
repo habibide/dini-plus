@@ -75,7 +75,7 @@ export function TeacherHome() {
             <p className="text-sm text-muted">{earnings.data?.pending.releaseAt[0] ? `Prochaine libération ${formatDateTime(Math.min(...earnings.data.pending.releaseAt), Intl.DateTimeFormat().resolvedOptions().timeZone)}.` : 'Rien en attente.'}</p>
           </div>
           <div className="flex flex-col gap-1 bg-white px-6 py-5">
-            <h2 className="text-sm font-semibold text-muted">Commission DINI</h2>
+            <h2 className="text-sm font-semibold text-muted">Commission DINE</h2>
             <p className="font-display text-3xl">{Math.round(rate * 100)} %</p>
             <p className="text-sm text-muted">{Math.round(hours)} h enseignées.{next ? ` Passe à ${Math.round(next.rate * 100)} % à partir de ${next.fromHours} h.` : ' Palier le plus bas atteint.'}</p>
           </div>

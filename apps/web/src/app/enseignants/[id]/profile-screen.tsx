@@ -57,7 +57,7 @@ export function ProfileScreen() {
               <li key={c.title} className="grid grid-cols-[80px_minmax(0,1fr)] gap-3 border-b border-line pb-4">
                 <span className="text-sm font-semibold text-ochre">{c.kind === 'ijaza' ? 'Ijaza' : 'Diplôme'}</span>
                 <div className="flex flex-col gap-1"><strong>{c.title}</strong><span className="text-sm text-muted">{c.institution}, {c.year}</span>
-                  <span className={cx('text-sm', (c.kind === 'ijaza' ? t.verification.ijaza : t.verification.diploma) ? 'text-green' : 'text-muted')}>{(c.kind === 'ijaza' ? t.verification.ijaza : t.verification.diploma) ? '✓ Vérifié par DINI' : 'Déclaré, pas encore vérifié'}</span>{c.sanad && <div className="mt-2"><Sanad chain={c.sanad} /></div>}</div>
+                  <span className={cx('text-sm', (c.kind === 'ijaza' ? t.verification.ijaza : t.verification.diploma) ? 'text-green' : 'text-muted')}>{(c.kind === 'ijaza' ? t.verification.ijaza : t.verification.diploma) ? '✓ Vérifié par DINE' : 'Déclaré, pas encore vérifié'}</span>{c.sanad && <div className="mt-2"><Sanad chain={c.sanad} /></div>}</div>
               </li>
             ))}
           </ul>

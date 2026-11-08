@@ -55,7 +55,7 @@ export function Terms({ action }: { action: string }) {
   return (
     <p className="text-center text-sm text-muted">
       En cliquant sur « {action} » ou « Continuer avec », vous acceptez les <Link href="/conditions" className="underline">conditions d’utilisation</Link> et
-      la <Link href="/confidentialite" className="underline">politique de confidentialité</Link> de DINI.
+      la <Link href="/confidentialite" className="underline">politique de confidentialité</Link> de DINE.
     </p>
   )
 }

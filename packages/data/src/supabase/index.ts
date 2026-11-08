@@ -7,7 +7,7 @@ export * from './api'
 export type { Database } from './database.types'
 
 /**
- * Client Supabase de DINI. `storage` garde la session entre deux lancements : localStorage sur le web,
+ * Client Supabase de DINE. `storage` garde la session entre deux lancements : localStorage sur le web,
  * AsyncStorage sur mobile. `detectSessionInUrl` termine les connexions Google et les liens reçus par e-mail sur le web.
  */
 export function createDiniClient(url: string, publishableKey: string, opts: { storage?: KeyValueStorage; detectSessionInUrl?: boolean } = {}): DiniClient {

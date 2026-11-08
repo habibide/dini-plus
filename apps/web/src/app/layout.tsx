@@ -10,7 +10,7 @@ const young = Young_Serif({ variable: '--font-young', subsets: ['latin'], weight
 const amiri = Amiri({ variable: '--font-amiri', subsets: ['arabic'], weight: ['400', '700'] })
 
 export const metadata: Metadata = {
-  title: { default: 'DINI, enseignants vérifiés en sciences islamiques', template: '%s · DINI' },
+  title: { default: 'DINE, enseignants vérifiés en sciences islamiques', template: '%s · DINE' },
   description: 'Coran, tajwid, arabe, fiqh : choisissez un enseignant vérifié, voyez ses diplômes et son sanad, suivez les progrès de vos enfants.',
 }
 

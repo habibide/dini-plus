@@ -7,7 +7,7 @@ import type { KeyValueStorage } from '../api'
 import { buildDashboard, filterTeachers, SlotTakenError, type BookingDraft, type TeacherCard, type TeacherFilters } from '../logic'
 import type { Database } from './database.types'
 
-// API DINI sur Supabase. Les lectures passent par PostgREST (protégé par RLS), les écritures sensibles
+// API DINE sur Supabase. Les lectures passent par PostgREST (protégé par RLS), les écritures sensibles
 // par des RPC qui recalculent tout côté serveur (prix, disponibilités, droits).
 
 export type DiniClient = SupabaseClient<Database>
@@ -79,7 +79,7 @@ const MESSAGES: Record<string, string> = {
   trial_already_used: 'Cet élève a déjà fait sa séance d’essai avec cet enseignant.',
   room_not_open: 'La salle ouvre 10 minutes avant le début du cours.',
   room_closed: 'Ce cours est terminé : la salle est fermée.',
-  video_not_configured: 'La visioconférence n’est pas encore activée sur DINI.',
+  video_not_configured: 'La visioconférence n’est pas encore activée sur DINE.',
   video_unavailable: 'Le service de visioconférence ne répond pas. Réessayez dans un instant.',
   'Invalid login credentials': 'E-mail ou mot de passe incorrect.',
   'Email not confirmed': 'Confirmez d’abord votre adresse avec le lien reçu par e-mail.',

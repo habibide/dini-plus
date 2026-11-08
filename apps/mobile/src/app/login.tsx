@@ -30,7 +30,7 @@ export default function Login() {
         <FormError message={signIn.error?.message} />
         <Button title={signIn.isPending ? 'Connexion…' : 'Se connecter'} disabled={signIn.isPending || !email || !password}
           onPress={() => signIn.mutate({ email, password }, { onSuccess: () => leave(next) })} />
-        <T tone="muted" style={{ textAlign: 'center', fontFamily: font.body }}>En continuant, vous acceptez les conditions d’utilisation et la politique de confidentialité de DINI.</T>
+        <T tone="muted" style={{ textAlign: 'center', fontFamily: font.body }}>En continuant, vous acceptez les conditions d’utilisation et la politique de confidentialité de DINE.</T>
       </ScrollView>
     </KeyboardAvoidingView>
   )
