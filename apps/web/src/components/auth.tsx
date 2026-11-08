@@ -31,7 +31,8 @@ export function useNextPath(fallback = '/') {
   if (!next) return fallback
   try {
     const u = new URL(next, window.location.origin)
-    return u.origin === window.location.origin ? u.pathname + u.search + u.hash : fallback
+    // « /.//site.com » se normalise en « //site.com » : une seule barre en tête, sinon l'adresse sortirait du site.
+    return u.origin === window.location.origin ? `/${u.pathname.replace(/^[/\\]+/, '')}${u.search}${u.hash}` : fallback
   } catch {
     return fallback
   }
