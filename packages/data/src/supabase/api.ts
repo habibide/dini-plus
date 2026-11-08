@@ -88,6 +88,8 @@ const MESSAGES: Record<string, string> = {
 
 function fail(error: { message: string; details?: string | null }): never {
   if (error.message === 'slot_taken') throw new SlotTakenError()
+  // Deux essais réservés au même instant : l'index unique de la base départage.
+  if (error.message.includes('bookings_one_trial')) throw new Error(MESSAGES.trial_already_used)
   if (error.message === 'incomplete_application') throw new Error(`Il manque encore : ${error.details ?? ''}.`)
   throw new Error(MESSAGES[error.message] ?? error.message)
 }
