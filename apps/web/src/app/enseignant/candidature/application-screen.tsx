@@ -54,10 +54,10 @@ function ApplicationForm({ t }: { t: MyTeacher }) {
 
   async function persist() {
     await save.mutateAsync({
-      name: f.name.trim(), city: f.city.trim(), countryLabel: residence.label.fr, timezone: f.timezone, headline: f.headline.trim(), bio: f.bio.trim(),
+      ...(credentialsLocked ? {} : { name: f.name.trim(), ...(f.gender ? { gender: f.gender } : {}) }),
+      city: f.city.trim(), countryLabel: residence.label.fr, timezone: f.timezone, headline: f.headline.trim(), bio: f.bio.trim(),
       subjects: f.subjects, arabicTracks: f.subjects.includes('arabic') ? f.arabicTracks : [], languages: f.languages, riwayat: f.riwayat,
       madhahib: f.madhahib, levels: f.levels, ageGroups: f.ageGroups,
-      ...(f.gender ? { gender: f.gender } : {}),
       ...(ratesOk ? { rates } : {}),
       ...(credentialsLocked ? {} : { credentials: credentials.filter((c) => c.title.trim()).map((c) => ({ ...c, sanad: c.kind === 'ijaza' ? c.sanad?.filter(Boolean) : undefined })) }),
     })
@@ -88,12 +88,12 @@ function ApplicationForm({ t }: { t: MyTeacher }) {
       <fieldset disabled={locked} className="flex flex-col gap-6 disabled:opacity-70">
         <Section title="Vous">
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Nom complet">{(id) => <input id={id} value={f.name} onChange={(e) => set('name', e.target.value)} className={inputCls} />}</Field>
+            <Field label="Nom complet">{(id) => <input id={id} disabled={credentialsLocked} value={f.name} onChange={(e) => set('name', e.target.value)} className={inputCls} />}</Field>
             <fieldset className="flex flex-col gap-1.5">
               <legend className="mb-1.5 font-semibold">Vous êtes</legend>
               <div className="flex gap-2">
                 {([['F', 'Une enseignante'], ['M', 'Un enseignant']] as const).map(([g, l]) => (
-                  <button key={g} type="button" aria-pressed={f.gender === g} onClick={() => set('gender', g)}
+                  <button key={g} type="button" disabled={credentialsLocked} aria-pressed={f.gender === g} onClick={() => set('gender', g)}
                     className={cx('min-h-12 flex-1 cursor-pointer rounded-sm border px-3', f.gender === g ? 'border-green bg-green text-white' : 'border-line bg-white hover:border-green')}>{l}</button>
                 ))}
               </div>

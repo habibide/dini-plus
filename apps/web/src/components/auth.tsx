@@ -25,10 +25,16 @@ export function RequireAccount({ roles, children }: { roles?: Role[]; children: 
   return children
 }
 
-/** Adresse de retour après connexion : uniquement un chemin interne, jamais une autre origine. */
+/** Adresse de retour après connexion : uniquement un chemin du site, jamais une autre origine (y compris « /\\site.com »). */
 export function useNextPath(fallback = '/') {
   const next = useSearchParams().get('suite')
-  return next && next.startsWith('/') && !next.startsWith('//') ? next : fallback
+  if (!next) return fallback
+  try {
+    const u = new URL(next, window.location.origin)
+    return u.origin === window.location.origin ? u.pathname + u.search + u.hash : fallback
+  } catch {
+    return fallback
+  }
 }
 
 export function AuthLayout({ title, children }: { title: string; children: ReactNode }) {

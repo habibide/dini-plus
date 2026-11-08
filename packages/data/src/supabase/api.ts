@@ -67,6 +67,7 @@ const MESSAGES: Record<string, string> = {
   not_signed_in: 'Connectez-vous pour continuer.',
   not_a_teacher: 'Ce compte n’a pas de profil enseignant.',
   application_under_review: 'Votre candidature est en cours d’examen : elle ne peut pas être modifiée pour l’instant.',
+  identity_locked: 'Votre nom et votre genre ont été vérifiés. Écrivez-nous pour les modifier.',
   credentials_locked: 'Vos diplômes ont déjà été vérifiés. Écrivez-nous pour en ajouter un.',
   not_submittable: 'Cette candidature a déjà été envoyée.',
   not_started: 'La séance n’a pas encore commencé.',
