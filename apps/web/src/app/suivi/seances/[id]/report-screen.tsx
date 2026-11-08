@@ -18,7 +18,7 @@ export function ReportScreen() {
     <article className="mx-auto flex max-w-3xl flex-col gap-6 px-5 py-8">
       <Link href="/suivi" className="text-sm text-muted hover:text-ink">Retour au suivi</Link>
       <header className="flex flex-col gap-1">
-        <span className="text-sm text-muted first-letter:uppercase">{formatDay(booking.startsAt, family.data.family.timezone)} · 30 minutes · {learner.name}</span>
+        <span className="text-sm text-muted first-letter:uppercase">{formatDay(booking.startsAt, family.data.family.timezone)} · {booking.minutes} minutes · {learner.name}</span>
         <h1 className="font-display text-3xl">Compte rendu {/^[aeiouyàâéèêëîïôöûüh]/i.test(teacher.name) ? 'd’' : 'de '}{teacher.name.split(' ')[0]}</h1>
       </header>
       {s && r.ayahTo && (

@@ -47,9 +47,10 @@ export function zonedToUtc(y: number, m: number, d: number, minutes: number, tz:
 
 export type AvailabilityRule = { weekday: number; start: number; end: number } // minutes locales, fuseau de l'enseignant
 
-/** Créneaux de 30 min proposés à partir de `from`, sur `days` jours du calendrier de l'enseignant. */
-export function generateSlots(rules: AvailabilityRule[], tz: string, from: number, days: number, opts: { taken?: Set<number>; leadMs?: number } = {}): number[] {
+/** Départs possibles toutes les 30 min pour une séance de `duration` minutes, sur `days` jours du calendrier de l'enseignant. */
+export function generateSlots(rules: AvailabilityRule[], tz: string, from: number, days: number, opts: { taken?: Set<number>; leadMs?: number; duration?: number } = {}): number[] {
   const lead = opts.leadMs ?? 2 * HOUR
+  const duration = opts.duration ?? SLOT_MINUTES
   const start = zonedParts(from, tz)
   const out: number[] = []
   for (let i = 0; i < days; i++) {
@@ -59,7 +60,7 @@ export function generateSlots(rules: AvailabilityRule[], tz: string, from: numbe
     const d = date.getUTCDate()
     for (const r of rules) {
       if (r.weekday !== date.getUTCDay()) continue
-      for (let t = r.start; t + SLOT_MINUTES <= r.end; t += SLOT_MINUTES) {
+      for (let t = r.start; t + duration <= r.end; t += SLOT_MINUTES) {
         const at = zonedToUtc(y, m, d, t, tz)
         if (at >= from + lead && !opts.taken?.has(at)) out.push(at)
       }

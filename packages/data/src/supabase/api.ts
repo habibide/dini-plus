@@ -76,6 +76,7 @@ const MESSAGES: Record<string, string> = {
   report_required: 'Indiquez au moins ce qui a été travaillé.',
   note_required: 'Expliquez le refus : le candidat verra ce message.',
   not_under_review: 'Cette candidature n’est plus en attente.',
+  trial_already_used: 'Cet élève a déjà fait sa séance d’essai avec cet enseignant.',
   room_not_open: 'La salle ouvre 10 minutes avant le début du cours.',
   room_closed: 'Ce cours est terminé : la salle est fermée.',
   video_not_configured: 'La visioconférence n’est pas encore activée sur DINI.',
@@ -305,9 +306,10 @@ export function createSupabaseApi(client: DiniClient, storage: KeyValueStorage) 
       return (await withPrices(p)).find((t) => t.id === id) ?? null
     },
 
-    async getSlots(teacherId: string, weekOffset = 0, days = 7) {
+    /** Départs libres pour un cours (50 min par défaut) ou un essai (`minutes` = 30). */
+    async getSlots(teacherId: string, weekOffset = 0, days = 7, minutes?: number) {
       const from = new Date(Date.now() + weekOffset * 7 * DAY).toISOString()
-      const slots = must(await client.rpc('free_slots', { p_teacher: teacherId, p_from: from, p_days: days }))
+      const slots = must(await client.rpc('free_slots', { p_teacher: teacherId, p_from: from, p_days: days, ...(minutes ? { p_minutes: minutes } : {}) }))
       return slots.map((s) => Date.parse(s))
     },
 
@@ -336,13 +338,15 @@ export function createSupabaseApi(client: DiniClient, storage: KeyValueStorage) 
     async quote(teacherId: string, learnerId: string) {
       const id = await familyId()
       const q = must(await client.rpc('quote', { p_family: id, p_teacher: teacherId, p_learner: learnerId })) as {
-        currency: CurrencyCode; session: number; trial: number; credit: { remaining: number; of: number } | null; payments: PaymentMethod[]
-        plans: { id: string; sessions: number; total: number }[]
+        currency: CurrencyCode; session: number; trial: number; trialAvailable: boolean; minutes: { course: number; trial: number }
+        credit: { remaining: number; of: number } | null; payments: PaymentMethod[]; plans: { id: string; sessions: number; total: number }[]
       }
       return {
         currency: q.currency,
         session: Number(q.session),
         trial: Number(q.trial),
+        trialAvailable: q.trialAvailable,
+        minutes: q.minutes,
         plans: PLANS.map((p) => ({ id: p.id, sessions: p.sessions, label: p.label, usage: p.usage, total: Number(q.plans.find((x) => x.id === p.id)?.total ?? 0) })),
         credit: q.credit,
         payments: q.payments,

@@ -26,7 +26,7 @@ describe('filterTeachers', () => {
 
 describe('buildDashboard', () => {
   const learner: Learner = { id: 'l1', familyId: 'f1', name: 'Awa', birthYear: 2017, level: 'beginner', goals: '' }
-  const base = { learnerId: 'l1', teacherId: 't-aissatou', kind: 'plan', subject: 'quran', minutes: 30, amount: 7, currency: 'EUR' } as const
+  const base = { learnerId: 'l1', teacherId: 't-aissatou', kind: 'plan', subject: 'quran', minutes: 50, amount: 7, currency: 'EUR' } as const
   const bookings: Booking[] = [
     { ...base, id: 'b1', startsAt: NOW - 5 * DAY, status: 'validated', deliveredAt: NOW - 5 * DAY, report: { covered: '', surah: 112, ayahTo: 4, tajwidNotes: '', homework: '', comment: '' } },
     { ...base, id: 'b2', startsAt: NOW - 3 * DAY, status: 'missed' },

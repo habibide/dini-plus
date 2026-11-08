@@ -132,7 +132,7 @@ function ApplicationForm({ t }: { t: MyTeacher }) {
           <ChipSet legend="Âge des élèves" options={AGE_GROUPS.map((a) => ({ id: a.id, label: a.label.fr }))} value={f.ageGroups} onChange={(v) => set('ageGroups', v)} />
         </Section>
 
-        <Section title="Tarifs" hint="Pour une séance de 30 minutes. Le tarif local s’applique au Sénégal et en Gambie, le tarif international ailleurs.">
+        <Section title="Tarifs" hint="Pour un cours de 50 minutes ; l’essai de 30 minutes est à moitié prix. Le tarif local s’applique au Sénégal et en Gambie, le tarif international ailleurs.">
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Tarif local (FCFA)">{(id) => <input id={id} type="number" min={500} step={50} inputMode="numeric" value={f.xof} onChange={(e) => set('xof', e.target.value)} className={inputCls} />}</Field>
             <Field label="Tarif international (€)">{(id) => <input id={id} type="number" min={1} step={0.5} inputMode="decimal" value={f.eur} onChange={(e) => set('eur', e.target.value)} className={inputCls} />}</Field>

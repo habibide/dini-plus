@@ -13,6 +13,10 @@ export const COMMISSION_TIERS = [
 
 export const commissionRate = (hoursTaught: number) => COMMISSION_TIERS.find((t) => hoursTaught < t.toHours)!.rate
 
+/** Durées : le cours standard, et l'essai de découverte réservé aux nouveaux élèves (un par enseignant). */
+export const COURSE_MINUTES = 50
+export const TRIAL_MINUTES = 30
+
 export const ESCROW_HOURS = 48
 export const FREE_CANCEL_HOURS = 24
 export const MIN_PAYOUT_EUR = 20

@@ -70,7 +70,7 @@ export function ProfileScreen() {
       </div>
 
       <aside className="flex flex-col gap-3 border border-line bg-white p-5 lg:sticky lg:top-4">
-        <span><strong className="font-display text-2xl text-green"><Money {...t.price} /></strong> <span className="text-sm text-muted">la séance de 30 min</span></span>
+        <span><strong className="font-display text-2xl text-green"><Money {...t.price} /></strong> <span className="text-sm text-muted">le cours de 50 min</span></span>
         <Stars value={t.rating} count={t.reviews.length} />
         <p className="bg-leaf px-3 py-2 text-sm">Séance d’essai à <Money amount={trialPrice(t.price.amount, t.price.currency)} currency={t.price.currency} />, pour vérifier que le courant passe.</p>
         <h2 className="mt-2 font-display text-lg">Choisissez un créneau</h2>

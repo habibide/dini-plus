@@ -11,7 +11,7 @@ export type Database = {
     Tables: {
       availability_rules: Table<{ end_min: number; id: number; start_min: number; teacher_id: string; weekday: number }>
       bookings: Table<{
-        amount: number; created_at: string; currency: string; delivered_at: string | null; id: string; kind: string; learner_id: string
+        amount: number; created_at: string; currency: string; delivered_at: string | null; id: string; kind: string; learner_id: string; video_room: string | null
         minutes: number; starts_at: string; status: string; subject: string; subscription_id: string | null; teacher_id: string
       }>
       countries: Table<{ code: string; currency: string; payments: string[] }>
@@ -31,7 +31,7 @@ export type Database = {
       }>
       plans: Table<{ id: string; sessions: number }>
       pricing_settings: Table<{
-        booking_lead_minutes: number; escrow_hours: number; eur_to_cad: number; eur_to_usd: number; free_cancel_hours: number
+        booking_lead_minutes: number; course_minutes: number; trial_minutes: number; escrow_hours: number; eur_to_cad: number; eur_to_usd: number; free_cancel_hours: number
         id: boolean; trial_discount: number; xof_to_gmd: number
       }>
       profiles: Table<{ created_at: string; display_name: string | null; full_name: string; id: string; role: string }>
@@ -66,7 +66,7 @@ export type Database = {
       deliver_session: { Args: { p_booking: string; p_report: Json }; Returns: undefined }
       dispute_booking: { Args: { p_booking: string; p_reason?: string }; Returns: undefined }
       ensure_my_family: { Args: { p_country: string; p_timezone: string }; Returns: string }
-      free_slots: { Args: { p_days?: number; p_from: string; p_teacher: string }; Returns: string[] }
+      free_slots: { Args: { p_days?: number; p_from: string; p_teacher: string; p_minutes?: number }; Returns: string[] }
       mark_session_missed: { Args: { p_booking: string }; Returns: undefined }
       my_teacher_id: { Args: Record<string, never>; Returns: string | null }
       price_list: { Args: { p_family: string }; Returns: { amount: number; currency: string; teacher_id: string }[] }

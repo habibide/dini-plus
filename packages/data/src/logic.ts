@@ -1,5 +1,5 @@
 import {
-  DAY, ESCROW_HOURS, HOUR, generateSlots, zonedParts,
+  COURSE_MINUTES, DAY, ESCROW_HOURS, HOUR, generateSlots, zonedParts,
   type Booking, type CurrencyCode, type LanguageId, type Learner, type PaymentMethod, type PlanId, type SubjectId, type Subscription, type Teacher,
 } from '@dini/core'
 
@@ -57,7 +57,7 @@ export function filterTeachers(list: TeacherCard[], f: TeacherFilters, tz: strin
     (!f.level || t.levels.includes(f.level as never)) &&
     (!f.ageGroup || t.ageGroups.includes(f.ageGroup as never)) &&
     (!f.maxPrice || t.price.amount <= f.maxPrice) &&
-    (!f.timeOfDay || generateSlots(t.availability, t.timezone, now, 7, { leadMs: 0 }).some((at) => {
+    (!f.timeOfDay || generateSlots(t.availability, t.timezone, now, 7, { leadMs: 0, duration: COURSE_MINUTES }).some((at) => {
       const hour = zonedParts(at, tz).minutes / 60
       return f.timeOfDay === 'morning' ? hour < 12 : f.timeOfDay === 'afternoon' ? hour >= 12 && hour < 18 : hour >= 18
     })))

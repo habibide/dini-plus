@@ -29,6 +29,8 @@ export default function BookScreen() {
   const q = quote.data
   const total = !q ? 0 : choice === 'trial' ? q.trial : choice === 'credit' ? 0 : q.plans.find((p) => p.id === choice)!.total
   const pay = method ?? q?.payments[0]
+  // Essai déjà fait avec cet enseignant : on propose le forfait en cours, sinon la première formule.
+  if (q && !q.trialAvailable && choice === 'trial') setChoice(q.credit ? 'credit' : q.plans[0].id)
 
   async function confirm() {
     setError(undefined)
@@ -62,8 +64,8 @@ export default function BookScreen() {
         {step === 1 && q && <>
           <T tone="h2">Quelle formule&nbsp;?</T>
           {q.credit && <Option on={choice === 'credit'} onPress={() => setChoice('credit')} title="Utiliser mon forfait" detail={`${q.credit.remaining} ${q.credit.remaining > 1 ? 'séances restantes' : 'séance restante'}`} right="Inclus" />}
-          <Option on={choice === 'trial'} onPress={() => setChoice('trial')} title="Séance d’essai, 30 min" detail="Pour tester le niveau et l’entente" right={formatMoney(q.trial, q.currency)} />
-          {q.plans.map((p) => <Option key={p.id} on={choice === p.id} onPress={() => setChoice(p.id)} title={`${p.label.fr}, ${p.sessions} séances`} detail={`${p.usage.fr}. Par mois.`} right={formatMoney(p.total, q.currency)} />)}
+          {q.trialAvailable && <Option on={choice === 'trial'} onPress={() => setChoice('trial')} title={`Séance d’essai, ${q.minutes.trial} min`} detail="Pour tester le niveau et faire connaissance. Une seule par enseignant." right={formatMoney(q.trial, q.currency)} />}
+          {q.plans.map((p) => <Option key={p.id} on={choice === p.id} onPress={() => setChoice(p.id)} title={`${p.label.fr}, ${p.sessions} cours de ${q.minutes.course} min`} detail={`${p.usage.fr}. Par mois.`} right={formatMoney(p.total, q.currency)} />)}
           <T tone="muted">Montants indicatifs, en attente de l’étude tarifaire.</T>
         </>}
 

@@ -91,7 +91,7 @@ function TeacherRow({ t }: { t: TeacherCard }) {
         </dl>
       </div>
       <div className="col-span-2 flex flex-col items-start gap-2 sm:col-span-1">
-        <span><strong className="font-display text-2xl text-green"><Money {...t.price} /></strong> <span className="text-sm text-muted">la séance de 30 min</span></span>
+        <span><strong className="font-display text-2xl text-green"><Money {...t.price} /></strong> <span className="text-sm text-muted">le cours de 50 min</span></span>
         <Stars value={t.rating} count={t.reviews.length} />
         <RecitationPreview seed={t.id} />
         <Link href={`/enseignants/${t.id}`} className={cx(buttonCls.ghost, 'min-h-10 w-full')}>Voir le profil</Link>

@@ -23,7 +23,7 @@ function Editor({ initial, timezone }: { initial: Teacher['availability']; timez
     <div className="mx-auto flex max-w-4xl flex-col gap-5 px-5 py-8">
       <Link href="/enseignant" className="text-sm text-muted hover:text-ink">Retour à l’espace enseignant</Link>
       <h1 className="font-display text-3xl">Mes disponibilités</h1>
-      <p>Heures de {timezone.split('/')[1]?.replace('_', ' ')}. Les familles voient ces créneaux dans leur propre fuseau, par séances de 30 minutes, au plus tôt 2 h à l’avance.</p>
+      <p>Heures de {timezone.split('/')[1]?.replace('_', ' ')}. Les familles voient ces créneaux dans leur propre fuseau, pour des cours de 50 minutes (30 minutes pour un essai), avec un départ possible toutes les demi-heures, au plus tôt 2 h à l’avance.</p>
       <AvailabilityEditor value={rules} onChange={(v) => { setRules(v); save.reset() }} />
       {overlapping && <FormError message="Deux plages se chevauchent le même jour." />}
       <FormError message={save.error?.message} />

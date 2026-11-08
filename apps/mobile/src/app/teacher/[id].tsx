@@ -34,7 +34,7 @@ export default function TeacherScreen() {
         </View>
         <Badges t={t} />
         <View style={{ backgroundColor: colors.leaf, padding: 12, gap: 2 }}>
-          <T><T style={{ fontFamily: font.display, fontSize: 20, color: colors.green }}>{formatMoney(t.price.amount, t.price.currency)}</T> la séance de 30 min</T>
+          <T><T style={{ fontFamily: font.display, fontSize: 20, color: colors.green }}>{formatMoney(t.price.amount, t.price.currency)}</T> le cours de 50 min</T>
           <T tone="muted">Séance d’essai à {formatMoney(trialPrice(t.price.amount, t.price.currency), t.price.currency)}</T>
         </View>
       </View>

@@ -1,6 +1,6 @@
 import { country, type Country, type CurrencyCode } from './catalog'
 
-// L'enseignant publie deux tarifs par séance de 30 min : local (FCFA) et international (EUR).
+// L'enseignant publie deux tarifs par cours de 50 min : local (FCFA) et international (EUR).
 // Les autres devises en sont dérivées avec des taux de démonstration, fixes, à remplacer.
 export const DEMO_RATES = { XOF_TO_GMD: 0.115, EUR_TO_USD: 1.08, EUR_TO_CAD: 1.5 } as const
 

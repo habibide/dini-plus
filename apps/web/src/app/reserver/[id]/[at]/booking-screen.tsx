@@ -48,6 +48,8 @@ export function BookingScreen() {
   const pay = method ?? q?.payments[0]
 
   if (learnerId === undefined && learner) setLearnerId(learner.id)
+  // Essai déjà fait avec cet enseignant : on propose le forfait en cours, sinon la première formule.
+  if (q && !q.trialAvailable && choice === 'trial') setChoice(q.credit ? 'credit' : q.plans[0].id)
 
   async function confirm() {
     setError(undefined)
@@ -110,13 +112,13 @@ export function BookingScreen() {
                   <span className="text-sm text-muted">{q.credit.remaining} {q.credit.remaining > 1 ? 'séances restantes' : 'séance restante'} ce mois-ci</span>
                 </Option>
               )}
-              <Option on={choice === 'trial'} onClick={() => setChoice('trial')}>
-                <strong>Séance d’essai, 30 min</strong><span className="row-span-2 font-display text-lg text-green"><Money amount={q.trial} currency={q.currency} /></span>
-                <span className="text-sm text-muted">Pour tester le niveau et l’entente. L’enseignant est rémunéré.</span>
-              </Option>
+              {q.trialAvailable && <Option on={choice === 'trial'} onClick={() => setChoice('trial')}>
+                <strong>Séance d’essai, {q.minutes.trial} min</strong><span className="row-span-2 font-display text-lg text-green"><Money amount={q.trial} currency={q.currency} /></span>
+                <span className="text-sm text-muted">Pour tester le niveau et faire connaissance. Une seule par enseignant ; l’enseignant est rémunéré.</span>
+              </Option>}
               {q.plans.map((p) => (
                 <Option key={p.id} on={choice === p.id} onClick={() => setChoice(p.id)}>
-                  <strong>{p.label.fr}, {p.sessions} séances par mois</strong>
+                  <strong>{p.label.fr}, {p.sessions} cours de {q.minutes.course} min par mois</strong>
                   <span className="row-span-2 font-display text-lg text-green"><Money amount={p.total} currency={q.currency} /><small className="font-sans text-xs text-muted"> /mois</small></span>
                   <span className="text-sm text-muted">{p.usage.fr}. Reconduit chaque mois, annulable à tout moment.</span>
                 </Option>
