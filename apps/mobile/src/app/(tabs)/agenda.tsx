@@ -6,6 +6,7 @@ import { ActivityIndicator, Pressable, RefreshControl, ScrollView, View } from '
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { SignInPrompt } from '@/lib/auth'
 import { Section, T, font } from '@/lib/ui'
+import { JoinButton } from '@/lib/video'
 
 const STATUS = {
   draft: ['Candidature à compléter', 'Remplissez votre profil sur le site DINI (matières, tarifs, diplômes, disponibilités), puis envoyez-le.'],
@@ -69,12 +70,14 @@ export default function Agenda() {
 
 function Row({ b, highlight }: { b: AgendaItem; highlight?: boolean }) {
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+  const now = Date.now()
   return (
     <Pressable accessibilityRole="button" onPress={() => router.push(`/session/${b.id}`)}
       style={({ pressed }) => ({ padding: 14, gap: 3, borderWidth: 1, borderRadius: 4, borderColor: highlight ? colors.ochre : colors.line, backgroundColor: pressed ? colors.leaf : colors.white })}>
       <T style={{ fontFamily: font.semibold, textTransform: 'capitalize' }}>{formatDateTime(b.startsAt, tz)}</T>
       <T tone="muted">{b.learner.name} · {subject(b.subject).label.fr}{b.kind === 'trial' ? ' · essai' : ''}</T>
       {highlight && <T style={{ color: colors.green, fontFamily: font.semibold }}>Écrire le compte rendu</T>}
+      {!highlight && b.startsAt - now < 60 * 60_000 && <JoinButton booking={b} tz={tz} style={{ marginTop: 6 }} />}
     </Pressable>
   )
 }

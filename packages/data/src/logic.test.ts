@@ -44,4 +44,11 @@ describe('buildDashboard', () => {
     expect(d.awaitingValidation[0].releaseAt).toBe(NOW - 19 * HOUR + 48 * HOUR)
     expect(d.progress).toEqual([{ surah: 112, reached: 4 }])
   })
+
+  it('laisse 48 h à la famille pour contester une absence signalée', () => {
+    const missed: Booking = { ...base, id: 'b5', startsAt: NOW - 2 * HOUR, status: 'missed', deliveredAt: NOW - HOUR }
+    const [x] = buildDashboard([learner], [...bookings, missed], [], NOW)
+    expect(x.awaitingValidation.map((b) => b.id)).toEqual(['b3', 'b5'])
+    expect(buildDashboard([learner], [missed], [], NOW + 48 * HOUR)[0].awaitingValidation).toEqual([])
+  })
 })

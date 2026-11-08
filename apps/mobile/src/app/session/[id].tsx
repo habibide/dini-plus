@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native'
 import { FormError, Input } from '@/lib/auth'
 import { Button, Chip, T } from '@/lib/ui'
+import { JoinButton } from '@/lib/video'
 
 export default function SessionScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
@@ -27,6 +28,7 @@ export default function SessionScreen() {
         <T tone="h1">{b.learner.name}</T>
         <T tone="muted" style={{ textTransform: 'capitalize' }}>{formatDateTime(b.startsAt, tz)} · {subject(b.subject).label.fr}</T>
         <T>Objectif : {b.learner.goals}</T>
+        {b.status === 'scheduled' && <JoinButton booking={b} tz={tz} />}
         {b.status !== 'scheduled' ? <T style={{ backgroundColor: colors.leaf, padding: 12 }}>Cette séance est terminée.</T>
           : !started ? <T style={{ backgroundColor: colors.leaf, padding: 12 }}>Le compte rendu s’écrit après la séance.</T>
           : <>

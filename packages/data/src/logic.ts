@@ -1,5 +1,5 @@
 import {
-  DAY, escrowState, generateSlots, zonedParts,
+  DAY, ESCROW_HOURS, HOUR, generateSlots, zonedParts,
   type Booking, type CurrencyCode, type LanguageId, type Learner, type PaymentMethod, type PlanId, type SubjectId, type Subscription, type Teacher,
 } from '@dini/core'
 
@@ -28,6 +28,9 @@ export type BookingDraft = {
   choice: BookingChoice
   method?: PaymentMethod
 }
+
+/** La salle vidéo ouvre 10 minutes avant le début et ferme 15 minutes après la fin prévue (même règle qu'en base). */
+export const videoWindow = (b: { startsAt: number; minutes: number }) => ({ opensAt: b.startsAt - 10 * 60_000, closesAt: b.startsAt + (b.minutes + 15) * 60_000 })
 
 export class SlotTakenError extends Error {
   constructor() { super('Ce créneau vient d’être réservé par quelqu’un d’autre.') }
@@ -73,7 +76,9 @@ export function buildDashboard(learners: Learner[], bookings: Booking[], subscri
       attendance: { present: held.filter((b) => b.status !== 'missed').length, held: held.length, marks: held.map((b) => (b.status === 'missed' ? 'missed' : 'present')) },
       progress: [...best.entries()].map(([surah, reached]) => ({ surah, reached })),
       lastReport: [...mine].reverse().find((b) => b.report),
-      awaitingValidation: mine.filter((b) => b.status === 'delivered').map((b) => ({ ...b, releaseAt: escrowState(b, now).releaseAt! })),
+      // Séances effectuées ou absences signalées : la famille a 48 h pour contester avant le paiement de l'enseignant.
+      awaitingValidation: mine.filter((b) => (b.status === 'delivered' || b.status === 'missed') && b.deliveredAt !== undefined && b.deliveredAt + ESCROW_HOURS * HOUR > now)
+        .map((b) => ({ ...b, releaseAt: b.deliveredAt! + ESCROW_HOURS * HOUR })),
       disputed: mine.filter((b) => b.status === 'disputed'),
       subscription: subscriptions.find((s) => s.learnerId === learner.id),
     }

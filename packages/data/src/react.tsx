@@ -173,6 +173,7 @@ export const useSubmitApplication = () => useWrite((api, _: void) => api.submitA
 export const useSetAvailability = () => useWrite((api, rules: Teacher['availability']) => api.setAvailability(rules))
 export const useDeliverSession = () => useWrite((api, a: { id: string; report: Report }) => api.deliverSession(a.id, a.report))
 export const useMarkMissed = () => useWrite((api, id: string) => api.markMissed(id))
+export const useJoinSession = () => useMutation({ mutationFn: (a: { api: DiniApi; bookingId: string }) => a.api.joinSession(a.bookingId) })
 
 // Modération ------------------------------------------------------------------------------
 

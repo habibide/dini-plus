@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 import { Modal, Money, Monogram, buttonCls, cx } from '@/components/ui'
+import { JoinButton } from '@/components/video'
 
 export function DashboardScreen() {
   const family = useFamily()
@@ -61,7 +62,7 @@ function LearnerBlock({ d, tz }: { d: LearnerDashboard; tz: string }) {
             <p className="font-display text-xl first-letter:uppercase">{formatDateTime(d.next.startsAt, tz)}</p>
             <p className="text-sm text-muted">{d.next.kind === 'trial' ? 'Séance d’essai. ' : ''}Dans votre fuseau horaire.</p>
             <div className="mt-1 flex flex-wrap gap-2">
-              <button type="button" className={cx(buttonCls.primary, 'min-h-10')}>Rejoindre le cours</button>
+              <JoinButton booking={d.next} tz={tz} />
               <button type="button" className={cx(buttonCls.ghost, 'min-h-10')} onClick={() => setToCancel(d.next!)}>Annuler ou reporter</button>
             </div>
           </> : <><p className="text-muted">Aucune séance prévue.</p><Link href="/enseignants" className={cx(buttonCls.primary, 'min-h-10 self-start')}>Réserver une séance</Link></>}
@@ -106,8 +107,10 @@ function LearnerBlock({ d, tz }: { d: LearnerDashboard; tz: string }) {
       </div>
       {d.awaitingValidation.map((b) => (
         <div key={b.id} className="flex flex-wrap items-center justify-between gap-3 border-t border-line bg-leaf px-6 py-3">
-          <span><strong className="first-letter:uppercase">Séance du {formatDay(b.startsAt, tz)}.</strong> Sans signalement dans les {Math.max(1, Math.ceil((b.releaseAt - now) / HOUR))} h, l’enseignant sera payé.</span>
-          <button type="button" className={cx(buttonCls.ghost, 'min-h-10')} onClick={() => setToDispute(b)}>Signaler un problème</button>
+          {b.status === 'missed'
+            ? <span><strong className="first-letter:uppercase">Absence signalée par l’enseignant le {formatDay(b.startsAt, tz)}.</strong> Sans contestation dans les {Math.max(1, Math.ceil((b.releaseAt - now) / HOUR))} h, la séance lui sera payée.</span>
+            : <span><strong className="first-letter:uppercase">Séance du {formatDay(b.startsAt, tz)}.</strong> Sans signalement dans les {Math.max(1, Math.ceil((b.releaseAt - now) / HOUR))} h, l’enseignant sera payé.</span>}
+          <button type="button" className={cx(buttonCls.ghost, 'min-h-10')} onClick={() => setToDispute(b)}>{b.status === 'missed' ? 'Contester l’absence' : 'Signaler un problème'}</button>
         </div>
       ))}
       {d.disputed.map((b) => (

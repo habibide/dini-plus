@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { SignInPrompt } from '@/lib/auth'
+import { JoinButton } from '@/lib/video'
 import { Button, Section, T, font } from '@/lib/ui'
 
 export default function Suivi() {
@@ -51,8 +52,10 @@ function LearnerView({ d, tz }: { d: LearnerDashboard; tz: string }) {
     <ScrollView contentInsetAdjustmentBehavior="never" contentContainerStyle={{ paddingBottom: 110 }}>
       {d.awaitingValidation.map((b) => (
         <View key={b.id} style={{ padding: 16, paddingHorizontal: 20, gap: 10, backgroundColor: colors.leaf, borderBottomWidth: 1, borderColor: colors.line }}>
-          <T><T style={{ fontFamily: font.semibold }}>Séance du {formatDay(b.startsAt, tz)}.</T> Sans signalement dans les {Math.max(1, Math.ceil((b.releaseAt - now) / HOUR))} h, l’enseignant sera payé.</T>
-          <Button title="Signaler un problème" kind="ghost" onPress={() => dispute.mutate(b.id)} style={{ alignSelf: 'flex-start', minHeight: 40 }} />
+          {b.status === 'missed'
+            ? <T><T style={{ fontFamily: font.semibold }}>Absence signalée par l’enseignant le {formatDay(b.startsAt, tz)}.</T> Sans contestation dans les {Math.max(1, Math.ceil((b.releaseAt - now) / HOUR))} h, la séance lui sera payée.</T>
+            : <T><T style={{ fontFamily: font.semibold }}>Séance du {formatDay(b.startsAt, tz)}.</T> Sans signalement dans les {Math.max(1, Math.ceil((b.releaseAt - now) / HOUR))} h, l’enseignant sera payé.</T>}
+          <Button title={b.status === 'missed' ? 'Contester l’absence' : 'Signaler un problème'} kind="ghost" onPress={() => dispute.mutate(b.id)} style={{ alignSelf: 'flex-start', minHeight: 40 }} />
         </View>
       ))}
       {d.disputed.map((b) => (
@@ -62,7 +65,7 @@ function LearnerView({ d, tz }: { d: LearnerDashboard; tz: string }) {
         {d.next ? <>
           <T style={{ fontFamily: font.display, fontSize: 20, textTransform: 'capitalize' }}>{formatDateTime(d.next.startsAt, tz)}</T>
           <T tone="muted">{d.next.kind === 'trial' ? 'Séance d’essai, ' : ''}à votre heure</T>
-          <Button title="Rejoindre le cours" style={{ alignSelf: 'flex-start', minHeight: 44 }} />
+          <JoinButton booking={d.next} tz={tz} />
         </> : <>
           <T tone="muted">Aucune séance prévue.</T>
           <Button title="Trouver un enseignant" onPress={() => router.navigate('/search')} style={{ alignSelf: 'flex-start' }} />

@@ -7,6 +7,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { Field, FormError, inputCls } from '@/components/auth'
 import { Money, buttonCls } from '@/components/ui'
+import { JoinButton } from '@/components/video'
 
 export function SessionScreen() {
   const { id } = useParams<{ id: string }>()
@@ -34,13 +35,14 @@ export function SessionScreen() {
         <p className="text-muted first-letter:uppercase">
           {formatDateTime(b.startsAt, tz)} · {subject(b.subject).label.fr}{b.kind === 'trial' ? ' · séance d’essai' : ''} · <Money amount={b.amount} currency={b.currency} />
         </p>
+        {b.status === 'scheduled' && <JoinButton booking={b} tz={tz} className="mt-2 self-start" />}
         <p>Niveau {LEVELS.find((l) => l.id === b.learner.level)?.label.fr.toLowerCase()}. Objectif : {b.learner.goals}</p>
       </header>
 
       {b.status !== 'scheduled' ? (
         <p className="bg-leaf px-4 py-3">{b.report ? <>Compte rendu envoyé : <strong>{b.report.covered}</strong></> : 'Cette séance est terminée.'}</p>
       ) : !started ? (
-        <p className="bg-leaf px-4 py-3">Le compte rendu s’écrit après la séance. Le lien du cours apparaîtra ici.</p>
+        <p className="bg-leaf px-4 py-3">Le compte rendu s’écrit après la séance.</p>
       ) : (
         <form className="flex flex-col gap-5 border border-line bg-white p-6" onSubmit={(e) => { e.preventDefault(); deliver.mutate({ id: b.id, report: r }, { onSuccess: done }) }}>
           <h2 className="font-display text-xl">Compte rendu pour la famille</h2>

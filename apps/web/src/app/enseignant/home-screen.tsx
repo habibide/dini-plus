@@ -6,6 +6,7 @@ import { useAgenda, useEarnings, useMyTeacher, useStartApplication } from '@dini
 import Link from 'next/link'
 import { StatusBanner } from '@/components/teacher'
 import { Money, buttonCls, cx } from '@/components/ui'
+import { JoinButton } from '@/components/video'
 
 const euros = (n: number) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(n)
 
@@ -96,7 +97,10 @@ function SessionList({ items, action }: { items: AgendaItem[]; action?: string }
               {b.learner.name}, {new Date().getFullYear() - b.learner.birthYear} ans · {subject(b.subject).label.fr}{b.kind === 'trial' ? ' · séance d’essai' : ''} · <Money amount={b.amount} currency={b.currency} />
             </span>
           </div>
-          <Link href={`/enseignant/seances/${b.id}`} className={cx(action ? buttonCls.primary : buttonCls.ghost, 'min-h-10')}>{action ?? 'Détails'}</Link>
+          <div className="flex flex-wrap gap-2">
+            {b.status === 'scheduled' && <JoinButton booking={b} tz={tz} />}
+            <Link href={`/enseignant/seances/${b.id}`} className={cx(action ? buttonCls.primary : buttonCls.ghost, 'min-h-10')}>{action ?? 'Détails'}</Link>
+          </div>
         </li>
       ))}
     </ul>

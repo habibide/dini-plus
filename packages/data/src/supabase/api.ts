@@ -76,6 +76,10 @@ const MESSAGES: Record<string, string> = {
   report_required: 'Indiquez au moins ce qui a été travaillé.',
   note_required: 'Expliquez le refus : le candidat verra ce message.',
   not_under_review: 'Cette candidature n’est plus en attente.',
+  room_not_open: 'La salle ouvre 10 minutes avant le début du cours.',
+  room_closed: 'Ce cours est terminé : la salle est fermée.',
+  video_not_configured: 'La visioconférence n’est pas encore activée sur DINI.',
+  video_unavailable: 'Le service de visioconférence ne répond pas. Réessayez dans un instant.',
   'Invalid login credentials': 'E-mail ou mot de passe incorrect.',
   'Email not confirmed': 'Confirmez d’abord votre adresse avec le lien reçu par e-mail.',
   'User already registered': 'Un compte existe déjà avec cette adresse. Connectez-vous.',
@@ -416,6 +420,17 @@ export function createSupabaseApi(client: DiniClient, storage: KeyValueStorage) 
         ...toBooking(r),
         learner: { name: r.learners.name, birthYear: r.learners.birth_year, goals: r.learners.goals, level: r.learners.level as Learner['level'] },
       }))
+    },
+
+    /** Adresse personnelle de la salle vidéo de la séance (enseignant ou famille), ouverte 10 min avant le début. */
+    async joinSession(bookingId: string): Promise<{ url: string; role: 'teacher' | 'family' }> {
+      const { data, error } = await client.functions.invoke('join-session', { body: { bookingId } })
+      if (error) {
+        const ctx = (error as { context?: Response }).context
+        const body = ctx && typeof ctx.json === 'function' ? await ctx.json().catch(() => null) : null
+        fail({ message: body?.error ?? error.message })
+      }
+      return data as { url: string; role: 'teacher' | 'family' }
     },
 
     async deliverSession(bookingId: string, report: Report) {
