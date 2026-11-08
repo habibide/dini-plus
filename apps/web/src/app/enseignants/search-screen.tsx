@@ -1,8 +1,8 @@
 'use client'
 
-import { AGE_GROUPS, LANGUAGES, LEVELS, RIWAYAT, SUBJECTS, subject, type LanguageId, type SubjectId } from '@dini/core'
+import { AGE_GROUPS, LANGUAGES, LEVELS, RIWAYAT, SUBJECTS, country, subject, type LanguageId, type SubjectId } from '@dini/core'
 import type { TeacherCard, TeacherFilters } from '@dini/data'
-import { useFamily, useTeachers } from '@dini/data/react'
+import { usePlace, useTeachers } from '@dini/data/react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useState, type ReactNode } from 'react'
@@ -25,9 +25,9 @@ export function SearchScreen() {
   const [sheet, setSheet] = useState(false)
   const toggle = <K extends keyof TeacherFilters>(k: K, v: TeacherFilters[K]) => setF((x) => ({ ...x, [k]: x[k] === v ? undefined : v }))
   const teachers = useTeachers(f)
-  const family = useFamily()
+  const { place } = usePlace()
   const active = Object.values(f).filter(Boolean).length
-  const tzLabel = family.data ? family.data.country.timezones.find((t) => t.id === family.data.family.timezone)?.label : ''
+  const tzLabel = country(place.country).timezones.find((t) => t.id === place.timezone)?.label
 
   const filters = (
     <div className="flex flex-col gap-5">

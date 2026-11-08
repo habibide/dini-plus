@@ -1,9 +1,10 @@
 import { PAYMENT_LABELS, colors, formatDay, formatMoney, formatTime, type PaymentMethod } from '@dini/core'
 import { SlotTakenError, type BookingChoice } from '@dini/data'
-import { useCreateBooking, useFamily, useQuote, useTeacher } from '@dini/data/react'
+import { useAddLearner, useCreateBooking, useFamily, useQuote, useTeacher } from '@dini/data/react'
 import { router, useLocalSearchParams } from 'expo-router'
 import { useState } from 'react'
 import { ActivityIndicator, ScrollView, View } from 'react-native'
+import { Input } from '@/lib/auth'
 import { Button, Option, T, font } from '@/lib/ui'
 
 export default function BookScreen() {
@@ -18,6 +19,8 @@ export default function BookScreen() {
   const [error, setError] = useState<string>()
   const quote = useQuote(id, learnerId)
   const create = useCreateBooking()
+  const addLearner = useAddLearner()
+  const [newName, setNewName] = useState('')
 
   if (!teacher.data || !family.data) return <ActivityIndicator style={{ marginTop: 40 }} color={colors.green} />
   const t = teacher.data
@@ -30,7 +33,7 @@ export default function BookScreen() {
   async function confirm() {
     setError(undefined)
     try {
-      await create.mutateAsync({ familyId: fam.id, learnerId: learnerId!, teacherId: t.id, subject: t.subjects[0], startsAt: at, choice, method: pay })
+      await create.mutateAsync({ learnerId: learnerId!, teacherId: t.id, subject: t.subjects[0], startsAt: at, choice, method: pay })
       router.dismissAll()
       router.navigate('/suivi')
     } catch (e) {
@@ -51,6 +54,9 @@ export default function BookScreen() {
         {step === 0 && <>
           <T tone="h2">Pour qui est ce cours&nbsp;?</T>
           {learners.map((l) => <Option key={l.id} on={learnerId === l.id} onPress={() => { setLearnerId(l.id); setChoice('trial') }} title={l.name} detail={l.goals} />)}
+          <Input label={learners.length ? 'Ajouter un élève' : 'Prénom et nom de l’élève'} value={newName} onChangeText={setNewName} placeholder="Vous-même ou votre enfant" />
+          <Button title={addLearner.isPending ? 'Ajout…' : 'Ajouter'} kind="ghost" disabled={!newName.trim() || addLearner.isPending}
+            onPress={() => addLearner.mutate({ name: newName, birthYear: new Date().getFullYear() - 8 }, { onSuccess: (l) => { setLearnerId(l.id); setNewName('') } })} style={{ alignSelf: 'flex-start' }} />
         </>}
 
         {step === 1 && q && <>

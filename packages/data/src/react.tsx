@@ -1,27 +1,79 @@
+import { COUNTRIES, type Report, type Teacher } from '@dini/core'
 import { MutationCache, QueryCache, QueryClient, QueryClientProvider, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { createContext, useContext, useMemo, useState, type ReactNode } from 'react'
-import type { DiniApi, BookingDraft, TeacherFilters } from './api'
-import type { Report } from '@dini/core'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import type { KeyValueStorage } from './api'
+import type { BookingDraft, TeacherFilters } from './logic'
+import type { Account, DiniApi, OAuthProvider, Place, TeacherApplication } from './supabase/api'
 
-type Session = { api: DiniApi; familyId: string; setFamilyId: (id: string) => void; error: string | null; clearError: () => void }
+type Session = {
+  api: DiniApi
+  /** undefined pendant le chargement, null si personne n'est connecté. */
+  account: Account | null | undefined
+  place: Place
+  setPlace: (p: Place) => void
+  error: string | null
+  clearError: () => void
+}
 const Ctx = createContext<Session | null>(null)
 
-export function DiniProvider({ api, initialFamilyId = 'fam-diop', children }: { api: DiniApi; initialFamilyId?: string; children: ReactNode }) {
+const PLACE_KEY = 'dini-place'
+
+/** Pays et fuseau déduits de l'appareil, parmi les pays ouverts ; France par défaut. */
+export function detectPlace(): Place {
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+  const c = COUNTRIES.find((x) => x.timezones.some((t) => t.id === tz))
+  return c ? { country: c.code, timezone: tz } : { country: 'FR', timezone: 'Europe/Paris' }
+}
+
+export function DiniProvider({ api, storage, children }: { api: DiniApi; storage: KeyValueStorage; children: ReactNode }) {
   // Dernière erreur de chargement, affichée par l'application (réseau coupé, accès refusé…).
-  // Les erreurs d'écriture sont aussi montrées par l'écran qui les déclenche, avec un message adapté.
+  // Les erreurs d'écriture sont montrées par l'écran qui les déclenche, avec un message adapté.
   const [error, setError] = useState<string | null>(null)
   const [client] = useState(() => new QueryClient({
     defaultOptions: { queries: { staleTime: 30_000, retry: false } },
     queryCache: new QueryCache({ onError: (e) => setError(e.message), onSuccess: () => setError(null) }),
     mutationCache: new MutationCache({ onSuccess: () => setError(null) }),
   }))
-  const [familyId, setFamilyId] = useState(initialFamilyId)
-  const value = useMemo(() => ({ api, familyId, setFamilyId, error, clearError: () => setError(null) }), [api, familyId, error])
   return (
     <QueryClientProvider client={client}>
-      <Ctx.Provider value={value}>{children}</Ctx.Provider>
+      <SessionProvider api={api} storage={storage} error={error} clearError={() => setError(null)}>{children}</SessionProvider>
     </QueryClientProvider>
   )
+}
+
+function SessionProvider({ api, storage, error, clearError, children }: { api: DiniApi; storage: KeyValueStorage; error: string | null; clearError: () => void; children: ReactNode }) {
+  const qc = useQueryClient()
+  const account = useQuery({ queryKey: ['account'], queryFn: () => api.getAccount(), staleTime: Infinity })
+  useEffect(() => api.onAuthChange(() => { qc.removeQueries({ predicate: (q) => q.queryKey[0] !== 'account' }); qc.invalidateQueries({ queryKey: ['account'] }) }), [api, qc])
+
+  const [place, setPlaceState] = useState<Place>(detectPlace)
+  useEffect(() => {
+    let live = true
+    Promise.resolve(storage.getItem(PLACE_KEY)).then((raw) => {
+      if (!live || !raw) return
+      try { setPlaceState(JSON.parse(raw) as Place) } catch { /* préférence illisible : on garde la détection */ }
+    })
+    return () => { live = false }
+  }, [storage])
+  useEffect(() => { api.setPlace(place) }, [api, place])
+
+  // Un parent connecté : le pays de sa famille fait foi.
+  const uid = account.data?.userId
+  const family = useQuery({ queryKey: ['family', uid], queryFn: () => api.getFamily(), enabled: account.data?.role === 'family' })
+  const famPlace = family.data && { country: family.data.family.country, timezone: family.data.family.timezone }
+  useEffect(() => {
+    if (famPlace) setPlaceState((p) => (p.country === famPlace.country && p.timezone === famPlace.timezone ? p : famPlace))
+  }, [famPlace?.country, famPlace?.timezone]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const setPlace = useCallback((p: Place) => {
+    setPlaceState(p)
+    void storage.setItem(PLACE_KEY, JSON.stringify(p))
+    if (account.data?.role === 'family') void api.setResidence(p.country, p.timezone).then(() => qc.invalidateQueries())
+  }, [api, storage, qc, account.data?.role])
+
+  const value = useMemo(() => ({ api, account: account.isPending ? undefined : account.data ?? null, place, setPlace, error, clearError }),
+    [api, account.isPending, account.data, place, setPlace, error, clearError])
+  return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }
 
 export function useDini() {
@@ -30,19 +82,22 @@ export function useDini() {
   return s
 }
 
-export function useFamily() {
-  const { api, familyId } = useDini()
-  return useQuery({ queryKey: ['family', familyId], queryFn: () => api.getFamily(familyId) })
+export const useAccount = () => useDini().account
+export function usePlace() {
+  const { place, setPlace } = useDini()
+  return { place, setPlace }
 }
 
+// Catalogue ---------------------------------------------------------------------------
+
 export function useTeachers(filters: TeacherFilters) {
-  const { api, familyId } = useDini()
-  return useQuery({ queryKey: ['teachers', familyId, filters], queryFn: () => api.listTeachers(familyId, filters), placeholderData: (prev) => prev })
+  const { api, place } = useDini()
+  return useQuery({ queryKey: ['teachers', place, filters], queryFn: () => api.listTeachers(place, filters), placeholderData: (prev) => prev })
 }
 
 export function useTeacher(id: string) {
-  const { api, familyId } = useDini()
-  return useQuery({ queryKey: ['teacher', familyId, id], queryFn: () => api.getTeacher(familyId, id) })
+  const { api, place } = useDini()
+  return useQuery({ queryKey: ['teacher', place, id], queryFn: () => api.getTeacher(place, id) })
 }
 
 export function useSlots(teacherId: string, weekOffset: number) {
@@ -50,33 +105,80 @@ export function useSlots(teacherId: string, weekOffset: number) {
   return useQuery({ queryKey: ['slots', teacherId, weekOffset], queryFn: () => api.getSlots(teacherId, weekOffset) })
 }
 
+// Famille -------------------------------------------------------------------------------
+
+export function useFamily() {
+  const { api, account } = useDini()
+  return useQuery({ queryKey: ['family', account?.userId], queryFn: () => api.getFamily(), enabled: !!account })
+}
+
 export function useQuote(teacherId: string, learnerId: string | undefined) {
-  const { api, familyId } = useDini()
-  return useQuery({ queryKey: ['quote', familyId, teacherId, learnerId], queryFn: () => api.quote(familyId, teacherId, learnerId!), enabled: !!learnerId })
+  const { api, account } = useDini()
+  return useQuery({ queryKey: ['quote', account?.userId, teacherId, learnerId], queryFn: () => api.quote(teacherId, learnerId!), enabled: !!account && !!learnerId })
 }
 
 export function useDashboard() {
-  const { api, familyId } = useDini()
-  return useQuery({ queryKey: ['dashboard', familyId], queryFn: () => api.getDashboard(familyId) })
+  const { api, account } = useDini()
+  return useQuery({ queryKey: ['dashboard', account?.userId], queryFn: () => api.getDashboard(), enabled: !!account })
 }
 
 export function useBookingDetails(id: string) {
-  const { api } = useDini()
-  return useQuery({ queryKey: ['booking', id], queryFn: () => api.getBooking(id) })
+  const { api, account } = useDini()
+  return useQuery({ queryKey: ['booking', id], queryFn: () => api.getBooking(id), enabled: !!account })
 }
 
 /** Toute écriture invalide l'ensemble du cache : simple et sûr tant que les volumes restent petits. */
-function useWrite<A, R>(fn: (api: DiniApi, familyId: string, arg: A) => Promise<R>) {
-  const { api, familyId } = useDini()
+function useWrite<A, R>(fn: (api: DiniApi, arg: A) => Promise<R>) {
+  const { api } = useDini()
   const qc = useQueryClient()
-  return useMutation({ mutationFn: (arg: A) => fn(api, familyId, arg), onSettled: () => qc.invalidateQueries() })
+  return useMutation({ mutationFn: (arg: A) => fn(api, arg), onSettled: () => qc.invalidateQueries() })
 }
 
-export const useCreateBooking = () => useWrite((api, _f, draft: BookingDraft) => api.createBooking(draft))
-export const useCancelBooking = () => useWrite((api, _f, id: string) => api.cancelBooking(id))
-export const useDisputeBooking = () => useWrite((api, _f, id: string) => api.disputeBooking(id))
-export const useAddLearner = () => useWrite((api, familyId, a: { name: string; birthYear: number }) => api.addLearner(familyId, a.name, a.birthYear))
-export const useSetResidence = () => useWrite((api, familyId, a: { country: 'SN' | 'GM' | 'FR' | 'US' | 'CA'; timezone: string }) => api.setResidence(familyId, a.country, a.timezone))
-export const useDeliverBooking = () => useWrite((api, _f, a: { id: string; report: Report }) => api.deliverBooking(a.id, a.report))
-export const useAdvanceClock = () => useWrite((api, familyId, hours: number) => api.advanceClock(familyId, hours))
-export const useResetDemo = () => useWrite((api, familyId) => api.reset(familyId))
+export const useCreateBooking = () => useWrite((api, draft: BookingDraft) => api.createBooking(draft))
+export const useCancelBooking = () => useWrite((api, id: string) => api.cancelBooking(id))
+export const useDisputeBooking = () => useWrite((api, id: string) => api.disputeBooking(id))
+export const useAddLearner = () => useWrite((api, a: { name: string; birthYear: number }) => api.addLearner(a.name, a.birthYear))
+
+// Connexion -----------------------------------------------------------------------------
+
+export const useSignIn = () => useWrite((api, a: { email: string; password: string }) => api.signIn(a.email, a.password))
+export const useSignUp = () => useWrite((api, a: { name?: string; email: string; password: string; asTeacher: boolean; redirectTo?: string }) => api.signUp(a))
+export const useSignOut = () => useWrite((api, _: void) => api.signOut())
+export const useSendPasswordReset = () => useWrite((api, a: { email: string; redirectTo: string }) => api.sendPasswordReset(a.email, a.redirectTo))
+export const useUpdatePassword = () => useWrite((api, password: string) => api.updatePassword(password))
+export const useOAuthUrl = () => useMutation({
+  mutationFn: (a: { api: DiniApi; provider: OAuthProvider; redirectTo: string; asTeacher?: boolean }) => a.api.oauthUrl(a.provider, a.redirectTo, a.asTeacher),
+})
+
+// Espace enseignant -------------------------------------------------------------------------
+
+export function useMyTeacher() {
+  const { api, account } = useDini()
+  return useQuery({ queryKey: ['my-teacher', account?.userId], queryFn: () => api.getMyTeacher(), enabled: !!account })
+}
+
+export function useAgenda() {
+  const { api, account } = useDini()
+  return useQuery({ queryKey: ['agenda', account?.userId], queryFn: () => api.getAgenda(), enabled: !!account })
+}
+
+export function useEarnings() {
+  const { api, account } = useDini()
+  return useQuery({ queryKey: ['earnings', account?.userId], queryFn: () => api.getEarnings(), enabled: !!account })
+}
+
+export const useStartApplication = () => useWrite((api, _: void) => api.startApplication())
+export const useSaveApplication = () => useWrite((api, input: TeacherApplication) => api.saveApplication(input))
+export const useSubmitApplication = () => useWrite((api, _: void) => api.submitApplication())
+export const useSetAvailability = () => useWrite((api, rules: Teacher['availability']) => api.setAvailability(rules))
+export const useDeliverSession = () => useWrite((api, a: { id: string; report: Report }) => api.deliverSession(a.id, a.report))
+export const useMarkMissed = () => useWrite((api, id: string) => api.markMissed(id))
+
+// Modération ------------------------------------------------------------------------------
+
+export function useApplications() {
+  const { api, account } = useDini()
+  return useQuery({ queryKey: ['applications'], queryFn: () => api.listApplications(), enabled: account?.role === 'moderator' || account?.role === 'admin' })
+}
+
+export const useReviewApplication = () => useWrite((api, a: Parameters<DiniApi['reviewApplication']>[0]) => api.reviewApplication(a))

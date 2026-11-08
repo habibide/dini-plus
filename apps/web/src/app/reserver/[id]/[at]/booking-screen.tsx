@@ -52,7 +52,7 @@ export function BookingScreen() {
   async function confirm() {
     setError(undefined)
     try {
-      const { booking } = await create.mutateAsync({ familyId: fam.id, learnerId: learner!.id, teacherId: t.id, subject: subjectId, startsAt: at, choice, method: pay })
+      const { booking } = await create.mutateAsync({ learnerId: learner!.id, teacherId: t.id, subject: subjectId, startsAt: at, choice, method: pay })
       router.push(`/suivi?reservee=${booking.id}`)
     } catch (e) {
       setError(e instanceof SlotTakenError ? e.message : 'La réservation n’a pas abouti. Réessayez.')

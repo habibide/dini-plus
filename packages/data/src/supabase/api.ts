@@ -3,26 +3,55 @@ import {
   type Booking, type Country, type CurrencyCode, type Family, type Learner, type PaymentMethod, type Report, type Subscription, type Teacher,
 } from '@dini/core'
 import type { PostgrestError, SupabaseClient } from '@supabase/supabase-js'
-import type { DiniApi } from '../api'
+import type { KeyValueStorage } from '../api'
 import { buildDashboard, filterTeachers, SlotTakenError, type BookingDraft, type TeacherCard, type TeacherFilters } from '../logic'
 import type { Database } from './database.types'
 
-// Implémentation Supabase de l'API DINI. Même contrat que createMockApi : les écrans ne changent pas.
-// Les lectures passent par PostgREST (protégé par RLS), les écritures sensibles par des RPC qui recalculent tout côté serveur.
-//
-// Démo : les identifiants 'fam-diop' et 'fam-sarr' désignent des modèles. Chaque visiteur se connecte en anonyme
-// et reçoit sa propre copie de la famille (RPC ensure_demo_family).
+// API DINI sur Supabase. Les lectures passent par PostgREST (protégé par RLS), les écritures sensibles
+// par des RPC qui recalculent tout côté serveur (prix, disponibilités, droits).
 
 export type DiniClient = SupabaseClient<Database>
 
+export type Role = 'family' | 'teacher' | 'moderator' | 'admin'
+export type Account = { userId: string; email: string; name: string; role: Role }
+export type Place = { country: Country['code']; timezone: string }
+export type OAuthProvider = 'google' | 'facebook' | 'apple'
+export type TeacherStatus = 'draft' | 'submitted' | 'approved' | 'rejected'
+
+/** Profil de l'enseignant connecté, y compris pendant la candidature (champs encore vides possibles). */
+export type MyTeacher = Omit<Teacher, 'gender' | 'rates'> & {
+  gender: Teacher['gender'] | null
+  rates: { XOF: number | null; EUR: number | null }
+  status: TeacherStatus
+  reviewNote: string | null
+  published: boolean
+}
+
+export type TeacherApplication = Partial<Pick<Teacher,
+  'name' | 'gender' | 'city' | 'countryLabel' | 'timezone' | 'headline' | 'bio' | 'subjects' | 'arabicTracks' | 'languages' | 'riwayat' | 'madhahib' | 'levels' | 'ageGroups' | 'credentials'
+>> & { rates?: { XOF: number; EUR: number } }
+
+export type AgendaItem = Booking & { learner: Pick<Learner, 'name' | 'birthYear' | 'goals' | 'level'> }
+
+export type Earnings = {
+  hoursTaught: number
+  entries: { bookingId: string | null; at: number; gross: number; currency: CurrencyCode; netEur: number; rate: number }[]
+  releasedEur: number
+  pending: { count: number; releaseAt: number[] }
+}
+
+export type Application = MyTeacher & { submittedAt: number | null }
+
 const TEACHER_COLUMNS = `id, name, gender, city, country_label, timezone, headline, bio, subjects, arabic_tracks, languages, riwayat, madhahib,
-  levels, age_groups, rate_xof, rate_eur, identity_verified, diploma_verified, ijaza_verified, hours_taught, rating, disputes,
+  levels, age_groups, rate_xof, rate_eur, identity_verified, diploma_verified, ijaza_verified, hours_taught, rating, disputes, published,
+  status, review_note, submitted_at,
   teacher_credentials (kind, title, institution, year, riwaya, sanad, position),
   availability_rules (weekday, start_min, end_min),
   reviews (author, rating, body, date_label, position)`
+const PUBLIC_TEACHER_COLUMNS = TEACHER_COLUMNS.replace('status, review_note, submitted_at,', '')
 
 type Row<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Row']
-type TeacherRow = Omit<Row<'teachers'>, 'user_id' | 'published' | 'created_at'> & {
+type TeacherRow = Omit<Row<'teachers'>, 'user_id' | 'created_at'> & {
   teacher_credentials: Row<'teacher_credentials'>[]
   availability_rules: Row<'availability_rules'>[]
   reviews: Row<'reviews'>[]
@@ -35,10 +64,25 @@ const MESSAGES: Record<string, string> = {
   not_cancellable: 'Cette séance ne peut plus être annulée.',
   invalid_payment_method: 'Ce moyen de paiement n’est pas proposé dans votre pays.',
   forbidden: 'Vous n’avez pas accès à cette information.',
+  not_signed_in: 'Connectez-vous pour continuer.',
+  not_a_teacher: 'Ce compte n’a pas de profil enseignant.',
+  application_under_review: 'Votre candidature est en cours d’examen : elle ne peut pas être modifiée pour l’instant.',
+  credentials_locked: 'Vos diplômes ont déjà été vérifiés. Écrivez-nous pour en ajouter un.',
+  not_submittable: 'Cette candidature a déjà été envoyée.',
+  not_started: 'La séance n’a pas encore commencé.',
+  too_early: 'Attendez au moins 10 minutes après le début avant de signaler une absence.',
+  not_scheduled: 'Cette séance n’est plus à venir.',
+  report_required: 'Indiquez au moins ce qui a été travaillé.',
+  note_required: 'Expliquez le refus : le candidat verra ce message.',
+  not_under_review: 'Cette candidature n’est plus en attente.',
+  'Invalid login credentials': 'E-mail ou mot de passe incorrect.',
+  'Email not confirmed': 'Confirmez d’abord votre adresse avec le lien reçu par e-mail.',
+  'User already registered': 'Un compte existe déjà avec cette adresse. Connectez-vous.',
 }
 
-function fail(error: PostgrestError | Error): never {
+function fail(error: { message: string; details?: string | null }): never {
   if (error.message === 'slot_taken') throw new SlotTakenError()
+  if (error.message === 'incomplete_application') throw new Error(`Il manque encore : ${error.details ?? ''}.`)
   throw new Error(MESSAGES[error.message] ?? error.message)
 }
 
@@ -48,31 +92,32 @@ function must<T>(res: { data: T; error: PostgrestError | null }): NonNullable<T>
   return res.data as NonNullable<T>
 }
 
-/** Intervalle Postgres (« 2 days 01:30:00 », « 48:00:00 ») en millisecondes. */
-export function intervalMs(value: string): number {
-  let ms = 0
-  const days = /(-?\d+) days?/.exec(value)
-  if (days) ms += Number(days[1]) * DAY
-  const time = /(-?)(\d+):(\d+):(\d+(?:\.\d+)?)/.exec(value)
-  if (time) ms += (time[1] === '-' ? -1 : 1) * (Number(time[2]) * 3600 + Number(time[3]) * 60 + Number(time[4])) * 1000
-  return ms
+const ms = (iso: string | null) => (iso ? Date.parse(iso) : null)
+
+function toMyTeacher(r: TeacherRow): MyTeacher {
+  return {
+    id: r.id, name: r.name, gender: r.gender as Teacher['gender'] | null, city: r.city, countryLabel: r.country_label, timezone: r.timezone,
+    headline: r.headline, bio: r.bio,
+    subjects: r.subjects as Teacher['subjects'], arabicTracks: r.arabic_tracks as Teacher['arabicTracks'], languages: r.languages as Teacher['languages'],
+    riwayat: r.riwayat as Teacher['riwayat'], madhahib: r.madhahib as Teacher['madhahib'], levels: r.levels as Teacher['levels'], ageGroups: r.age_groups as Teacher['ageGroups'],
+    rates: { XOF: r.rate_xof == null ? null : Number(r.rate_xof), EUR: r.rate_eur == null ? null : Number(r.rate_eur) },
+    verification: { identity: r.identity_verified, diploma: r.diploma_verified, ijaza: r.ijaza_verified },
+    hoursTaught: Number(r.hours_taught), rating: Number(r.rating), disputes: r.disputes,
+    credentials: [...r.teacher_credentials].sort((a, b) => a.position - b.position).map((c) => ({
+      kind: c.kind as 'diploma' | 'ijaza', title: c.title, institution: c.institution, year: c.year,
+      ...(c.riwaya ? { riwaya: c.riwaya as Teacher['riwayat'][number] } : {}), ...(c.sanad ? { sanad: c.sanad } : {}),
+    })),
+    availability: r.availability_rules.map((a) => ({ weekday: a.weekday, start: a.start_min, end: a.end_min })),
+    reviews: [...r.reviews].sort((a, b) => a.position - b.position).map((v) => ({ author: v.author, rating: v.rating, text: v.body, date: v.date_label })),
+    status: (r.status ?? 'approved') as TeacherStatus, reviewNote: r.review_note ?? null, published: r.published,
+  }
 }
 
-const toTeacher = (r: TeacherRow): Teacher => ({
-  id: r.id, name: r.name, gender: r.gender as Teacher['gender'], city: r.city, countryLabel: r.country_label, timezone: r.timezone,
-  headline: r.headline, bio: r.bio,
-  subjects: r.subjects as Teacher['subjects'], arabicTracks: r.arabic_tracks as Teacher['arabicTracks'], languages: r.languages as Teacher['languages'],
-  riwayat: r.riwayat as Teacher['riwayat'], madhahib: r.madhahib as Teacher['madhahib'], levels: r.levels as Teacher['levels'], ageGroups: r.age_groups as Teacher['ageGroups'],
-  rates: { XOF: Number(r.rate_xof), EUR: Number(r.rate_eur) },
-  verification: { identity: r.identity_verified, diploma: r.diploma_verified, ijaza: r.ijaza_verified },
-  hoursTaught: Number(r.hours_taught), rating: Number(r.rating), disputes: r.disputes,
-  credentials: [...r.teacher_credentials].sort((a, b) => a.position - b.position).map((c) => ({
-    kind: c.kind as 'diploma' | 'ijaza', title: c.title, institution: c.institution, year: c.year,
-    ...(c.riwaya ? { riwaya: c.riwaya as Teacher['riwayat'][number] } : {}), ...(c.sanad ? { sanad: c.sanad } : {}),
-  })),
-  availability: r.availability_rules.map((a) => ({ weekday: a.weekday, start: a.start_min, end: a.end_min })),
-  reviews: [...r.reviews].sort((a, b) => a.position - b.position).map((v) => ({ author: v.author, rating: v.rating, text: v.body, date: v.date_label })),
-})
+/** Un profil publié a forcément un genre et des tarifs (contrôlés à l'envoi de la candidature). */
+const toTeacher = (r: TeacherRow): Teacher => {
+  const t = toMyTeacher(r)
+  return { ...t, gender: t.gender ?? 'F', rates: { XOF: t.rates.XOF ?? 0, EUR: t.rates.EUR ?? 0 } }
+}
 
 const toBooking = (r: BookingRow): Booking => {
   const rep = r.session_reports
@@ -101,64 +146,45 @@ const toSubscription = (r: Row<'subscriptions'>): Subscription => ({
   sessionsRemaining: r.sessions_remaining, price: Number(r.price), currency: r.currency as CurrencyCode, renewsAt: Date.parse(r.renews_at),
 })
 
-export function createSupabaseApi(client: DiniClient): DiniApi {
-  let signingIn: Promise<void> | null = null
-  const families = new Map<string, string>() // modèle de démo → famille du visiteur
-  const offsets = new Map<string, number>() // famille → avance d'horloge de démo
-  let active: string | undefined
+const INTENT_KEY = 'dini-signup-intent'
+
+export function createSupabaseApi(client: DiniClient, storage: KeyValueStorage) {
   let catalog: { at: number; teachers: Promise<Teacher[]> } | null = null
+  let family: { userId: string; id: Promise<string> } | null = null
+  let place: Place = { country: 'FR', timezone: 'Europe/Paris' }
 
-  const now = () => Date.now() + (active ? offsets.get(active) ?? 0 : 0)
-
-  function signIn() {
-    signingIn ??= (async () => {
-      const { data } = await client.auth.getSession()
-      if (data.session) return
-      const { error } = await client.auth.signInAnonymously()
-      if (error) {
-        signingIn = null
-        throw new Error(error.code === 'anonymous_provider_disabled'
-          ? 'Connexions anonymes désactivées : activez-les dans Supabase (Authentication, Sign In / Providers, Anonymous).'
-          : error.message)
-      }
-    })()
-    return signingIn
+  async function userId(): Promise<string> {
+    const { data } = await client.auth.getSession()
+    if (!data.session) throw new Error(MESSAGES.not_signed_in)
+    return data.session.user.id
   }
 
-  /** Accepte un modèle de démo ('fam-diop') ou l'identifiant réel d'une famille. */
-  async function resolve(familyId: string): Promise<string> {
-    await signIn()
-    let id = familyId
-    if (familyId.startsWith('fam-')) {
-      id = families.get(familyId) ?? must(await client.rpc('ensure_demo_family', { p_template: familyId }))
-      families.set(familyId, id)
+  /** Famille du compte connecté, créée à la première demande avec le pays choisi par le visiteur. */
+  async function familyId(): Promise<string> {
+    const uid = await userId()
+    if (!family || family.userId !== uid) {
+      const id = (async () => must(await client.rpc('ensure_my_family', { p_country: place.country, p_timezone: place.timezone })))()
+      family = { userId: uid, id }
+      id.catch(() => { family = null })
     }
-    active = id
-    return id
-  }
-
-  async function loadFamily(id: string) {
-    const fam = must(await client.from('families').select('*').eq('id', id).single())
-    offsets.set(id, intervalMs(fam.clock_offset))
-    return fam
+    return family!.id
   }
 
   function teachers(): Promise<Teacher[]> {
     if (!catalog || Date.now() - catalog.at > 60_000) {
-      const teachers = (async () => {
-        const rows = must(await client.from('teachers').select(TEACHER_COLUMNS).order('name')) as unknown as TeacherRow[]
+      const list = (async () => {
+        const rows = must(await client.from('teachers').select(PUBLIC_TEACHER_COLUMNS).eq('published', true).order('name')) as unknown as TeacherRow[]
         return rows.map(toTeacher)
       })()
-      catalog = { at: Date.now(), teachers }
-      teachers.catch(() => { catalog = null })
+      catalog = { at: Date.now(), teachers: list }
+      list.catch(() => { catalog = null })
     }
     return catalog.teachers
   }
 
-  async function withPrices(familyId: string): Promise<TeacherCard[]> {
-    const id = await resolve(familyId)
-    const [list, prices] = await Promise.all([teachers(), client.rpc('price_list', { p_family: id }).then(must)])
-    const byTeacher = new Map(prices.map((p) => [p.teacher_id, { amount: Number(p.amount), currency: p.currency as CurrencyCode }]))
+  async function withPrices(p: Place): Promise<TeacherCard[]> {
+    const [list, prices] = await Promise.all([teachers(), client.rpc('price_list_for_country', { p_country: p.country }).then(must)])
+    const byTeacher = new Map(prices.map((x) => [x.teacher_id, { amount: Number(x.amount), currency: x.currency as CurrencyCode }]))
     return list.filter((t) => byTeacher.has(t.id)).map((t) => ({ ...t, price: byTeacher.get(t.id)! }))
   }
 
@@ -168,47 +194,142 @@ export function createSupabaseApi(client: DiniClient): DiniApi {
     return res.data ? toBooking(res.data as unknown as BookingRow) : null
   }
 
-  return {
-    now,
+  async function myTeacherRow(): Promise<TeacherRow | null> {
+    await userId()
+    const { data: id, error } = await client.rpc('my_teacher_id')
+    if (error) fail(error)
+    if (!id) return null
+    return must(await client.from('teachers').select(TEACHER_COLUMNS).eq('id', id).single()) as unknown as TeacherRow
+  }
 
-    async listTeachers(familyId: string, f: TeacherFilters = {}) {
-      const list = await withPrices(familyId)
-      const fam = await loadFamily(active!)
-      return filterTeachers(list, f, fam.timezone, now())
+  return {
+    now: () => Date.now(),
+
+    // Connexion ---------------------------------------------------------------
+
+    /** Compte connecté, ou null. Termine une inscription enseignant commencée avant confirmation ou via Google. */
+    async getAccount(): Promise<Account | null> {
+      const { data } = await client.auth.getSession()
+      const user = data.session?.user
+      if (!user) return null
+      const intent = user.user_metadata?.intent ?? await storage.getItem(INTENT_KEY)
+      const found = must(await client.from('profiles').select('full_name, role').eq('id', user.id).maybeSingle())
+      if (!found) {
+        // Session restée dans le navigateur pour un compte supprimé depuis : on la ferme.
+        await client.auth.signOut({ scope: 'local' })
+        return null
+      }
+      let profile = found
+      if (intent === 'teacher' && profile.role === 'family') {
+        must(await client.rpc('start_teacher_application'))
+        profile = must(await client.from('profiles').select('full_name, role').eq('id', user.id).single())
+      }
+      if (intent) await storage.setItem(INTENT_KEY, '')
+      return { userId: user.id, email: user.email ?? '', name: profile.full_name, role: profile.role as Role }
     },
 
-    async getTeacher(familyId: string, id: string) {
-      return (await withPrices(familyId)).find((t) => t.id === id) ?? null
+    onAuthChange(listener: () => void): () => void {
+      const { data } = client.auth.onAuthStateChange((event) => {
+        if (event === 'SIGNED_OUT' || event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+          family = null
+          listener()
+        }
+      })
+      return () => data.subscription.unsubscribe()
+    },
+
+    async signIn(email: string, password: string) {
+      const { error } = await client.auth.signInWithPassword({ email: email.trim(), password })
+      if (error) fail(error)
+    },
+
+    /** Renvoie `needsConfirmation` quand Supabase attend la confirmation de l'adresse e-mail. */
+    async signUp(input: { name?: string; email: string; password: string; asTeacher: boolean; redirectTo?: string }) {
+      const { data, error } = await client.auth.signUp({
+        email: input.email.trim(), password: input.password,
+        options: { data: { full_name: input.name?.trim() ?? '', intent: input.asTeacher ? 'teacher' : 'family' }, ...(input.redirectTo ? { emailRedirectTo: input.redirectTo } : {}) },
+      })
+      if (error) fail(error)
+      return { needsConfirmation: !data.session }
+    },
+
+    /**
+     * Adresse de connexion Google, Facebook ou Apple. Le web y redirige la page ;
+     * le mobile l'ouvre dans un navigateur intégré puis appelle completeOAuth avec l'adresse de retour.
+     */
+    async oauthUrl(provider: OAuthProvider, redirectTo: string, asTeacher = false): Promise<string> {
+      await storage.setItem(INTENT_KEY, asTeacher ? 'teacher' : '')
+      const { data, error } = await client.auth.signInWithOAuth({ provider, options: { redirectTo, skipBrowserRedirect: true } })
+      if (error) fail(error)
+      return data.url!
+    },
+
+    async completeOAuth(callbackUrl: string) {
+      const code = new URL(callbackUrl).searchParams.get('code')
+      if (!code) throw new Error('La connexion a été annulée.')
+      const { error } = await client.auth.exchangeCodeForSession(code)
+      if (error) fail(error)
+    },
+
+    async sendPasswordReset(email: string, redirectTo: string) {
+      const { error } = await client.auth.resetPasswordForEmail(email.trim(), { redirectTo })
+      if (error) fail(error)
+    },
+
+    async updatePassword(password: string) {
+      const { error } = await client.auth.updateUser({ password })
+      if (error) fail(error)
+    },
+
+    async signOut() {
+      family = null
+      const { error } = await client.auth.signOut()
+      if (error) fail(error)
+    },
+
+    // Catalogue -------------------------------------------------------------------
+
+    /** Pays et fuseau utilisés pour les prix et pour créer la famille à la première connexion. */
+    setPlace(p: Place) { place = p },
+
+    async listTeachers(p: Place, f: TeacherFilters = {}) {
+      return filterTeachers(await withPrices(p), f, p.timezone, Date.now())
+    },
+
+    async getTeacher(p: Place, id: string) {
+      return (await withPrices(p)).find((t) => t.id === id) ?? null
     },
 
     async getSlots(teacherId: string, weekOffset = 0, days = 7) {
-      const from = new Date(now() + weekOffset * 7 * DAY).toISOString()
+      const from = new Date(Date.now() + weekOffset * 7 * DAY).toISOString()
       const slots = must(await client.rpc('free_slots', { p_teacher: teacherId, p_from: from, p_days: days }))
       return slots.map((s) => Date.parse(s))
     },
 
-    async getFamily(familyId: string) {
-      const id = await resolve(familyId)
+    // Famille ----------------------------------------------------------------------
+
+    async getFamily() {
+      const id = await familyId()
       const [fam, learners] = await Promise.all([
-        loadFamily(id),
+        client.from('families').select('*').eq('id', id).single().then(must),
         client.from('learners').select('*').eq('family_id', id).order('created_at').then(must),
       ])
-      const family = toFamily(fam)
-      return { family, country: country(family.country), learners: learners.map(toLearner) }
+      const f = toFamily(fam)
+      return { family: f, country: country(f.country), learners: learners.map(toLearner) }
     },
 
-    async setResidence(familyId: string, code: Country['code'], timezone: string) {
-      const id = await resolve(familyId)
+    async setResidence(code: Country['code'], timezone: string) {
+      const id = await familyId()
       must(await client.from('families').update({ country: code, timezone }).eq('id', id).select('id').single())
     },
 
-    async addLearner(familyId: string, name: string, birthYear: number) {
-      const id = await resolve(familyId)
-      return toLearner(must(await client.from('learners').insert({ family_id: id, name, birth_year: birthYear }).select('*').single()))
+    async addLearner(name: string, birthYear: number) {
+      const id = await familyId()
+      return toLearner(must(await client.from('learners').insert({ family_id: id, name: name.trim(), birth_year: birthYear }).select('*').single()))
     },
 
-    async quote(familyId: string, teacherId: string, learnerId: string) {
-      const id = await resolve(familyId)
+    async quote(teacherId: string, learnerId: string) {
+      const id = await familyId()
       const q = must(await client.rpc('quote', { p_family: id, p_teacher: teacherId, p_learner: learnerId })) as {
         currency: CurrencyCode; session: number; trial: number; credit: { remaining: number; of: number } | null; payments: PaymentMethod[]
         plans: { id: string; sessions: number; total: number }[]
@@ -224,7 +345,7 @@ export function createSupabaseApi(client: DiniClient): DiniApi {
     },
 
     async createBooking(draft: BookingDraft) {
-      const id = await resolve(draft.familyId)
+      const id = await familyId()
       const res = must(await client.rpc('book_session', {
         p_family: id, p_learner: draft.learnerId, p_teacher: draft.teacherId, p_subject: draft.subject,
         p_starts_at: new Date(draft.startsAt).toISOString(), p_choice: draft.choice, ...(draft.method ? { p_method: draft.method } : {}),
@@ -243,42 +364,98 @@ export function createSupabaseApi(client: DiniClient): DiniApi {
     },
 
     async getBooking(id: string) {
-      await signIn()
       const booking = await bookingRow(id)
       if (!booking) return null
       const [list, learner] = await Promise.all([teachers(), client.from('learners').select('*').eq('id', booking.learnerId).single().then(must)])
       return { booking, teacher: list.find((t) => t.id === booking.teacherId)!, learner: toLearner(learner) }
     },
 
-    async getDashboard(familyId: string) {
-      const id = await resolve(familyId)
-      await loadFamily(id)
+    async getDashboard() {
+      const id = await familyId()
       const learners = must(await client.from('learners').select('*').eq('family_id', id).order('created_at')).map(toLearner)
       const ids = learners.map((l) => l.id)
       const [bookings, subs] = await Promise.all([
         client.from('bookings').select('*, session_reports (*)').in('learner_id', ids).order('starts_at').then(must),
         client.from('subscriptions').select('*').in('learner_id', ids).order('renews_at').then(must),
       ])
-      return buildDashboard(learners, (bookings as unknown as BookingRow[]).map(toBooking), subs.map(toSubscription), now())
+      return buildDashboard(learners, (bookings as unknown as BookingRow[]).map(toBooking), subs.map(toSubscription), Date.now())
     },
 
-    async deliverBooking(id: string, report: Report) {
-      must(await client.rpc('demo_deliver', { p_booking: id, p_report: report }))
+    // Espace enseignant ---------------------------------------------------------------
+
+    async getMyTeacher(): Promise<MyTeacher | null> {
+      const row = await myTeacherRow()
+      return row && toMyTeacher(row)
     },
 
-    async advanceClock(familyId: string, hours: number) {
-      const id = await resolve(familyId)
-      must(await client.rpc('demo_advance', { p_family: id, p_hours: hours }))
-      await loadFamily(id)
+    async startApplication() {
+      return must(await client.rpc('start_teacher_application')) as string
     },
 
-    async reset(familyId: string) {
-      const id = await resolve(familyId)
-      const fresh = must(await client.rpc('reset_demo', { p_family: id }))
-      for (const [template, fam] of families) if (fam === id) families.set(template, fresh)
-      offsets.delete(id)
-      active = fresh
+    async saveApplication(input: TeacherApplication) {
+      must(await client.rpc('save_teacher_application', { p: input as never }))
+    },
+
+    async submitApplication() {
+      must(await client.rpc('submit_teacher_application'))
+    },
+
+    async setAvailability(rules: Teacher['availability']) {
+      must(await client.rpc('set_my_availability', { p_rules: rules as never }))
+    },
+
+    /** Séances de l'enseignant connecté, avec le prénom et l'objectif de l'élève. */
+    async getAgenda(): Promise<AgendaItem[]> {
+      const row = await myTeacherRow()
+      if (!row) return []
+      const rows = must(await client.from('bookings').select('*, session_reports (*), learners (name, birth_year, goals, level)')
+        .eq('teacher_id', row.id).not('status', 'in', '(cancelled,refunded)').order('starts_at')) as unknown as
+        (BookingRow & { learners: Pick<Row<'learners'>, 'name' | 'birth_year' | 'goals' | 'level'> })[]
+      return rows.map((r) => ({
+        ...toBooking(r),
+        learner: { name: r.learners.name, birthYear: r.learners.birth_year, goals: r.learners.goals, level: r.learners.level as Learner['level'] },
+      }))
+    },
+
+    async deliverSession(bookingId: string, report: Report) {
+      must(await client.rpc('deliver_session', { p_booking: bookingId, p_report: report as never }))
+    },
+
+    async markMissed(bookingId: string) {
+      must(await client.rpc('mark_session_missed', { p_booking: bookingId }))
+    },
+
+    async getEarnings(): Promise<Earnings | null> {
+      const row = await myTeacherRow()
+      if (!row) return null
+      const [ledger, delivered, settings] = await Promise.all([
+        client.from('ledger_entries').select('*').eq('teacher_id', row.id).order('created_at', { ascending: false }).then(must),
+        client.from('bookings').select('delivered_at').eq('teacher_id', row.id).eq('status', 'delivered').then(must),
+        client.from('pricing_settings').select('escrow_hours').single().then(must),
+      ])
+      return {
+        hoursTaught: Number(row.hours_taught),
+        entries: ledger.map((e) => ({ bookingId: e.booking_id, at: Date.parse(e.created_at), gross: Number(e.gross), currency: e.currency as CurrencyCode, netEur: Number(e.net_eur), rate: Number(e.commission_rate) })),
+        releasedEur: ledger.reduce((s, e) => s + Number(e.net_eur), 0),
+        pending: { count: delivered.length, releaseAt: delivered.map((d) => ms(d.delivered_at)! + settings.escrow_hours * 3_600_000) },
+      }
+    },
+
+    // Modération ----------------------------------------------------------------------
+
+    async listApplications(): Promise<Application[]> {
+      const rows = must(await client.from('teachers').select(TEACHER_COLUMNS).eq('status', 'submitted').order('submitted_at')) as unknown as TeacherRow[]
+      return rows.map((r) => ({ ...toMyTeacher(r), submittedAt: ms(r.submitted_at ?? null) }))
+    },
+
+    async reviewApplication(input: { teacherId: string; approve: boolean; note?: string; identity?: boolean; diploma?: boolean; ijaza?: boolean }) {
+      must(await client.rpc('review_teacher_application', {
+        p_teacher: input.teacherId, p_approve: input.approve, p_note: input.note ?? '',
+        p_identity: !!input.identity, p_diploma: !!input.diploma, p_ijaza: !!input.ijaza,
+      }))
       catalog = null
     },
   }
 }
+
+export type DiniApi = ReturnType<typeof createSupabaseApi>

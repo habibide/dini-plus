@@ -1,6 +1,7 @@
-import { DAY, HOUR, generateSlots, type Booking, type Family, type Learner, type Subscription, type Teacher } from '@dini/core'
+import type { Teacher } from '@dini/core'
 
-// Données de démonstration. Toutes les personnes, avis, diplômes et sanad sont fictifs.
+// Catalogue de départ, chargé en base par supabase/scripts/generate-seed.ts.
+// Toutes les personnes, avis, diplômes et sanad sont fictifs : à retirer avant l'ouverture au public.
 
 const h = (hh: number, mm = 0) => hh * 60 + mm
 const week = (days: number[], start: number, end: number) => days.map((weekday) => ({ weekday, start, end }))
@@ -129,49 +130,3 @@ export const SEED_TEACHERS: Teacher[] = [
     reviews: [{ author: 'Élodie, Bordeaux', rating: 5, text: 'Je n’osais poser mes questions nulle part. Ici, oui.', date: 'octobre 2026' }],
   },
 ]
-
-export const SEED_FAMILIES: Family[] = [
-  { id: 'fam-diop', parentName: 'Fatou Diop', country: 'FR', timezone: 'Europe/Paris', isAdultLearner: false },
-  { id: 'fam-sarr', parentName: 'Marème Sarr', country: 'SN', timezone: 'Africa/Dakar', isAdultLearner: true },
-]
-
-export const SEED_LEARNERS: Learner[] = [
-  { id: 'l-awa', familyId: 'fam-diop', name: 'Awa Diop', birthYear: 2017, level: 'beginner', goals: 'Mémoriser le dernier juz en riwaya Warsh' },
-  { id: 'l-ibrahim', familyId: 'fam-diop', name: 'Ibrahim Diop', birthYear: 2013, level: 'intermediate', goals: 'Lire et comprendre l’arabe' },
-  { id: 'l-mareme', familyId: 'fam-sarr', name: 'Marème Sarr', birthYear: 1992, level: 'beginner', goals: 'Reprendre les bases de la prière et des invocations' },
-]
-
-/** Séances et forfaits de départ, placés autour de `now` pour que la démo soit toujours vivante. */
-export function seedActivity(now: number): { subscriptions: Subscription[]; bookings: Booking[] } {
-  const t = (id: string) => SEED_TEACHERS.find((x) => x.id === id)!
-  const nextSlot = (id: string, afterDays: number) => generateSlots(t(id).availability, t(id).timezone, now + afterDays * DAY, 14)[0]
-  const past = (daysAgo: number) => {
-    const d = new Date(now - daysAgo * DAY)
-    d.setUTCHours(17, 0, 0, 0)
-    return d.getTime()
-  }
-  const plan = (id: string, learnerId: string, teacherId: string, startsAt: number, status: Booking['status'], extra: Partial<Booking> = {}): Booking => ({
-    id, learnerId, teacherId, subscriptionId: learnerId === 'l-awa' ? 's-awa' : 's-ibrahim', kind: 'plan',
-    subject: teacherId === 't-ousmane' ? 'arabic' : 'quran', startsAt, minutes: 30, amount: 7, currency: 'EUR', status, ...extra,
-  })
-  const done = (startsAt: number) => ({ deliveredAt: startsAt + 30 * 60_000 })
-  return {
-    subscriptions: [
-      { id: 's-awa', learnerId: 'l-awa', teacherId: 't-aissatou', planId: 'regular', sessionsPerMonth: 8, sessionsRemaining: 2, price: 56, currency: 'EUR', renewsAt: now + 9 * DAY },
-      { id: 's-ibrahim', learnerId: 'l-ibrahim', teacherId: 't-ousmane', planId: 'discovery', sessionsPerMonth: 4, sessionsRemaining: 1, price: 36, currency: 'EUR', renewsAt: now + 13 * DAY },
-    ],
-    bookings: [
-      plan('b-1', 'l-awa', 't-aissatou', past(19), 'validated', { ...done(past(19)), report: { covered: 'Révision complète d’Al-Fatiha', surah: 1, ayahFrom: 1, ayahTo: 7, tajwidNotes: 'Allongements bien tenus.', homework: 'Réciter chaque matin.', comment: 'Très bon départ, Awa est concentrée.' } }),
-      plan('b-2', 'l-awa', 't-aissatou', past(15), 'validated', { ...done(past(15)), report: { covered: 'An-Nas mémorisée', surah: 114, ayahFrom: 1, ayahTo: 6, tajwidNotes: 'Attention au « sîn » final.', homework: 'Réviser An-Nas et Al-Falaq.', comment: 'Bonne mémoire, un peu rapide.' } }),
-      plan('b-3', 'l-awa', 't-aissatou', past(12), 'validated', { ...done(past(12)), report: { covered: 'Al-Falaq mémorisée', surah: 113, ayahFrom: 1, ayahTo: 5, tajwidNotes: 'Qalqala à consolider.', homework: 'Écouter puis répéter trois fois.', comment: 'Awa progresse bien.' } }),
-      plan('b-4', 'l-awa', 't-aissatou', past(8), 'missed'),
-      plan('b-5', 'l-awa', 't-aissatou', past(5), 'validated', { ...done(past(5)), report: { covered: 'Al-Ikhlas mémorisée', surah: 112, ayahFrom: 1, ayahTo: 4, tajwidNotes: 'Bonne sortie des lettres emphatiques.', homework: 'Réviser Al-Ikhlas.', comment: 'Séance joyeuse et efficace.' } }),
-      plan('b-6', 'l-awa', 't-aissatou', now - 20 * HOUR, 'delivered', { deliveredAt: now - 20 * HOUR + 30 * 60_000, report: { covered: 'Al-Masad, versets 1 à 3', surah: 111, ayahFrom: 1, ayahTo: 3, tajwidNotes: 'Awa confond encore les deux « tâ ».', homework: 'Répéter les versets 1 à 3 avant le prochain cours.', comment: 'Il reste deux versets, on les finit la prochaine fois.' } }),
-      plan('b-7', 'l-awa', 't-aissatou', nextSlot('t-aissatou', 1), 'scheduled'),
-      plan('b-8', 'l-ibrahim', 't-ousmane', past(16), 'validated', { amount: 9, ...done(past(16)), report: { covered: 'Lecture : les voyelles longues', tajwidNotes: '', homework: 'Lire la page 4 à voix haute.', comment: 'Ibrahim lit déjà de manière fluide.' } }),
-      plan('b-9', 'l-ibrahim', 't-ousmane', past(9), 'validated', { amount: 9, ...done(past(9)), report: { covered: 'Écriture : les lettres liées', tajwidNotes: '', homework: 'Copier cinq phrases.', comment: 'À retravailler : les lettres qui ne se lient pas à gauche.' } }),
-      plan('b-10', 'l-ibrahim', 't-ousmane', nextSlot('t-ousmane', 2), 'scheduled', { amount: 9 }),
-      { id: 'b-11', learnerId: 'l-mareme', teacherId: 't-khady', kind: 'trial', subject: 'fiqh', startsAt: nextSlot('t-khady', 2), minutes: 30, amount: 1500, currency: 'XOF', status: 'scheduled' },
-    ],
-  }
-}

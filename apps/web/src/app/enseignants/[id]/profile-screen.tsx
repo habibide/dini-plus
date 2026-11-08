@@ -1,7 +1,7 @@
 'use client'
 
-import { LANGUAGES, LEVELS, dayKey, formatDay, formatTime, subject, trialPrice } from '@dini/core'
-import { useFamily, useSlots, useTeacher } from '@dini/data/react'
+import { LANGUAGES, LEVELS, country, dayKey, formatDay, formatTime, subject, trialPrice } from '@dini/core'
+import { usePlace, useSlots, useTeacher } from '@dini/data/react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { useState } from 'react'
@@ -10,17 +10,17 @@ import { BADGE_INFO, Badge, Modal, Money, Monogram, RecitationPreview, Sanad, St
 export function ProfileScreen() {
   const { id } = useParams<{ id: string }>()
   const teacher = useTeacher(id)
-  const family = useFamily()
+  const { place } = usePlace()
   const [week, setWeek] = useState(0)
   const slots = useSlots(id, week)
   const [badge, setBadge] = useState<BadgeKey | null>(null)
 
-  if (teacher.isPending || !family.data) return <p className="mx-auto max-w-6xl px-5 py-10 text-muted">Chargement du profil…</p>
+  if (teacher.isPending) return <p className="mx-auto max-w-6xl px-5 py-10 text-muted">Chargement du profil…</p>
   const t = teacher.data
   if (!t) return <div className="mx-auto flex max-w-6xl flex-col items-start gap-3 px-5 py-10"><p>Ce profil n’existe pas ou plus.</p><Link href="/enseignants" className={buttonCls.ghost}>Retour à la recherche</Link></div>
 
-  const tz = family.data.family.timezone
-  const tzLabel = family.data.country.timezones.find((x) => x.id === tz)?.label
+  const tz = place.timezone
+  const tzLabel = country(place.country).timezones.find((x) => x.id === tz)?.label
   const byDay = new Map<string, number[]>()
   for (const at of slots.data ?? []) byDay.set(dayKey(at, tz), [...(byDay.get(dayKey(at, tz)) ?? []), at])
   const ijaza = t.credentials.find((c) => c.sanad)

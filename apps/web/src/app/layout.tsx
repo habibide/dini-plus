@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 import { Amiri, Hanken_Grotesk, Young_Serif } from 'next/font/google'
 import { Providers } from '@/components/providers'
-import { DemoBar, SiteFooter, SiteHeader } from '@/components/chrome'
+import { ErrorBanner, SiteFooter, SiteHeader } from '@/components/chrome'
 import './globals.css'
 
 const hanken = Hanken_Grotesk({ variable: '--font-hanken', subsets: ['latin'] })
@@ -19,8 +19,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="fr" className={`${hanken.variable} ${young.variable} ${amiri.variable} antialiased`}>
       <body className="flex min-h-screen flex-col font-sans">
         <Providers>
-          <DemoBar />
           <SiteHeader />
+          <ErrorBanner />
           <main className="flex-1">{children}</main>
           <SiteFooter />
         </Providers>

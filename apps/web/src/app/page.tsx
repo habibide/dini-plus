@@ -86,7 +86,7 @@ export default function Home() {
           <div className="flex min-w-0 flex-[1_1_440px] flex-col gap-4">
             <h2 className="font-display text-4xl">Devenez enseignant sur DINI</h2>
             <p className="max-w-[50ch] text-lg text-[#d6dde5]">Diplômé d’institut, porteur d’une ijaza, imam ou maître de daara : rendez-vous visible auprès des familles qui vous cherchent.</p>
-            <p className="text-sm text-sand">La candidature en ligne arrive dans la prochaine étape du développement.</p>
+            <Link href="/devenir-enseignant" className={`${buttonCls.sand} self-start`}>Créer mon profil enseignant</Link>
           </div>
           <ul className="flex min-w-0 flex-[1_1_360px] flex-col gap-4 border-l border-ochre pl-5">
             <li><strong>Fixez vos tarifs.</strong><br /><span className="text-[#d6dde5]">Un tarif local en FCFA, un tarif international en euros.</span></li>

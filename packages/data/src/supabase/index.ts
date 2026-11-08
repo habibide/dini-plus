@@ -3,18 +3,18 @@ import type { KeyValueStorage } from '../api'
 import { createSupabaseApi, type DiniClient } from './api'
 import type { Database } from './database.types'
 
-export { createSupabaseApi, intervalMs, type DiniClient } from './api'
+export * from './api'
 export type { Database } from './database.types'
 
 /**
- * Client Supabase de DINI. `storage` garde la session entre deux lancements :
- * localStorage sur le web (par défaut), AsyncStorage sur mobile.
+ * Client Supabase de DINI. `storage` garde la session entre deux lancements : localStorage sur le web,
+ * AsyncStorage sur mobile. `detectSessionInUrl` termine les connexions Google et les liens reçus par e-mail sur le web.
  */
-export function createDiniClient(url: string, publishableKey: string, storage?: KeyValueStorage): DiniClient {
+export function createDiniClient(url: string, publishableKey: string, opts: { storage?: KeyValueStorage; detectSessionInUrl?: boolean } = {}): DiniClient {
   return createClient<Database>(url, publishableKey, {
-    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, ...(storage ? { storage: storage as never } : {}) },
+    auth: {
+      flowType: 'pkce', persistSession: true, autoRefreshToken: true, detectSessionInUrl: opts.detectSessionInUrl ?? false,
+      ...(opts.storage ? { storage: opts.storage as never } : {}),
+    },
   })
 }
-
-export const createSupabaseDiniApi = (url: string, publishableKey: string, storage?: KeyValueStorage) =>
-  createSupabaseApi(createDiniClient(url, publishableKey, storage))

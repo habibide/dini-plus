@@ -1,5 +1,5 @@
-import { LANGUAGES, colors, dayKey, formatDay, formatMoney, formatTime, subject, trialPrice } from '@dini/core'
-import { useFamily, useSlots, useTeacher } from '@dini/data/react'
+import { LANGUAGES, colors, country, dayKey, formatDay, formatMoney, formatTime, subject, trialPrice } from '@dini/core'
+import { useAccount, usePlace, useSlots, useTeacher } from '@dini/data/react'
 import { Stack, router, useLocalSearchParams } from 'expo-router'
 import { useState } from 'react'
 import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native'
@@ -8,14 +8,15 @@ import { Badges, Button, Monogram, Sanad, Section, T, font } from '@/lib/ui'
 export default function TeacherScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const teacher = useTeacher(id)
-  const family = useFamily()
+  const { place } = usePlace()
+  const account = useAccount()
   const [week, setWeek] = useState(0)
   const slots = useSlots(id, week)
 
-  if (!teacher.data || !family.data) return <ActivityIndicator style={{ marginTop: 40 }} color={colors.green} />
+  if (!teacher.data) return <ActivityIndicator style={{ marginTop: 40 }} color={colors.green} />
   const t = teacher.data
-  const tz = family.data.family.timezone
-  const tzLabel = family.data.country.timezones.find((x) => x.id === tz)?.label
+  const tz = place.timezone
+  const tzLabel = country(place.country).timezones.find((x) => x.id === tz)?.label
   const byDay = new Map<string, number[]>()
   for (const at of slots.data ?? []) byDay.set(dayKey(at, tz), [...(byDay.get(dayKey(at, tz)) ?? []), at])
 
@@ -56,7 +57,7 @@ export default function TeacherScreen() {
             <T style={{ fontFamily: font.semibold, textTransform: 'capitalize' }}>{formatDay(list[0], tz)}</T>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
               {list.map((at) => (
-                <Pressable key={at} accessibilityRole="button" onPress={() => router.push(`/book/${t.id}/${at}`)}
+                <Pressable key={at} accessibilityRole="button" onPress={() => account ? router.push(`/book/${t.id}/${at}`) : router.push({ pathname: '/login', params: { next: `/book/${t.id}/${at}` } })}
                   style={({ pressed }) => ({ minWidth: 72, minHeight: 44, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.green2, borderRadius: 3, backgroundColor: pressed ? colors.green : colors.white })}>
                   <T style={{ fontFamily: font.semibold, color: colors.green }}>{formatTime(at, tz)}</T>
                 </Pressable>

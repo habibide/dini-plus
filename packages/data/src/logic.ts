@@ -21,7 +21,6 @@ export type TeacherCard = Teacher & { price: { amount: number; currency: Currenc
 export type BookingChoice = 'trial' | 'credit' | PlanId
 
 export type BookingDraft = {
-  familyId: string
   learnerId: string
   teacherId: string
   subject: SubjectId

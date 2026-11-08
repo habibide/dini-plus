@@ -1,16 +1,9 @@
-import { COUNTRIES, SUBJECTS, colors } from '@dini/core'
-import { useDini, useFamily, useResetDemo, useSetResidence } from '@dini/data/react'
+import { SUBJECTS, colors } from '@dini/core'
 import { router } from 'expo-router'
 import { Pressable, ScrollView, View } from 'react-native'
-import { Button, Chip, T, font } from '@/lib/ui'
+import { Button, T, font } from '@/lib/ui'
 
 export default function Home() {
-  const family = useFamily()
-  const setResidence = useSetResidence()
-  const reset = useResetDemo()
-  const { familyId, setFamilyId } = useDini()
-  const current = family.data?.family
-
   return (
     <ScrollView style={{ backgroundColor: colors.green }} contentContainerStyle={{ paddingBottom: 110, backgroundColor: colors.paper }}>
       <View style={{ backgroundColor: colors.green }}>
@@ -38,26 +31,6 @@ export default function Home() {
         </View>
       </View>
 
-      <View style={{ paddingHorizontal: 20, gap: 10 }}>
-        <T tone="h2">J’habite</T>
-        <T tone="muted">Les prix s’affichent dans votre devise, les horaires dans votre fuseau.</T>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
-          {COUNTRIES.flatMap((c) => c.timezones.slice(0, c.code === 'US' || c.code === 'CA' ? 2 : 1).map((tz) => (
-            <Chip key={tz.id} label={c.timezones.length > 1 ? `${c.label.fr}, ${tz.label}` : c.label.fr}
-              on={current?.country === c.code && current?.timezone === tz.id}
-              onPress={() => setResidence.mutate({ country: c.code, timezone: tz.id })} />
-          )))}
-        </View>
-      </View>
-
-      <View style={{ margin: 20, padding: 16, gap: 10, backgroundColor: colors.leaf }}>
-        <T style={{ fontFamily: font.semibold }}>Démo : personnes, avis et paiements fictifs.</T>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
-          <Chip label="Fatou, parent" on={familyId === 'fam-diop'} onPress={() => setFamilyId('fam-diop')} />
-          <Chip label="Marème, élève adulte" on={familyId === 'fam-sarr'} onPress={() => setFamilyId('fam-sarr')} />
-        </View>
-        <Button title="Réinitialiser la démo" kind="ghost" onPress={() => reset.mutate(undefined)} />
-      </View>
     </ScrollView>
   )
 }

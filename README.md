@@ -1,18 +1,18 @@
 # DINI
 
-Marketplace d’enseignement religieux en ligne : site web et application mobile, branchés pour l’instant sur des **données fictives**, sans backend ni base de données.
+Marketplace d’enseignement religieux en ligne : site web et application mobile sur un backend Supabase, avec de vrais comptes.
 
 ## Organisation
 
 | Dossier | Contenu |
 |---|---|
-| `apps/web` | Site Next.js 16 : accueil, recherche, profil enseignant, réservation, suivi parent, compte rendu |
-| `apps/mobile` | Application Expo SDK 58 (iOS, Android) : mêmes parcours, en onglets |
+| `apps/web` | Site Next.js 16 : accueil, recherche, profil, réservation, suivi parent, connexion, candidature et espace enseignant, modération |
+| `apps/mobile` | Application Expo SDK 58 (iOS, Android) : recherche, réservation, suivi, connexion, agenda et comptes rendus enseignant |
 | `packages/core` | Catalogue (pays, langues, matières), règles métier (prix, commission, séquestre, annulation, fuseaux horaires), types |
-| `packages/data` | API fictive et hooks React communs au web et au mobile |
+| `packages/data` | API Supabase et hooks React communs au web et au mobile |
 | `prototype` | Premier prototype de présentation, publié sur GitHub Pages |
 
-Les écrans ne connaissent que l’API de `packages/data`. Pour brancher Supabase, il suffira d’écrire une seconde implémentation de `createMockApi`, sans toucher aux écrans.
+Les écrans ne connaissent que l’API de `packages/data`. La candidature et les disponibilités enseignant se remplissent sur le web.
 
 ## Lancer
 
@@ -40,26 +40,21 @@ Puis scannez le QR code avec Expo Go, ou ouvrez le simulateur iOS.
 npm test
 ```
 
-## Données de démonstration
-
-Les enseignants, avis, diplômes et sanad sont fictifs. Les données sont conservées dans le navigateur (web) ou sur le téléphone (mobile) ; le bouton « Réinitialiser » les remet à zéro. Sur le web, « Avancer de 48 h » fait passer le séquestre.
-
-Taux de change fixes de démonstration : FCFA ↔ dalasi, euro ↔ dollar américain et canadien.
+Taux de change fixes, à remplacer : FCFA ↔ dalasi, euro ↔ dollar américain et canadien (table `pricing_settings`).
 
 ## Backend Supabase
 
-Le schéma vit dans `supabase/migrations/` (appliqué au projet « Dine App ») :
+Le schéma vit dans `supabase/migrations/` (appliqué au projet « Dine App »). Les apps web et mobile exigent `apps/web/.env.local` et `apps/mobile/.env.local` (modèles dans les `.env.example`).
 
-- **Tables** : catalogue (pays, forfaits, réglages de prix, enseignants, diplômes, disponibilités, avis), familles, élèves, forfaits, séances, comptes rendus, paiements, litiges, journal des sommes dues aux enseignants.
-- **Droits (RLS)** : catalogue lisible par tous ; une famille ne lit que ses propres données ; aucune écriture directe sur les séances, forfaits ou paiements.
-- **Règles côté serveur (RPC)** : `free_slots`, `price_list`, `quote`, `book_session`, `cancel_booking`, `dispute_booking`. Le prix, la disponibilité et les droits sont recalculés en base. Une contrainte d'exclusion interdit deux séances qui se chevauchent chez un même enseignant.
+- **Comptes** : e-mail et mot de passe, Google, Facebook, Apple (à activer dans Supabase, Authentication, Providers). Un profil par compte, avec un rôle : famille, enseignant, modérateur, administrateur. Le rôle de modérateur se donne en base.
+- **Familles** : créées à la première connexion avec le pays et le fuseau choisis. Une famille ne lit que ses propres données.
+- **Enseignants** : candidature en ligne (profil, matières, tarifs, diplômes, ijaza et sanad, disponibilités), envoyée puis approuvée ou refusée par un modérateur. Seuls les profils approuvés sont publiés.
+- **Espace enseignant** : séances à venir, compte rendu après chaque séance (ou absence de l'élève), disponibilités, gains et palier de commission.
+- **Règles côté serveur (RPC)** : prix, créneaux libres, réservation, annulation, litige, candidature, modération, compte rendu. Une contrainte d'exclusion interdit deux séances qui se chevauchent chez un même enseignant.
 - **Séquestre** : `pg_cron` libère toutes les 10 minutes les séances non contestées depuis 48 h, et inscrit la part de l'enseignant (commission dégressive) au journal.
-- **Démo** : chaque visiteur se connecte en anonyme et reçoit sa propre copie des familles `fam-diop` et `fam-sarr` (`ensure_demo_family`, `reset_demo`, `demo_deliver`, `demo_advance`). Les séances de démo ne bloquent pas les agendas des autres familles et ne créditent jamais les enseignants.
 - **Paiements** : simulés (`provider = 'simulated'`) tant que Stripe, Wave, Orange Money et Afrimoney ne sont pas branchés.
 
-Les apps utilisent Supabase quand `apps/web/.env.local` et `apps/mobile/.env.local` existent (modèles dans les `.env.example`), sinon les données fictives. Prérequis côté projet Supabase : activer les connexions anonymes (Authentication, Sign In / Providers, Anonymous).
-
-Le catalogue en base est généré depuis `@dini/data` :
+Le catalogue de départ (10 enseignants fictifs) est généré depuis `@dini/data` et doit être retiré avant l'ouverture au public :
 
 ```bash
 npx tsx supabase/scripts/generate-seed.ts > supabase/migrations/<horodatage>_catalog_seed.sql

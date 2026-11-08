@@ -24,6 +24,12 @@ export function DashboardScreen() {
         <Link href="/enseignants" className={buttonCls.ghost}>Trouver un enseignant</Link>
       </div>
       {justBooked && <p role="status" className="bg-leaf px-4 py-3"><strong>Séance réservée.</strong> Rappels par SMS et e-mail 24 h et 1 h avant le cours.</p>}
+      {dash.data.length === 0 && (
+        <div className="flex flex-col items-start gap-3 border border-line bg-white p-6">
+          <p className="text-lg">Votre suivi apparaîtra ici après la première séance réservée.</p>
+          <Link href="/enseignants" className={buttonCls.primary}>Choisir un enseignant</Link>
+        </div>
+      )}
       {dash.data.map((d) => <LearnerBlock key={d.learner.id} d={d} tz={fam.timezone} />)}
     </div>
   )

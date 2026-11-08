@@ -1,17 +1,20 @@
 import { HOUR, colors, formatDateTime, formatDay, surah } from '@dini/core'
 import type { LearnerDashboard } from '@dini/data'
-import { useDashboard, useDini, useDisputeBooking, useFamily } from '@dini/data/react'
+import { useAccount, useDashboard, useDini, useDisputeBooking, useFamily } from '@dini/data/react'
 import { router } from 'expo-router'
 import { useState } from 'react'
 import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { SignInPrompt } from '@/lib/auth'
 import { Button, Section, T, font } from '@/lib/ui'
 
 export default function Suivi() {
+  const account = useAccount()
   const family = useFamily()
   const dash = useDashboard()
   const [tab, setTab] = useState(0)
   const insets = useSafeAreaInsets()
+  if (account === null) return <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: colors.paper }}><SignInPrompt title="Suivi" text="Connectez-vous pour voir les séances, l’assiduité et les comptes rendus." next="/suivi" /></View>
   if (!family.data || !dash.data) return <ActivityIndicator style={{ marginTop: 80 }} color={colors.green} />
   const fam = family.data.family
   const d = dash.data[Math.min(tab, dash.data.length - 1)]
@@ -30,7 +33,12 @@ export default function Suivi() {
           ))}
         </View>
       </View>
-      {d && <LearnerView d={d} tz={fam.timezone} />}
+      {d ? <LearnerView d={d} tz={fam.timezone} /> : (
+        <View style={{ padding: 20, gap: 12 }}>
+          <T>Votre suivi apparaîtra ici après la première séance réservée.</T>
+          <Button title="Trouver un enseignant" onPress={() => router.navigate('/search')} style={{ alignSelf: 'flex-start' }} />
+        </View>
+      )}
     </View>
   )
 }

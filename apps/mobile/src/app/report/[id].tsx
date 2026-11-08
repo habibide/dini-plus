@@ -1,5 +1,5 @@
 import { colors, formatDay, surah } from '@dini/core'
-import { useBookingDetails, useFamily } from '@dini/data/react'
+import { useBookingDetails, usePlace } from '@dini/data/react'
 import { useLocalSearchParams } from 'expo-router'
 import { ActivityIndicator, ScrollView, View } from 'react-native'
 import { T, font } from '@/lib/ui'
@@ -7,8 +7,8 @@ import { T, font } from '@/lib/ui'
 export default function ReportScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const q = useBookingDetails(id)
-  const family = useFamily()
-  if (!q.data || !family.data) return <ActivityIndicator style={{ marginTop: 40 }} color={colors.green} />
+  const { place } = usePlace()
+  if (!q.data) return <ActivityIndicator style={{ marginTop: 40 }} color={colors.green} />
   const { booking, teacher, learner } = q.data
   const r = booking.report
   if (!r) return <T style={{ padding: 20 }}>Pas encore de compte rendu pour cette séance.</T>
@@ -16,7 +16,7 @@ export default function ReportScreen() {
   return (
     <ScrollView style={{ backgroundColor: colors.paper }} contentContainerStyle={{ padding: 20, gap: 20 }}>
       <View style={{ gap: 4 }}>
-        <T tone="muted" style={{ textTransform: 'capitalize' }}>{formatDay(booking.startsAt, family.data.family.timezone)} · {learner.name}</T>
+        <T tone="muted" style={{ textTransform: 'capitalize' }}>{formatDay(booking.startsAt, place.timezone)} · {learner.name}</T>
         <T tone="h1">{teacher.name}</T>
       </View>
       {s && r.ayahTo ? (
