@@ -273,9 +273,9 @@ export function createSupabaseApi(client: DiniClient, storage: KeyValueStorage) 
     },
 
     /** Connexion Apple native (iPhone) : jeton fourni par le système. Apple ne donne le nom qu'à la première connexion. */
-    async signInWithApple(identityToken: string, fullName: string | null, asTeacher = false) {
+    async signInWithApple(identityToken: string, nonce: string, fullName: string | null, asTeacher = false) {
       await storage.setItem(INTENT_KEY, asTeacher ? 'teacher' : '')
-      const { data, error } = await client.auth.signInWithIdToken({ provider: 'apple', token: identityToken })
+      const { data, error } = await client.auth.signInWithIdToken({ provider: 'apple', token: identityToken, nonce })
       if (error) fail(error)
       if (fullName?.trim() && data.user) {
         await client.from('profiles').update({ full_name: fullName.trim().slice(0, 120) }).eq('id', data.user.id).eq('full_name', '')

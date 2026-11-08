@@ -2,6 +2,7 @@ import { colors } from '@dini/core'
 import type { OAuthProvider } from '@dini/data/supabase'
 import { useDini } from '@dini/data/react'
 import * as AppleAuthentication from 'expo-apple-authentication'
+import * as Crypto from 'expo-crypto'
 import * as Linking from 'expo-linking'
 import { router } from 'expo-router'
 import { SymbolView } from 'expo-symbols'
@@ -96,11 +97,15 @@ export function OAuthButtons({ providers, verb = 'Continuer', asTeacher = false,
   })
 
   const apple = () => run('apple', async () => {
+    // Nonce à usage unique : Apple signe son empreinte, Supabase vérifie la valeur brute. Un jeton intercepté ne peut pas être rejoué.
+    const nonce = Crypto.randomUUID()
+    const hashed = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, nonce)
     const credential = await AppleAuthentication.signInAsync({
       requestedScopes: [AppleAuthentication.AppleAuthenticationScope.FULL_NAME, AppleAuthentication.AppleAuthenticationScope.EMAIL],
+      nonce: hashed,
     })
     if (!credential.identityToken) throw new Error('Apple n’a pas renvoyé d’identifiant. Réessayez.')
-    await api.signInWithApple(credential.identityToken, appleName(credential.fullName), asTeacher)
+    await api.signInWithApple(credential.identityToken, nonce, appleName(credential.fullName), asTeacher)
     return true
   })
 
