@@ -47,10 +47,10 @@ function ActiveNavLinks() {
 function PlaceSelect() {
   const { place, setPlace } = usePlace()
   return (
-    <label className="flex items-center gap-2 text-sm text-muted">J’habite
+    <label className="flex min-w-0 items-center gap-2 text-sm text-muted"><span className="hidden sm:inline">J’habite</span>
       <select value={`${place.country}|${place.timezone}`}
         onChange={(e) => { const [c, tz] = e.target.value.split('|'); setPlace({ country: c as typeof place.country, timezone: tz }) }}
-        className="rounded-sm border border-line bg-white px-2 py-1.5 text-ink">
+        aria-label="J’habite" className="min-w-0 max-w-48 rounded-sm border border-line bg-white px-2 py-1.5 text-ink">
         {COUNTRIES.map((c) => (
           <optgroup key={c.code} label={`${c.label.fr} (${c.currency})`}>
             {c.timezones.map((tz) => <option key={tz.id} value={`${c.code}|${tz.id}`}>{c.timezones.length > 1 ? `${c.label.fr}, ${tz.label}` : c.label.fr}</option>)}
@@ -104,7 +104,7 @@ export function SiteHeader() {
         <nav aria-label="Navigation principale" className="flex flex-1 flex-wrap gap-x-6">
           <ClientOnly fallback={null}><Suspense fallback={<NavLinks path="" />}><ActiveNavLinks /></Suspense></ClientOnly>
         </nav>
-        <div className="flex items-center gap-4">
+        <div className="flex min-w-0 flex-wrap items-center gap-3">
           <ClientOnly fallback={null}><PlaceSelect /><AccountArea /></ClientOnly>
         </div>
       </div>
