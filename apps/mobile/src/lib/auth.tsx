@@ -1,6 +1,6 @@
 import { colors } from '@dini/core'
 import type { OAuthProvider } from '@dini/data/supabase'
-import { useDini } from '@dini/data/react'
+import { useAuthProviders, useDini } from '@dini/data/react'
 import * as AppleAuthentication from 'expo-apple-authentication'
 import * as Crypto from 'expo-crypto'
 import * as Linking from 'expo-linking'
@@ -42,7 +42,10 @@ export function FormError({ message }: { message?: string | null }) {
   return message ? <T accessibilityRole="alert" style={{ color: colors.warn, backgroundColor: colors.warnBg, padding: 10 }}>{message}</T> : null
 }
 
+/** Séparateur « ou », affiché seulement si au moins un bouton Google ou Apple est actif. */
 export function Divider() {
+  const enabled = useAuthProviders().data ?? []
+  if (!enabled.length) return null
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
       <View style={{ flex: 1, height: 1, backgroundColor: colors.line }} /><T tone="muted">ou</T><View style={{ flex: 1, height: 1, backgroundColor: colors.line }} />
@@ -69,8 +72,10 @@ const appleName = (n: AppleAuthentication.AppleAuthenticationFullName | null) =>
  * Boutons « Continuer avec ». Sur iPhone, Apple passe par la connexion native du système (bouton officiel d'Apple) ;
  * Google, et Apple ailleurs, passent par le navigateur du système puis reviennent dans l'app (dine://auth-callback).
  */
-export function OAuthButtons({ providers, verb = 'Continuer', asTeacher = false, onDone }: { providers: OAuthProvider[]; verb?: string; asTeacher?: boolean; onDone: () => void }) {
+export function OAuthButtons({ providers: wanted, verb = 'Continuer', asTeacher = false, onDone }: { providers: OAuthProvider[]; verb?: string; asTeacher?: boolean; onDone: () => void }) {
   const { api } = useDini()
+  const enabled = useAuthProviders().data ?? []
+  const providers = wanted.filter((p) => enabled.includes(p))
   const [pending, setPending] = useState<OAuthProvider | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [nativeApple, setNativeApple] = useState(false)
@@ -109,6 +114,7 @@ export function OAuthButtons({ providers, verb = 'Continuer', asTeacher = false,
     return true
   })
 
+  if (!providers.length) return null
   return (
     <View style={{ gap: 10 }}>
       {providers.map((p) => p === 'apple' && nativeApple ? (

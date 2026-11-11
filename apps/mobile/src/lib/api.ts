@@ -16,4 +16,4 @@ AppState.addEventListener('change', (state) => {
   else client.auth.stopAutoRefresh()
 })
 
-export const api = createSupabaseApi(client, storage)
+export const api = createSupabaseApi(client, storage, { url: SUPABASE_URL, key: SUPABASE_KEY })

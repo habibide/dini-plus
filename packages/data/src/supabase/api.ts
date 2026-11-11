@@ -156,7 +156,8 @@ const toSubscription = (r: Row<'subscriptions'>): Subscription => ({
 
 const INTENT_KEY = 'dini-signup-intent'
 
-export function createSupabaseApi(client: DiniClient, storage: KeyValueStorage) {
+export function createSupabaseApi(client: DiniClient, storage: KeyValueStorage, project: { url: string; key: string }) {
+  let providers: Promise<OAuthProvider[]> | null = null
   let catalog: { at: number; teachers: Promise<Teacher[]> } | null = null
   let family: { userId: string; id: Promise<string> } | null = null
   let place: Place = { country: 'FR', timezone: 'Europe/Paris' }
@@ -265,6 +266,15 @@ export function createSupabaseApi(client: DiniClient, storage: KeyValueStorage) 
      * Adresse de connexion Google ou Apple. Le web y redirige la page ;
      * le mobile l'ouvre dans un navigateur intégré puis appelle completeOAuth avec l'adresse de retour.
      */
+    /** Fournisseurs Google et Apple réellement activés dans Supabase : un bouton inactif n'est jamais affiché. */
+    authProviders(): Promise<OAuthProvider[]> {
+      providers ??= fetch(`${project.url}/auth/v1/settings`, { headers: { apikey: project.key } })
+        .then((r) => (r.ok ? r.json() : { external: {} }))
+        .then((s: { external?: Record<string, boolean> }) => (['google', 'apple'] as const).filter((p) => s.external?.[p]))
+        .catch(() => { providers = null; return [] })
+      return providers
+    },
+
     async oauthUrl(provider: OAuthProvider, redirectTo: string, asTeacher = false): Promise<string> {
       await storage.setItem(INTENT_KEY, asTeacher ? 'teacher' : '')
       const { data, error } = await client.auth.signInWithOAuth({ provider, options: { redirectTo, skipBrowserRedirect: true } })

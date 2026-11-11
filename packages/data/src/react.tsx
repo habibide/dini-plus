@@ -146,6 +146,12 @@ export const useSignUp = () => useWrite((api, a: { name?: string; email: string;
 export const useSignOut = () => useWrite((api, _: void) => api.signOut())
 export const useSendPasswordReset = () => useWrite((api, a: { email: string; redirectTo: string }) => api.sendPasswordReset(a.email, a.redirectTo))
 export const useUpdatePassword = () => useWrite((api, password: string) => api.updatePassword(password))
+/** Fournisseurs de connexion activés (Google, Apple), lus une fois par session. */
+export function useAuthProviders() {
+  const { api } = useDini()
+  return useQuery({ queryKey: ['auth-providers'], queryFn: () => api.authProviders(), staleTime: Infinity })
+}
+
 export const useOAuthUrl = () => useMutation({
   mutationFn: (a: { api: DiniApi; provider: OAuthProvider; redirectTo: string; asTeacher?: boolean }) => a.api.oauthUrl(a.provider, a.redirectTo, a.asTeacher),
 })

@@ -20,13 +20,14 @@ let browserApi: { api: DiniApi; storage: KeyValueStorage } | undefined
 
 function createApi() {
   if (!SUPABASE_URL || !SUPABASE_KEY) throw new Error('Supabase n’est pas configuré : copiez apps/web/.env.example en .env.local.')
+  const project = { url: SUPABASE_URL, key: SUPABASE_KEY }
   if (typeof window === 'undefined') {
     // Rendu serveur : aucune donnée n'y est chargée, les écrans s'affichent après l'hydratation.
     const storage = memoryStorage()
-    return { api: createSupabaseApi(createDiniClient(SUPABASE_URL, SUPABASE_KEY, { storage }), storage), storage }
+    return { api: createSupabaseApi(createDiniClient(SUPABASE_URL, SUPABASE_KEY, { storage }), storage, project), storage }
   }
   browserApi ??= {
-    api: createSupabaseApi(createDiniClient(SUPABASE_URL, SUPABASE_KEY, { storage: browserStorage, detectSessionInUrl: true }), browserStorage),
+    api: createSupabaseApi(createDiniClient(SUPABASE_URL, SUPABASE_KEY, { storage: browserStorage, detectSessionInUrl: true }), browserStorage, project),
     storage: browserStorage,
   }
   return browserApi

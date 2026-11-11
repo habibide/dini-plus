@@ -1,7 +1,7 @@
 'use client'
 
 import type { OAuthProvider, Role } from '@dini/data/supabase'
-import { useAccount, useDini } from '@dini/data/react'
+import { useAccount, useAuthProviders, useDini } from '@dini/data/react'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useId, useState, type ReactNode } from 'react'
@@ -47,7 +47,10 @@ export function AuthLayout({ title, children }: { title: string; children: React
   )
 }
 
+/** Séparateur « ou », affiché seulement si au moins un bouton Google ou Apple est actif. */
 export function Divider() {
+  const enabled = useAuthProviders().data ?? []
+  if (!enabled.length) return null
   return <div className="flex items-center gap-4 text-muted"><span className="h-px flex-1 bg-line" />ou<span className="h-px flex-1 bg-line" /></div>
 }
 
@@ -111,8 +114,10 @@ const PROVIDERS: Record<OAuthProvider, { label: string; icon: ReactNode }> = {
 }
 
 /** Boutons « Continuer avec ». Google et Apple doivent être activés dans Supabase (Authentication, Providers). */
-export function OAuthButtons({ providers, verb = 'Continuer', asTeacher = false, next = '/' }: { providers: OAuthProvider[]; verb?: string; asTeacher?: boolean; next?: string }) {
+export function OAuthButtons({ providers: wanted, verb = 'Continuer', asTeacher = false, next = '/' }: { providers: OAuthProvider[]; verb?: string; asTeacher?: boolean; next?: string }) {
   const { api } = useDini()
+  const enabled = useAuthProviders().data ?? []
+  const providers = wanted.filter((p) => enabled.includes(p))
   const [pending, setPending] = useState<OAuthProvider | null>(null)
   const [error, setError] = useState<string | null>(null)
   async function go(p: OAuthProvider) {
@@ -123,6 +128,7 @@ export function OAuthButtons({ providers, verb = 'Continuer', asTeacher = false,
       setPending(null); setError(e instanceof Error ? e.message : String(e))
     }
   }
+  if (!providers.length) return null
   return (
     <div className="flex flex-col gap-3">
       {providers.map((p) => (
