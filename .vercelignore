@@ -1,0 +1,8 @@
+# Seul le site (apps/web) et ses paquets partagés sont construits sur Vercel.
+# Chemins ancrés à la racine (« / ») : sinon « supabase » exclurait aussi packages/data/src/supabase.
+/prototype
+/supabase
+/.claude
+/apps/mobile/ios
+/apps/mobile/android
+/apps/mobile/.expo
