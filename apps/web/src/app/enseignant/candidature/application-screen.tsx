@@ -128,7 +128,10 @@ function ApplicationForm({ t }: { t: MyTeacher }) {
         </Section>
 
         <Section title="Présentation" hint="C’est ce que les familles lisent en premier. Parlez de votre parcours et de votre façon d’enseigner.">
-          <Field label="Titre de votre profil">{(id) => <input id={id} maxLength={160} value={f.headline} onChange={(e) => set('headline', e.target.value)} placeholder="Coran et tajwid pour enfants, riwaya Warsh" className={inputCls} />}</Field>
+          <Field label="Titre de votre profil">{(id) => <>
+            <input id={id} maxLength={160} value={f.headline} onChange={(e) => set('headline', e.target.value)} placeholder="Coran et tajwid pour enfants, riwaya Warsh" className={inputCls} />
+            <span className="text-sm text-muted">Une phrase courte qui dit ce que vous enseignez et à qui.</span>
+          </>}</Field>
           <Field label="Présentation">{(id) => <>
             <textarea id={id} rows={7} maxLength={3000} value={f.bio} onChange={(e) => set('bio', e.target.value)} placeholder={BIO_EXAMPLE} className={`${inputCls} py-2`} />
             <span className={cx('text-sm', f.bio.trim().length < 80 ? 'text-warn' : 'text-muted')}>{f.bio.trim().length} caractères, 80 au minimum.</span>
