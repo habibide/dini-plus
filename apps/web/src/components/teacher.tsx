@@ -67,7 +67,7 @@ export function AvailabilityEditor({ value, onChange }: { value: Rule[]; onChang
 
 const STATUS: Record<MyTeacher['status'], { tone: string; title: string; text: string }> = {
   draft: { tone: 'bg-leaf', title: 'Candidature à compléter', text: 'Remplissez votre profil, puis envoyez-le : notre équipe le vérifie avant publication.' },
-  submitted: { tone: 'bg-leaf', title: 'Candidature en cours d’examen', text: 'Notre équipe vérifie votre identité, vos diplômes et votre ijaza, en général sous 3 jours ouvrés.' },
+  submitted: { tone: 'bg-leaf', title: 'Candidature en cours d’examen', text: 'Notre équipe vous contacte pour un entretien, en général sous 3 jours ouvrés.' },
   rejected: { tone: 'bg-warnbg text-warn', title: 'Candidature à reprendre', text: 'Corrigez votre profil selon le message ci-dessous, puis renvoyez-le.' },
   approved: { tone: 'bg-leaf', title: 'Profil publié', text: 'Les familles peuvent vous trouver et réserver vos créneaux.' },
 }

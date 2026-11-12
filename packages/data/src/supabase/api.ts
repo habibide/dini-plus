@@ -29,7 +29,7 @@ export type MyTeacher = Omit<Teacher, 'gender' | 'rates'> & {
 
 export type TeacherApplication = Partial<Pick<Teacher,
   'name' | 'gender' | 'city' | 'countryLabel' | 'timezone' | 'headline' | 'bio' | 'subjects' | 'arabicTracks' | 'languages' | 'riwayat' | 'madhahib' | 'levels' | 'ageGroups' | 'credentials'
->> & { rates?: { XOF: number; EUR: number } }
+>> & { rates?: { XOF: number } }
 
 export type AgendaItem = Booking & { learner: Pick<Learner, 'name' | 'birthYear' | 'goals' | 'level'> }
 
@@ -45,7 +45,7 @@ export type Application = MyTeacher & { submittedAt: number | null }
 const TEACHER_COLUMNS = `id, name, gender, city, country_label, timezone, headline, bio, subjects, arabic_tracks, languages, riwayat, madhahib,
   levels, age_groups, rate_xof, rate_eur, identity_verified, diploma_verified, ijaza_verified, hours_taught, rating, disputes, published,
   status, review_note, submitted_at,
-  teacher_credentials (kind, title, institution, year, riwaya, sanad, position),
+  teacher_credentials (kind, title, institution, year, riwaya, sanad, position, verified),
   availability_rules (weekday, start_min, end_min),
   reviews (author, rating, body, date_label, position)`
 const PUBLIC_TEACHER_COLUMNS = TEACHER_COLUMNS.replace('status, review_note, submitted_at,', '')
@@ -69,6 +69,7 @@ const MESSAGES: Record<string, string> = {
   application_under_review: 'Votre candidature est en cours d’examen : elle ne peut pas être modifiée pour l’instant.',
   identity_locked: 'Votre nom et votre genre ont été vérifiés. Écrivez-nous pour les modifier.',
   credentials_locked: 'Vos diplômes ont déjà été vérifiés. Écrivez-nous pour en ajouter un.',
+  invalid_rate: 'Indiquez un tarif supérieur à zéro.',
   not_submittable: 'Cette candidature a déjà été envoyée.',
   not_started: 'La séance n’a pas encore commencé.',
   too_early: 'Attendez au moins 10 minutes après le début avant de signaler une absence.',
@@ -112,7 +113,7 @@ function toMyTeacher(r: TeacherRow): MyTeacher {
     verification: { identity: r.identity_verified, diploma: r.diploma_verified, ijaza: r.ijaza_verified },
     hoursTaught: Number(r.hours_taught), rating: Number(r.rating), disputes: r.disputes,
     credentials: [...r.teacher_credentials].sort((a, b) => a.position - b.position).map((c) => ({
-      kind: c.kind as 'diploma' | 'ijaza', title: c.title, institution: c.institution, year: c.year,
+      kind: c.kind as 'diploma' | 'ijaza', title: c.title, institution: c.institution, year: c.year, verified: c.verified,
       ...(c.riwaya ? { riwaya: c.riwaya as Teacher['riwayat'][number] } : {}), ...(c.sanad ? { sanad: c.sanad } : {}),
     })),
     availability: r.availability_rules.map((a) => ({ weekday: a.weekday, start: a.start_min, end: a.end_min })),

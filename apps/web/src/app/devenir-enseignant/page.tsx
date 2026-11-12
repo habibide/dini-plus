@@ -9,8 +9,8 @@ export const metadata: Metadata = {
 }
 
 const STEPS = [
-  { title: 'Inscrivez-vous', text: 'et remplissez votre profil : matières, langues, tarifs, diplômes, ijaza.' },
-  { title: 'Faites valider votre profil', text: 'par notre équipe, qui vérifie votre identité et vos diplômes.' },
+  { title: 'Inscrivez-vous', text: 'et remplissez votre profil : présentation, matières, langues, tarif, disponibilités.' },
+  { title: 'Faites valider votre profil', text: 'lors d’un entretien avec notre équipe, qui vérifie votre identité.' },
   { title: 'Commencez à enseigner', text: 'aux familles du Sénégal, de Gambie et de la diaspora.' },
 ]
 
@@ -40,7 +40,7 @@ export default function Page() {
         <div className="mx-auto grid max-w-6xl gap-10 px-5 py-14 md:grid-cols-3">
           <div className="flex flex-col gap-3">
             <h2 className="font-display text-3xl">Fixez vos tarifs</h2>
-            <p>Un tarif local en francs CFA, un tarif international en euros. Vous les modifiez quand vous voulez.</p>
+            <p>Un prix en francs CFA pour un cours de 50 minutes, converti automatiquement pour les familles à l’étranger. Vous le modifiez quand vous voulez.</p>
           </div>
           <div className="flex flex-col gap-3">
             <h2 className="font-display text-3xl">Enseignez quand vous voulez</h2>

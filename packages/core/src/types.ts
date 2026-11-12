@@ -16,6 +16,8 @@ export const CredentialSchema = z.object({
   year: z.number().int(),
   riwaya: z.enum(RIWAYAT).optional(),
   sanad: z.array(z.string()).optional(),
+  /** Vérifié par DINE ; un diplôme ajouté après l'approbation reste « déclaré » jusqu'à sa vérification. */
+  verified: z.boolean().optional(),
 })
 
 export const ReviewSchema = z.object({ author: z.string(), rating: z.number().min(1).max(5), text: z.string(), date: z.string() })

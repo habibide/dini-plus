@@ -46,7 +46,7 @@ export type Database = {
       }>
       teacher_credentials: Table<{
         id: number; institution: string; kind: string; position: number; riwaya: string | null; sanad: string[] | null
-        teacher_id: string; title: string; year: number
+        teacher_id: string; title: string; verified: boolean; year: number
       }>
       teachers: Table<{
         age_groups: string[]; arabic_tracks: string[]; bio: string; city: string; country_label: string; created_at: string

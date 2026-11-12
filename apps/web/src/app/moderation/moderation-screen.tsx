@@ -45,16 +45,17 @@ function Review({ a }: { a: Application }) {
         <dt className="text-muted">Langues</dt><dd>{a.languages.map((l) => LANGUAGES.find((x) => x.id === l)?.label.fr).join(', ')}</dd>
         <dt className="text-muted">Riwayat, madhahib</dt><dd>{[...a.riwayat, ...a.madhahib].join(', ') || 'Non précisé'}</dd>
         <dt className="text-muted">Public</dt><dd>{[...a.levels.map((l) => LEVELS.find((x) => x.id === l)?.label.fr), ...a.ageGroups.map((g) => AGE_GROUPS.find((x) => x.id === g)?.label.fr)].join(', ')}</dd>
-        <dt className="text-muted">Tarifs</dt><dd>{a.rates.XOF} FCFA · {a.rates.EUR} €</dd>
+        <dt className="text-muted">Tarif</dt><dd>{a.rates.XOF} FCFA le cours de 50 min ({a.rates.EUR} € à l’international)</dd>
         <dt className="text-muted">Disponibilités</dt>
         <dd>{a.availability.map((r) => `${WEEKDAYS[r.weekday]} ${hm(r.start)}-${hm(r.end)}`).join(', ')} ({a.timezone})</dd>
       </dl>
       <div className="flex flex-col gap-3">
         <h3 className="font-semibold">Diplômes et ijaza déclarés</h3>
+        {!a.credentials.length && <p className="text-sm text-muted">Aucun pour l’instant (facultatif, à voir pendant l’entretien).</p>}
         {a.credentials.map((c, i) => (
           <div key={i} className="flex flex-col gap-2 border-l-2 border-ochre pl-4">
             <strong>{c.title} ({c.year})</strong>
-            <span className="text-sm text-muted">{c.kind === 'ijaza' ? 'Ijaza' : 'Diplôme'}{c.riwaya ? `, riwaya ${c.riwaya}` : ''} · {c.institution}</span>
+            <span className="text-sm text-muted">{c.kind === 'ijaza' ? 'Ijaza' : 'Diplôme'}{c.riwaya ? `, riwaya ${c.riwaya}` : ''}{c.institution ? ` · ${c.institution}` : ''}</span>
             {c.sanad?.length ? <Sanad chain={c.sanad} /> : null}
           </div>
         ))}
