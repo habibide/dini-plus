@@ -42,6 +42,9 @@ export type Earnings = {
 
 export type Application = MyTeacher & { submittedAt: number | null }
 
+/** Diplôme ajouté par un enseignant déjà approuvé, en attente de vérification. */
+export type PendingCredential = Teacher['credentials'][number] & { id: number; teacherId: string; teacherName: string }
+
 const TEACHER_COLUMNS = `id, name, gender, city, country_label, timezone, headline, bio, subjects, arabic_tracks, languages, riwayat, madhahib,
   levels, age_groups, rate_xof, rate_eur, identity_verified, diploma_verified, ijaza_verified, hours_taught, rating, disputes, published,
   status, review_note, submitted_at,
@@ -77,6 +80,7 @@ const MESSAGES: Record<string, string> = {
   report_required: 'Indiquez au moins ce qui a été travaillé.',
   note_required: 'Expliquez le refus : le candidat verra ce message.',
   not_under_review: 'Cette candidature n’est plus en attente.',
+  credential_not_pending: 'Ce diplôme a déjà été traité.',
   trial_already_used: 'Cet élève a déjà fait sa séance d’essai avec cet enseignant.',
   room_not_open: 'La salle ouvre 10 minutes avant le début du cours.',
   room_closed: 'Ce cours est terminé : la salle est fermée.',
@@ -496,6 +500,16 @@ export function createSupabaseApi(client: DiniClient, storage: KeyValueStorage, 
         p_teacher: input.teacherId, p_approve: input.approve, p_note: input.note ?? '',
         p_identity: !!input.identity, p_diploma: !!input.diploma, p_ijaza: !!input.ijaza,
       }))
+      catalog = null
+    },
+
+    async listCredentialsToReview(): Promise<PendingCredential[]> {
+      const rows = must(await client.rpc('credentials_to_review')) as unknown as (PendingCredential & { riwaya: string | null })[]
+      return rows.map(({ riwaya, ...c }) => ({ ...c, ...(riwaya ? { riwaya: riwaya as PendingCredential['riwaya'] } : {}) }))
+    },
+
+    async reviewCredential(input: { id: number; approve: boolean }) {
+      must(await client.rpc('review_credential', { p_id: input.id, p_approve: input.approve }))
       catalog = null
     },
   }

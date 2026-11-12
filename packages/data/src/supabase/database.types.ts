@@ -77,6 +77,8 @@ export type Database = {
         Returns: undefined
       }
       save_teacher_application: { Args: { p: Json }; Returns: undefined }
+      credentials_to_review: { Args: Record<string, never>; Returns: Json }
+      review_credential: { Args: { p_id: number; p_approve: boolean }; Returns: undefined }
       set_my_availability: { Args: { p_rules: Json }; Returns: undefined }
       start_teacher_application: { Args: Record<string, never>; Returns: string }
       submit_teacher_application: { Args: Record<string, never>; Returns: undefined }

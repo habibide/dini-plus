@@ -1,8 +1,8 @@
 'use client'
 
 import { AGE_GROUPS, LANGUAGES, LEVELS, formatDateTime, subject } from '@dini/core'
-import type { Application } from '@dini/data/supabase'
-import { useApplications, useReviewApplication } from '@dini/data/react'
+import type { Application, PendingCredential } from '@dini/data/supabase'
+import { useApplications, useCredentialsToReview, useReviewApplication, useReviewCredential } from '@dini/data/react'
 import { useState } from 'react'
 import { FormError, inputCls } from '@/components/auth'
 import { WEEKDAYS, hm } from '@/components/teacher'
@@ -16,7 +16,40 @@ export function ModerationScreen() {
       {list.isPending ? <p className="text-muted">Chargement…</p>
         : !list.data?.length ? <p className="bg-leaf px-4 py-3">Aucune candidature en attente.</p>
         : list.data.map((a) => <Review key={a.id} a={a} />)}
+      <PendingCredentials />
     </div>
+  )
+}
+
+/** Diplômes et ijaza ajoutés après l'approbation : affichés « déclarés » jusqu'à la décision. */
+function PendingCredentials() {
+  const list = useCredentialsToReview()
+  const review = useReviewCredential()
+  return (
+    <section className="flex flex-col gap-4">
+      <h2 className="font-display text-3xl">Diplômes ajoutés à vérifier</h2>
+      <p className="text-muted">Ajoutés par des enseignants déjà publiés. Validez après avoir vu le justificatif ; un refus retire le diplôme du profil.</p>
+      {list.isPending ? <p className="text-muted">Chargement…</p>
+        : !list.data?.length ? <p className="bg-leaf px-4 py-3">Aucun diplôme en attente.</p>
+        : list.data.map((c) => <PendingCredentialRow key={c.id} c={c} busy={review.isPending} onDecide={(approve) => review.mutate({ id: c.id, approve })} />)}
+      <FormError message={review.error?.message} />
+    </section>
+  )
+}
+
+function PendingCredentialRow({ c, busy, onDecide }: { c: PendingCredential; busy: boolean; onDecide: (approve: boolean) => void }) {
+  return (
+    <article className="flex flex-wrap items-center gap-4 border border-line bg-white p-4">
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <strong>{c.title} ({c.year})</strong>
+        <span className="text-sm text-muted">{[c.kind === 'ijaza' ? 'Ijaza' : 'Diplôme', c.riwaya && `riwaya ${c.riwaya}`, c.institution].filter(Boolean).join(' · ')}</span>
+        <a href={`/enseignants/${c.teacherId}`} className="text-sm underline">{c.teacherName}</a>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <button type="button" className={buttonCls.primary} disabled={busy} onClick={() => onDecide(true)}>Vérifié</button>
+        <button type="button" className={buttonCls.ghost} disabled={busy} onClick={() => { if (window.confirm(`Retirer « ${c.title} » du profil de ${c.teacherName} ?`)) onDecide(false) }}>Refuser</button>
+      </div>
+    </article>
   )
 }
 

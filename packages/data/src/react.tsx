@@ -189,3 +189,10 @@ export function useApplications() {
 }
 
 export const useReviewApplication = () => useWrite((api, a: Parameters<DiniApi['reviewApplication']>[0]) => api.reviewApplication(a))
+
+export function useCredentialsToReview() {
+  const { api, account } = useDini()
+  return useQuery({ queryKey: ['credentials-to-review'], queryFn: () => api.listCredentialsToReview(), enabled: account?.role === 'moderator' || account?.role === 'admin' })
+}
+
+export const useReviewCredential = () => useWrite((api, a: { id: number; approve: boolean }) => api.reviewCredential(a))
