@@ -50,7 +50,7 @@ function ApplicationForm({ t }: { t: MyTeacher }) {
   const [f, setF] = useState({
     name: t.name, gender: t.gender, city: t.city, timezone: t.timezone, headline: t.headline, bio: t.bio,
     subjects: t.subjects, arabicTracks: t.arabicTracks, languages: t.languages, riwayat: t.riwayat, madhahib: t.madhahib,
-    levels: t.levels, ageGroups: t.ageGroups, xof: t.rates.XOF?.toString() ?? '',
+    levels: t.levels, ageGroups: t.ageGroups, xof: t.rates.XOF?.toString() ?? '', eur: t.rates.EUR?.toString() ?? '',
   })
   // Les diplômes déjà vérifiés sont figés ; seuls les diplômes déclarés se modifient.
   const verified = t.credentials.filter((c) => c.verified)
@@ -61,6 +61,8 @@ function ApplicationForm({ t }: { t: MyTeacher }) {
   const residence = COUNTRIES.find((c) => c.timezones.some((z) => z.id === f.timezone)) ?? COUNTRIES[0]
   const xof = Number(f.xof)
   const rateOk = xof > 0
+  // Tarif international facultatif : vide, il se déduit du tarif local (même calcul que la base).
+  const eur = Number(f.eur) > 0 ? Number(f.eur) : rateOk ? eurFromXof(xof) : 0
 
   async function persist() {
     await save.mutateAsync({
@@ -68,7 +70,7 @@ function ApplicationForm({ t }: { t: MyTeacher }) {
       city: f.city.trim(), countryLabel: residence.label.fr, timezone: f.timezone, headline: f.headline.trim(), bio: f.bio.trim(),
       subjects: f.subjects, arabicTracks: f.subjects.includes('arabic') ? f.arabicTracks : [], languages: f.languages, riwayat: f.riwayat,
       madhahib: f.madhahib, levels: f.levels, ageGroups: f.ageGroups,
-      ...(rateOk ? { rates: { XOF: xof } } : {}),
+      ...(rateOk ? { rates: { XOF: xof, ...(Number(f.eur) > 0 ? { EUR: Number(f.eur) } : {}) } } : {}),
       credentials: credentials.filter((c) => c.title.trim()).map((c) => ({
         kind: c.kind, title: c.title.trim(), year: c.year, institution: c.kind === 'diploma' ? c.institution.trim() : '',
         ...(c.kind === 'ijaza' && c.riwaya ? { riwaya: c.riwaya } : {}),
@@ -148,10 +150,16 @@ function ApplicationForm({ t }: { t: MyTeacher }) {
           <ChipSet legend="Âge des élèves" options={AGE_GROUPS.map((a) => ({ id: a.id, label: a.label.fr }))} value={f.ageGroups} onChange={(v) => set('ageGroups', v)} />
         </Section>
 
-        <Section title="Tarif" hint="Pour un cours de 50 minutes ; l’essai de 30 minutes est à moitié prix. Pour les familles hors du Sénégal et de la Gambie, le prix est converti automatiquement.">
-          <Field label="Prix d’un cours (FCFA)">{(id) => <input id={id} type="number" min={500} step={50} inputMode="numeric" value={f.xof} onChange={(e) => set('xof', e.target.value)} placeholder="3000" className={cx(inputCls, 'sm:max-w-64')} />}</Field>
+        <Section title="Tarifs" hint="Pour un cours de 50 minutes ; l’essai de 30 minutes est à moitié prix. Le tarif local s’applique au Sénégal et en Gambie, le tarif international ailleurs.">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Tarif local (FCFA)">{(id) => <input id={id} type="number" min={500} step={50} inputMode="numeric" value={f.xof} onChange={(e) => set('xof', e.target.value)} placeholder="3000" className={inputCls} />}</Field>
+            <Field label="Tarif international (€)">{(id) => <>
+              <input id={id} type="number" min={0.5} step={0.5} inputMode="decimal" value={f.eur} onChange={(e) => set('eur', e.target.value)} placeholder={rateOk ? String(eurFromXof(xof)) : '5'} className={inputCls} />
+              <span className="text-sm text-muted">Facultatif : laissé vide, il est calculé à partir du tarif local.</span>
+            </>}</Field>
+          </div>
           {rateOk && (
-            <p className="text-sm text-muted">Prix affichés aux familles : {COUNTRIES.map((c) => { const p = sessionPrice({ XOF: xof, EUR: eurFromXof(xof) }, c.code); return `${c.label.fr} ${formatMoney(p.amount, p.currency)}` }).join(' · ')}.</p>
+            <p className="text-sm text-muted">Prix affichés aux familles : {COUNTRIES.map((c) => { const p = sessionPrice({ XOF: xof, EUR: eur }, c.code); return `${c.label.fr} ${formatMoney(p.amount, p.currency)}` }).join(' · ')}.</p>
           )}
         </Section>
 

@@ -29,7 +29,7 @@ export type MyTeacher = Omit<Teacher, 'gender' | 'rates'> & {
 
 export type TeacherApplication = Partial<Pick<Teacher,
   'name' | 'gender' | 'city' | 'countryLabel' | 'timezone' | 'headline' | 'bio' | 'subjects' | 'arabicTracks' | 'languages' | 'riwayat' | 'madhahib' | 'levels' | 'ageGroups' | 'credentials'
->> & { rates?: { XOF: number } }
+>> & { rates?: { XOF: number; EUR?: number } }
 
 export type AgendaItem = Booking & { learner: Pick<Learner, 'name' | 'birthYear' | 'goals' | 'level'> }
 
