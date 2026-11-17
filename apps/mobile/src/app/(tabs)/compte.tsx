@@ -5,8 +5,7 @@ import { ScrollView, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { SignInPrompt } from '@/lib/auth'
 import { Button, Chip, Section, T } from '@/lib/ui'
-
-const ROLES = { family: 'Élève ou parent', teacher: 'Enseignant', moderator: 'Modération', admin: 'Administration' } as const
+import { LOCALES, setLocale, useFormat, useT } from '@/lib/i18n'
 
 export default function Compte() {
   const account = useAccount()
@@ -14,33 +13,41 @@ export default function Compte() {
   const signOut = useSignOut()
   const start = useStartApplication()
   const insets = useSafeAreaInsets()
+  const t = useT()
+  const m = t.account
+  const fmt = useFormat()
   return (
     <ScrollView style={{ backgroundColor: colors.paper }} contentInsetAdjustmentBehavior="never" contentContainerStyle={{ paddingTop: insets.top, paddingBottom: 110 }}>
-      {account === null && <SignInPrompt title="Mon compte" text="Connectez-vous pour réserver, suivre les progrès de vos enfants ou enseigner sur DINE." next="/compte" />}
+      {account === null && <SignInPrompt title={m.title} text={m.prompt} next="/compte" />}
       {account && (
-        <Section title="Mon compte" style={{ paddingTop: 10 }}>
+        <Section title={m.title} style={{ paddingTop: 10 }}>
           <T tone="h1">{account.name || account.email}</T>
-          <T tone="muted">{account.email} · {ROLES[account.role]}</T>
+          <T tone="muted">{account.email} · {m.roles[account.role]}</T>
         </Section>
       )}
-      <Section title="J’habite">
-        <T tone="muted">Les prix s’affichent dans votre devise, les horaires dans votre fuseau.</T>
+      <Section title={m.language}>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+          {LOCALES.map((l) => <Chip key={l} label={l === 'fr' ? 'Français' : 'English'} on={fmt.locale === l} onPress={() => setLocale(l)} />)}
+        </View>
+      </Section>
+      <Section title={m.livesIn}>
+        <T tone="muted">{m.livesInText}</T>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
           {COUNTRIES.flatMap((c) => c.timezones.map((tz) => (
-            <Chip key={tz.id} label={c.timezones.length > 1 ? `${c.label.fr}, ${tz.label}` : c.label.fr}
+            <Chip key={tz.id} label={c.timezones.length > 1 ? `${fmt.label(c.label)}, ${tz.label}` : fmt.label(c.label)}
               on={place.country === c.code && place.timezone === tz.id} onPress={() => setPlace({ country: c.code, timezone: tz.id })} />
           )))}
         </View>
       </Section>
       {account?.role === 'family' && (
-        <Section title="Enseigner sur DINE">
-          <T>Diplômé, porteur d’une ijaza, imam ou maître de daara : proposez vos cours aux familles.</T>
-          <Button title="Devenir enseignant" kind="ghost" disabled={start.isPending} onPress={() => start.mutate(undefined, { onSuccess: () => router.navigate('/agenda') })} />
+        <Section title={m.teach}>
+          <T>{m.teachText}</T>
+          <Button title={m.becomeTeacher} kind="ghost" disabled={start.isPending} onPress={() => start.mutate(undefined, { onSuccess: () => router.navigate('/agenda') })} />
         </Section>
       )}
       {account && (
         <View style={{ padding: 20 }}>
-          <Button title={signOut.isPending ? 'Déconnexion…' : 'Se déconnecter'} kind="ghost" disabled={signOut.isPending} onPress={() => signOut.mutate(undefined, { onSuccess: () => router.navigate('/') })} />
+          <Button title={signOut.isPending ? m.signingOut : m.signOut} kind="ghost" disabled={signOut.isPending} onPress={() => signOut.mutate(undefined, { onSuccess: () => router.navigate('/') })} />
         </View>
       )}
     </ScrollView>

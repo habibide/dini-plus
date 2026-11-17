@@ -1,4 +1,4 @@
-import { COMMISSION_TIERS, colors, commissionRate, formatDateTime, subject } from '@dini/core'
+import { COMMISSION_TIERS, colors, commissionRate, subject } from '@dini/core'
 import type { AgendaItem } from '@dini/data/supabase'
 import { useAccount, useAgenda, useEarnings, useMyTeacher } from '@dini/data/react'
 import { router } from 'expo-router'
@@ -7,14 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { SignInPrompt } from '@/lib/auth'
 import { Section, T, font } from '@/lib/ui'
 import { JoinButton } from '@/lib/video'
-
-const STATUS = {
-  draft: ['Candidature à compléter', 'Remplissez votre profil sur le site DINE (matières, tarifs, diplômes, disponibilités), puis envoyez-le.'],
-  submitted: ['Candidature en cours d’examen', 'Notre équipe vérifie votre identité, vos diplômes et votre ijaza, en général sous 3 jours ouvrés.'],
-  rejected: ['Candidature à reprendre', 'Corrigez votre profil sur le site DINE selon le message ci-dessous, puis renvoyez-le.'],
-} as const
-
-const euros = (n: number) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(n)
+import { useFormat, useT } from '@/lib/i18n'
 
 export default function Agenda() {
   const account = useAccount()
@@ -22,7 +15,9 @@ export default function Agenda() {
   const agenda = useAgenda()
   const earnings = useEarnings()
   const insets = useSafeAreaInsets()
-  if (account === null) return <View style={{ paddingTop: insets.top }}><SignInPrompt title="Espace enseignant" text="Connectez-vous avec votre compte enseignant." next="/agenda" /></View>
+  const m = useT().agenda
+  const fmt = useFormat()
+  if (account === null) return <View style={{ paddingTop: insets.top }}><SignInPrompt title={m.title} text={m.prompt} next="/agenda" /></View>
   if (me.isPending || !account) return <ActivityIndicator style={{ marginTop: 80 }} color={colors.green} />
   const t = me.data
   const now = Date.now()
@@ -36,32 +31,32 @@ export default function Agenda() {
     <ScrollView style={{ backgroundColor: colors.paper }} contentInsetAdjustmentBehavior="never" contentContainerStyle={{ paddingTop: insets.top, paddingBottom: 110 }}
       refreshControl={<RefreshControl refreshing={agenda.isRefetching} onRefresh={() => { agenda.refetch(); earnings.refetch(); me.refetch() }} />}>
       <View style={{ paddingHorizontal: 20, paddingTop: 10, paddingBottom: 14, gap: 4, borderBottomWidth: 1, borderColor: colors.line }}>
-        <T tone="h1">Bonjour {t?.name.split(' ')[0] || account.name.split(' ')[0]}</T>
-        <T tone="muted">Votre espace enseignant</T>
+        <T tone="h1">{m.hello(t?.name.split(' ')[0] || account.name.split(' ')[0])}</T>
+        <T tone="muted">{m.yourSpace}</T>
       </View>
       {t && t.status !== 'approved' && (
         <Section style={{ backgroundColor: t.status === 'rejected' ? colors.warnBg : colors.leaf }}>
-          <T style={{ fontFamily: font.semibold }}>{STATUS[t.status][0]}</T>
-          <T>{STATUS[t.status][1]}</T>
+          <T style={{ fontFamily: font.semibold }}>{m.status[t.status][0]}</T>
+          <T>{m.status[t.status][1]}</T>
           {t.status === 'rejected' && t.reviewNote ? <T style={{ color: colors.warn }}>« {t.reviewNote} »</T> : null}
         </Section>
       )}
       {t?.status === 'approved' && <>
         {toComplete.length > 0 && (
-          <Section title="À compléter">
-            <T tone="muted">Écrivez le compte rendu : la famille le reçoit, et votre paiement est libéré 48 h après.</T>
+          <Section title={m.toComplete}>
+            <T tone="muted">{m.toCompleteText}</T>
             {toComplete.map((b) => <Row key={b.id} b={b} highlight />)}
           </Section>
         )}
-        <Section title="Prochaines séances">
+        <Section title={m.upcoming}>
           {agenda.isPending ? <ActivityIndicator color={colors.green} />
             : upcoming.length ? upcoming.map((b) => <Row key={b.id} b={b} />)
-            : <T tone="muted">Aucune séance réservée pour l’instant.</T>}
+            : <T tone="muted">{m.noUpcoming}</T>}
         </Section>
-        <Section title="Gains">
-          <T><T style={{ fontFamily: font.display, fontSize: 26, color: colors.green }}>{euros(earnings.data?.releasedEur ?? 0)}</T> acquis, net de commission</T>
-          <T tone="muted">{earnings.data?.pending.count ?? 0} séance(s) en attente des 48 h sans litige.</T>
-          <T tone="muted">Commission DINE : {Math.round(commissionRate(hours) * 100)} % ({Math.round(hours)} h enseignées){next ? `, ${Math.round(next.rate * 100)} % dès ${next.fromHours} h` : ''}.</T>
+        <Section title={m.earnings}>
+          <T><T style={{ fontFamily: font.display, fontSize: 26, color: colors.green }}>{fmt.euros(earnings.data?.releasedEur ?? 0)}</T>{m.earned}</T>
+          <T tone="muted">{m.pending(earnings.data?.pending.count ?? 0)}</T>
+          <T tone="muted">{m.commission(fmt.pct(commissionRate(hours)), Math.round(hours), next ? m.nextTier(fmt.pct(next.rate), next.fromHours) : '')}</T>
         </Section>
       </>}
     </ScrollView>
@@ -71,12 +66,14 @@ export default function Agenda() {
 function Row({ b, highlight }: { b: AgendaItem; highlight?: boolean }) {
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
   const now = Date.now()
+  const m = useT().agenda
+  const fmt = useFormat()
   return (
     <Pressable accessibilityRole="button" onPress={() => router.push(`/session/${b.id}`)}
       style={({ pressed }) => ({ padding: 14, gap: 3, borderWidth: 1, borderRadius: 4, borderColor: highlight ? colors.ochre : colors.line, backgroundColor: pressed ? colors.leaf : colors.white })}>
-      <T style={{ fontFamily: font.semibold, textTransform: 'capitalize' }}>{formatDateTime(b.startsAt, tz)}</T>
-      <T tone="muted">{b.learner.name} · {subject(b.subject).label.fr}{b.kind === 'trial' ? ' · essai' : ''}</T>
-      {highlight && <T style={{ color: colors.green, fontFamily: font.semibold }}>Écrire le compte rendu</T>}
+      <T style={{ fontFamily: font.semibold, textTransform: 'capitalize' }}>{fmt.dateTime(b.startsAt, tz)}</T>
+      <T tone="muted">{b.learner.name} · {fmt.label(subject(b.subject).label)}{b.kind === 'trial' ? m.trial : ''}</T>
+      {highlight && <T style={{ color: colors.green, fontFamily: font.semibold }}>{m.writeReport}</T>}
       {!highlight && b.startsAt - now < 60 * 60_000 && <JoinButton booking={b} tz={tz} style={{ marginTop: 6 }} />}
     </Pressable>
   )

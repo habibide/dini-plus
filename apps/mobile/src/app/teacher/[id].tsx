@@ -1,9 +1,10 @@
-import { LANGUAGES, colors, country, dayKey, formatDay, formatMoney, formatTime, subject, trialPrice } from '@dini/core'
+import { LANGUAGES, colors, country, dayKey, subject, trialPrice } from '@dini/core'
 import { useAccount, usePlace, useSlots, useTeacher } from '@dini/data/react'
 import { Stack, router, useLocalSearchParams } from 'expo-router'
 import { useState } from 'react'
 import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native'
 import { Badges, Button, Monogram, Sanad, Section, T, font } from '@/lib/ui'
+import { useFormat, useT } from '@/lib/i18n'
 
 export default function TeacherScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
@@ -12,6 +13,9 @@ export default function TeacherScreen() {
   const account = useAccount()
   const [week, setWeek] = useState(0)
   const slots = useSlots(id, week)
+  const all = useT()
+  const m = all.teacher
+  const fmt = useFormat()
 
   if (!teacher.data) return <ActivityIndicator style={{ marginTop: 40 }} color={colors.green} />
   const t = teacher.data
@@ -29,57 +33,59 @@ export default function TeacherScreen() {
           <View style={{ flex: 1, gap: 4 }}>
             <T tone="h1" style={{ fontSize: 25 }}>{t.name}</T>
             <T tone="muted">{t.city}, {t.countryLabel}</T>
-            <T tone="muted"><T style={{ color: colors.ochre }}>★</T> {t.rating.toFixed(1).replace('.', ',')} · {t.reviews.length} avis · {Math.round(t.hoursTaught)} heures</T>
+            <T tone="muted"><T style={{ color: colors.ochre }}>★</T> {m.stats(fmt.decimal(t.rating), t.reviews.length, Math.round(t.hoursTaught))}</T>
           </View>
         </View>
         <Badges t={t} />
         <View style={{ backgroundColor: colors.leaf, padding: 12, gap: 2 }}>
-          <T><T style={{ fontFamily: font.display, fontSize: 20, color: colors.green }}>{formatMoney(t.price.amount, t.price.currency)}</T> le cours de 50 min</T>
-          <T tone="muted">Séance d’essai à {formatMoney(trialPrice(t.price.amount, t.price.currency), t.price.currency)}</T>
+          <T><T style={{ fontFamily: font.display, fontSize: 20, color: colors.green }}>{fmt.money(t.price.amount, t.price.currency)}</T>{all.common.perCourse}</T>
+          <T tone="muted">{m.trial(fmt.money(trialPrice(t.price.amount, t.price.currency), t.price.currency))}</T>
         </View>
       </View>
 
-      <Section title="Présentation">
+      <Section title={m.intro}>
         <T tone="title">{t.headline}</T>
         <T>{t.bio}</T>
-        <T tone="muted">Matières : {t.subjects.map((s) => subject(s).label.fr).join(', ')}</T>
-        <T tone="muted">Langues : {t.languages.map((l) => LANGUAGES.find((x) => x.id === l)!.label.fr).join(', ')}</T>
-        <T tone="muted">Riwaya : {t.riwayat.join(', ')} · Madhhab : {t.madhahib.join(', ')}</T>
+        <T tone="muted">{m.subjects(t.subjects.map((s) => fmt.label(subject(s).label)).join(', '))}</T>
+        <T tone="muted">{m.languages(t.languages.map((l) => fmt.label(LANGUAGES.find((x) => x.id === l)!.label)).join(', '))}</T>
+        <T tone="muted">{m.riwayaMadhhab(t.riwayat.join(', '), t.madhahib.join(', '))}</T>
       </Section>
 
-      <Section title={`Créneaux, heure de ${tzLabel}`}>
+      <Section title={m.slots(tzLabel ?? '')}>
         <View style={{ flexDirection: 'row', gap: 8 }}>
-          <Button title="Semaine précédente" kind="ghost" disabled={week === 0} onPress={() => setWeek(week - 1)} style={{ flex: 1, minHeight: 40, paddingHorizontal: 8 }} />
-          <Button title="Semaine suivante" kind="ghost" disabled={week >= 3} onPress={() => setWeek(week + 1)} style={{ flex: 1, minHeight: 40, paddingHorizontal: 8 }} />
+          <Button title={m.prevWeek} kind="ghost" disabled={week === 0} onPress={() => setWeek(week - 1)} style={{ flex: 1, minHeight: 40, paddingHorizontal: 8 }} />
+          <Button title={m.nextWeek} kind="ghost" disabled={week >= 3} onPress={() => setWeek(week + 1)} style={{ flex: 1, minHeight: 40, paddingHorizontal: 8 }} />
         </View>
         {[...byDay.values()].map((list) => (
           <View key={list[0]} style={{ gap: 6 }}>
-            <T style={{ fontFamily: font.semibold, textTransform: 'capitalize' }}>{formatDay(list[0], tz)}</T>
+            <T style={{ fontFamily: font.semibold, textTransform: 'capitalize' }}>{fmt.day(list[0], tz)}</T>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
               {list.map((at) => (
                 <Pressable key={at} accessibilityRole="button" onPress={() => account ? router.push(`/book/${t.id}/${at}`) : router.push({ pathname: '/login', params: { next: `/book/${t.id}/${at}` } })}
                   style={({ pressed }) => ({ minWidth: 72, minHeight: 44, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.green2, borderRadius: 3, backgroundColor: pressed ? colors.green : colors.white })}>
-                  <T style={{ fontFamily: font.semibold, color: colors.green }}>{formatTime(at, tz)}</T>
+                  <T style={{ fontFamily: font.semibold, color: colors.green }}>{fmt.time(at, tz)}</T>
                 </Pressable>
               ))}
             </View>
           </View>
         ))}
-        {!slots.isPending && byDay.size === 0 && <T tone="muted">Aucun créneau libre cette semaine.</T>}
+        {!slots.isPending && byDay.size === 0 && <T tone="muted">{m.noSlots}</T>}
       </Section>
 
-      <Section title="Parcours vérifié">
+      {t.credentials.length > 0 && <Section title={m.credentials}>
         {t.credentials.map((c) => (
           <View key={c.title} style={{ gap: 4 }}>
-            <T style={{ color: colors.ochre, fontFamily: font.semibold, fontSize: 13 }}>{c.kind === 'ijaza' ? 'Ijaza' : 'Diplôme'}, {c.year}</T>
+            <T style={{ color: colors.ochre, fontFamily: font.semibold, fontSize: 13 }}>{c.kind === 'ijaza' ? m.ijaza : m.diploma}, {c.year}</T>
             <T style={{ fontFamily: font.semibold }}>{c.title}</T>
-            <T tone="muted">{c.institution}</T>
+            {c.institution ? <T tone="muted">{c.institution}</T> : null}
+            <T tone="muted" style={c.verified ? { color: colors.green } : undefined}>{c.verified ? m.verified : m.declared}</T>
             {c.sanad ? <View style={{ marginTop: 6 }}><Sanad chain={c.sanad} /></View> : null}
           </View>
         ))}
-      </Section>
+      </Section>}
 
-      <Section title="Avis des familles" style={{ borderBottomWidth: 0 }}>
+      <Section title={m.reviews} style={{ borderBottomWidth: 0 }}>
+        {t.reviews.length === 0 && <T tone="muted">{m.noReviews}</T>}
         {t.reviews.map((r) => (
           <View key={r.text} style={{ gap: 3 }}>
             <T style={{ color: colors.ochre }}>{'★'.repeat(r.rating)}</T>

@@ -1,7 +1,8 @@
-import { colors, formatMoney, isConfirmed, type CurrencyCode, type Teacher } from '@dini/core'
+import { colors, isConfirmed, type CurrencyCode, type Teacher } from '@dini/core'
 import { useDini } from '@dini/data/react'
 import type { ReactNode } from 'react'
 import { Pressable, StyleSheet, Text, View, type TextProps, type ViewStyle } from 'react-native'
+import { useFormat, useT } from './i18n'
 
 export const font = {
   display: 'YoungSerif_400Regular',
@@ -56,7 +57,7 @@ export function Option({ on, onPress, title, detail, right }: { on: boolean; onP
   )
 }
 
-export const Money = ({ amount, currency }: { amount: number; currency: CurrencyCode }) => formatMoney(amount, currency)
+export const Money = ({ amount, currency }: { amount: number; currency: CurrencyCode }) => useFormat().money(amount, currency)
 
 export function Monogram({ name, size = 56 }: { name: string; size?: number }) {
   const initials = name.split(' ').map((w) => w[0]).slice(0, 2).join('')
@@ -68,11 +69,12 @@ export function Monogram({ name, size = 56 }: { name: string; size?: number }) {
 }
 
 export function Badges({ t }: { t: Teacher }) {
+  const m = useT().badges
   const list: { label: string; dark?: boolean; gold?: boolean }[] = []
-  if (t.verification.identity) list.push({ label: 'Identité vérifiée' })
-  if (t.verification.diploma) list.push({ label: 'Diplôme vérifié' })
-  if (t.verification.ijaza) list.push({ label: 'Ijaza vérifiée', dark: true })
-  if (isConfirmed(t)) list.push({ label: t.gender === 'F' ? 'Enseignante confirmée' : 'Enseignant confirmé', gold: true })
+  if (t.verification.identity) list.push({ label: m.identity })
+  if (t.verification.diploma) list.push({ label: m.diploma })
+  if (t.verification.ijaza) list.push({ label: m.ijaza, dark: true })
+  if (isConfirmed(t)) list.push({ label: t.gender === 'F' ? m.confirmedF : m.confirmedM, gold: true })
   return (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 5 }}>
       {list.map((b) => (
@@ -104,11 +106,12 @@ export function Sanad({ chain }: { chain: string[] }) {
 /** Erreur de chargement (réseau, accès refusé), affichée au-dessus de la barre d'onglets. */
 export function ErrorBanner() {
   const { error, clearError } = useDini()
+  const t = useT()
   if (!error) return null
   return (
     <Pressable accessibilityRole="alert" onPress={clearError} style={{ position: 'absolute', left: 12, right: 12, bottom: 104, padding: 12, borderRadius: 4, backgroundColor: colors.warnBg, borderWidth: 1, borderColor: colors.sand }}>
-      <T style={{ color: colors.warn, fontSize: 15 }}>Chargement impossible : {error}</T>
-      <T tone="muted" style={{ marginTop: 4 }}>Touchez pour fermer.</T>
+      <T style={{ color: colors.warn, fontSize: 15 }}>{t.common.loadError(error)}</T>
+      <T tone="muted" style={{ marginTop: 4 }}>{t.common.tapToClose}</T>
     </Pressable>
   )
 }
