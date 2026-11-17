@@ -35,3 +35,6 @@ body {
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
 }
+
+/* Langue autre que le français : page masquée le temps d'appliquer la traduction (voir i18n/locale.tsx). */
+html[data-locale-pending] body { visibility: hidden; }

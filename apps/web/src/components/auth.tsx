@@ -6,8 +6,9 @@ import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useId, useState, type ReactNode } from 'react'
 import { buttonCls, cx } from './styles'
+import { useT } from '@/i18n/locale'
 
-const Loading = () => <p className="mx-auto max-w-6xl px-5 py-10 text-muted">Chargement…</p>
+const Loading = () => <p className="mx-auto max-w-6xl px-5 py-10 text-muted">{useT().common.loading}</p>
 
 /** Page réservée aux comptes connectés (et, si précisé, à certains rôles). Renvoie vers la connexion, puis ici. */
 export function RequireAccount({ roles, children }: { roles?: Role[]; children: ReactNode }) {
@@ -15,12 +16,13 @@ export function RequireAccount({ roles, children }: { roles?: Role[]; children: 
   const router = useRouter()
   const path = usePathname()
   const search = useSearchParams().toString()
+  const t = useT()
   useEffect(() => {
     if (account === null) router.replace(`/connexion?suite=${encodeURIComponent(path + (search ? `?${search}` : ''))}`)
   }, [account, router, path, search])
   if (!account) return <Loading />
   if (roles && !roles.includes(account.role)) {
-    return <p className="mx-auto max-w-6xl px-5 py-10">Cette page n’est pas accessible avec ce compte. <Link href="/" className="underline">Retour à l’accueil</Link></p>
+    return <p className="mx-auto max-w-6xl px-5 py-10">{t.common.notAllowed} <Link href="/" className="underline">{t.common.backHome}</Link></p>
   }
   return children
 }
@@ -50,15 +52,17 @@ export function AuthLayout({ title, children }: { title: string; children: React
 /** Séparateur « ou », affiché seulement si au moins un bouton Google ou Apple est actif. */
 export function Divider() {
   const enabled = useAuthProviders().data ?? []
+  const t = useT()
   if (!enabled.length) return null
-  return <div className="flex items-center gap-4 text-muted"><span className="h-px flex-1 bg-line" />ou<span className="h-px flex-1 bg-line" /></div>
+  return <div className="flex items-center gap-4 text-muted"><span className="h-px flex-1 bg-line" />{t.auth.or}<span className="h-px flex-1 bg-line" /></div>
 }
 
 export function Terms({ action }: { action: string }) {
+  const m = useT().auth.terms(action)
   return (
     <p className="text-center text-sm text-muted">
-      En cliquant sur « {action} » ou « Continuer avec », vous acceptez les <Link href="/conditions" className="underline">conditions d’utilisation</Link> et
-      la <Link href="/confidentialite" className="underline">politique de confidentialité</Link> de DINE.
+      {m.before}<Link href="/conditions" className="underline">{m.termsLink}</Link>{m.middle}
+      <Link href="/confidentialite" className="underline">{m.privacyLink}</Link>{m.after}
     </p>
   )
 }
@@ -72,11 +76,12 @@ export const inputCls = 'min-h-12 w-full rounded-sm border border-line bg-white 
 
 export function PasswordInput({ id, value, onChange, autoComplete }: { id: string; value: string; onChange: (v: string) => void; autoComplete: 'current-password' | 'new-password' }) {
   const [shown, setShown] = useState(false)
+  const t = useT()
   return (
     <div className="relative">
       <input id={id} type={shown ? 'text' : 'password'} required minLength={autoComplete === 'new-password' ? 8 : undefined} value={value}
-        onChange={(e) => onChange(e.target.value)} autoComplete={autoComplete} placeholder="Votre mot de passe" className={cx(inputCls, 'pr-12')} />
-      <button type="button" onClick={() => setShown(!shown)} aria-label={shown ? 'Masquer le mot de passe' : 'Afficher le mot de passe'} aria-pressed={shown}
+        onChange={(e) => onChange(e.target.value)} autoComplete={autoComplete} placeholder={t.auth.passwordPlaceholder} className={cx(inputCls, 'pr-12')} />
+      <button type="button" onClick={() => setShown(!shown)} aria-label={shown ? t.auth.hidePassword : t.auth.showPassword} aria-pressed={shown}
         className="absolute inset-y-0 right-0 grid w-12 cursor-pointer place-items-center text-muted hover:text-ink">
         <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
           <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" /><circle cx="12" cy="12" r="3" />
@@ -114,8 +119,9 @@ const PROVIDERS: Record<OAuthProvider, { label: string; icon: ReactNode }> = {
 }
 
 /** Boutons « Continuer avec ». Google et Apple doivent être activés dans Supabase (Authentication, Providers). */
-export function OAuthButtons({ providers: wanted, verb = 'Continuer', asTeacher = false, next = '/' }: { providers: OAuthProvider[]; verb?: string; asTeacher?: boolean; next?: string }) {
+export function OAuthButtons({ providers: wanted, verb, asTeacher = false, next = '/' }: { providers: OAuthProvider[]; verb?: string; asTeacher?: boolean; next?: string }) {
   const { api } = useDini()
+  const t = useT()
   const enabled = useAuthProviders().data ?? []
   const providers = wanted.filter((p) => enabled.includes(p))
   const [pending, setPending] = useState<OAuthProvider | null>(null)
@@ -134,7 +140,7 @@ export function OAuthButtons({ providers: wanted, verb = 'Continuer', asTeacher 
       {providers.map((p) => (
         <button key={p} type="button" onClick={() => go(p)} disabled={!!pending}
           className="flex min-h-13 cursor-pointer items-center justify-center gap-3 rounded-sm border-2 border-ink bg-white px-4 text-lg font-semibold hover:bg-leaf disabled:cursor-wait disabled:opacity-60">
-          {PROVIDERS[p].icon}{pending === p ? 'Redirection…' : `${verb} avec ${PROVIDERS[p].label}`}
+          {PROVIDERS[p].icon}{pending === p ? t.auth.redirecting : t.auth.continueWith(verb ?? t.auth.continueVerb, PROVIDERS[p].label)}
         </button>
       ))}
       <FormError message={error} />

@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { Amiri, Hanken_Grotesk, Young_Serif } from 'next/font/google'
 import { Providers } from '@/components/providers'
 import { ErrorBanner, SiteFooter, SiteHeader } from '@/components/chrome'
+import { LOCALE_BOOT_SCRIPT, LocaleSync } from '@/i18n/locale'
 import './globals.css'
 
 const hanken = Hanken_Grotesk({ variable: '--font-hanken', subsets: ['latin'] })
@@ -16,9 +17,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="fr" className={`${hanken.variable} ${young.variable} ${amiri.variable} antialiased`}>
+    // lang est ajusté avant l'affichage par le script de langue : React ne doit pas s'en étonner.
+    <html lang="fr" suppressHydrationWarning className={`${hanken.variable} ${young.variable} ${amiri.variable} antialiased`}>
+      <head><script dangerouslySetInnerHTML={{ __html: LOCALE_BOOT_SCRIPT }} /></head>
       <body className="flex min-h-screen flex-col font-sans">
         <Providers>
+          <LocaleSync />
           <SiteHeader />
           <ErrorBanner />
           <main className="flex-1">{children}</main>

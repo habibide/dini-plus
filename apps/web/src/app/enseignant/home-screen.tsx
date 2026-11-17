@@ -1,29 +1,32 @@
 'use client'
 
-import { COMMISSION_TIERS, commissionRate, formatDateTime, subject } from '@dini/core'
+import { COMMISSION_TIERS, commissionRate, subject } from '@dini/core'
 import type { AgendaItem } from '@dini/data/supabase'
 import { useAgenda, useEarnings, useMyTeacher, useStartApplication } from '@dini/data/react'
 import Link from 'next/link'
 import { StatusBanner } from '@/components/teacher'
 import { Money, buttonCls, cx } from '@/components/ui'
 import { JoinButton } from '@/components/video'
-
-const euros = (n: number) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(n)
+import { useFormat, useT } from '@/i18n/locale'
 
 export function TeacherHome() {
   const me = useMyTeacher()
   const agenda = useAgenda()
   const earnings = useEarnings()
   const start = useStartApplication()
+  const all = useT()
+  const m = all.teacherHome
+  const fmt = useFormat()
+  const pct = (r: number) => `${Math.round(r * 100)}${fmt.locale === 'fr' ? ' ' : ''}%`
 
-  if (me.isPending) return <p className="mx-auto max-w-6xl px-5 py-10 text-muted">Chargement…</p>
+  if (me.isPending) return <p className="mx-auto max-w-6xl px-5 py-10 text-muted">{all.common.loading}</p>
   const t = me.data
   if (!t) {
     return (
       <div className="mx-auto flex max-w-3xl flex-col items-start gap-4 px-5 py-12">
-        <h1 className="font-display text-3xl">Espace enseignant</h1>
-        <p>Ce compte n’a pas encore de profil enseignant.</p>
-        <button type="button" className={buttonCls.primary} disabled={start.isPending} onClick={() => start.mutate()}>Commencer ma candidature</button>
+        <h1 className="font-display text-3xl">{m.title}</h1>
+        <p>{m.noProfile}</p>
+        <button type="button" className={buttonCls.primary} disabled={start.isPending} onClick={() => start.mutate()}>{m.start}</button>
       </div>
     )
   }
@@ -39,10 +42,10 @@ export function TeacherHome() {
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6 px-5 py-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-display text-3xl">Bonjour {t.name.split(' ')[0] || 'et bienvenue'}</h1>
+        <h1 className="font-display text-3xl">{m.hello(t.name.split(' ')[0])}</h1>
         <div className="flex flex-wrap gap-2">
-          <Link href="/enseignant/disponibilites" className={buttonCls.ghost}>Mes disponibilités</Link>
-          <Link href="/enseignant/candidature" className={buttonCls.ghost}>{t.status === 'approved' ? 'Modifier mon profil' : 'Ma candidature'}</Link>
+          <Link href="/enseignant/disponibilites" className={buttonCls.ghost}>{m.availability}</Link>
+          <Link href="/enseignant/candidature" className={buttonCls.ghost}>{t.status === 'approved' ? m.editProfile : m.myApplication}</Link>
         </div>
       </div>
       <StatusBanner t={t} />
@@ -50,34 +53,34 @@ export function TeacherHome() {
       {t.status === 'approved' && <>
         {toComplete.length > 0 && (
           <section className="flex flex-col border border-ochre bg-white">
-            <h2 className="border-b border-line px-6 py-4 font-display text-xl">À compléter</h2>
-            <p className="px-6 pt-4 text-muted">Écrivez le compte rendu de chaque séance : la famille le reçoit, et votre paiement est libéré 48 h après.</p>
-            <SessionList items={toComplete} action="Écrire le compte rendu" />
+            <h2 className="border-b border-line px-6 py-4 font-display text-xl">{m.toComplete}</h2>
+            <p className="px-6 pt-4 text-muted">{m.toCompleteText}</p>
+            <SessionList items={toComplete} action={m.writeReport} />
           </section>
         )}
 
         <section className="flex flex-col border border-line bg-white">
-          <h2 className="border-b border-line px-6 py-4 font-display text-xl">Prochaines séances</h2>
-          {agenda.isPending ? <p className="px-6 py-5 text-muted">Chargement…</p>
+          <h2 className="border-b border-line px-6 py-4 font-display text-xl">{m.upcoming}</h2>
+          {agenda.isPending ? <p className="px-6 py-5 text-muted">{all.common.loading}</p>
             : upcoming.length ? <SessionList items={upcoming} />
-            : <p className="px-6 py-5 text-muted">Aucune séance réservée pour l’instant. Des disponibilités larges vous rendent plus visible dans la recherche.</p>}
+            : <p className="px-6 py-5 text-muted">{m.noUpcoming}</p>}
         </section>
 
         <section className="grid gap-px border border-line bg-line md:grid-cols-3">
           <div className="flex flex-col gap-1 bg-white px-6 py-5">
-            <h2 className="text-sm font-semibold text-muted">Acquis</h2>
-            <p className="font-display text-3xl text-green">{euros(earnings.data?.releasedEur ?? 0)}</p>
-            <p className="text-sm text-muted">Net de commission, après les 48 h sans litige.</p>
+            <h2 className="text-sm font-semibold text-muted">{m.earned}</h2>
+            <p className="font-display text-3xl text-green">{fmt.euros(earnings.data?.releasedEur ?? 0)}</p>
+            <p className="text-sm text-muted">{m.earnedText}</p>
           </div>
           <div className="flex flex-col gap-1 bg-white px-6 py-5">
-            <h2 className="text-sm font-semibold text-muted">En attente</h2>
-            <p className="font-display text-3xl">{earnings.data?.pending.count ?? 0} {(earnings.data?.pending.count ?? 0) > 1 ? 'séances' : 'séance'}</p>
-            <p className="text-sm text-muted">{earnings.data?.pending.releaseAt[0] ? `Prochaine libération ${formatDateTime(Math.min(...earnings.data.pending.releaseAt), Intl.DateTimeFormat().resolvedOptions().timeZone)}.` : 'Rien en attente.'}</p>
+            <h2 className="text-sm font-semibold text-muted">{m.pending}</h2>
+            <p className="font-display text-3xl">{m.sessions(earnings.data?.pending.count ?? 0)}</p>
+            <p className="text-sm text-muted">{earnings.data?.pending.releaseAt[0] ? m.nextRelease(fmt.dateTime(Math.min(...earnings.data.pending.releaseAt), Intl.DateTimeFormat().resolvedOptions().timeZone)) : m.nothingPending}</p>
           </div>
           <div className="flex flex-col gap-1 bg-white px-6 py-5">
-            <h2 className="text-sm font-semibold text-muted">Commission DINE</h2>
-            <p className="font-display text-3xl">{Math.round(rate * 100)} %</p>
-            <p className="text-sm text-muted">{Math.round(hours)} h enseignées.{next ? ` Passe à ${Math.round(next.rate * 100)} % à partir de ${next.fromHours} h.` : ' Palier le plus bas atteint.'}</p>
+            <h2 className="text-sm font-semibold text-muted">{m.commission}</h2>
+            <p className="font-display text-3xl">{pct(rate)}</p>
+            <p className="text-sm text-muted">{m.hours(Math.round(hours))}{next ? m.nextTier(Math.round(next.rate * 100), next.fromHours) : m.lowest}</p>
           </div>
         </section>
       </>}
@@ -87,19 +90,21 @@ export function TeacherHome() {
 
 function SessionList({ items, action }: { items: AgendaItem[]; action?: string }) {
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+  const all = useT()
+  const fmt = useFormat()
   return (
     <ul className="flex flex-col divide-y divide-line">
       {items.map((b) => (
         <li key={b.id} className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
           <div className="flex flex-col gap-0.5">
-            <strong className="first-letter:uppercase">{formatDateTime(b.startsAt, tz)}</strong>
+            <strong className="first-letter:uppercase">{fmt.dateTime(b.startsAt, tz)}</strong>
             <span className="text-sm text-muted">
-              {b.learner.name}, {new Date().getFullYear() - b.learner.birthYear} ans · {subject(b.subject).label.fr}{b.kind === 'trial' ? ' · séance d’essai' : ''} · <Money amount={b.amount} currency={b.currency} />
+              {b.learner.name}, {all.common.years(new Date().getFullYear() - b.learner.birthYear)} · {fmt.label(subject(b.subject).label)}{b.kind === 'trial' ? all.teacherHome.trial : ''} · <Money amount={b.amount} currency={b.currency} />
             </span>
           </div>
           <div className="flex flex-wrap gap-2">
             {b.status === 'scheduled' && <JoinButton booking={b} tz={tz} />}
-            <Link href={`/enseignant/seances/${b.id}`} className={cx(action ? buttonCls.primary : buttonCls.ghost, 'min-h-10')}>{action ?? 'Détails'}</Link>
+            <Link href={`/enseignant/seances/${b.id}`} className={cx(action ? buttonCls.primary : buttonCls.ghost, 'min-h-10')}>{action ?? all.teacherHome.details}</Link>
           </div>
         </li>
       ))}

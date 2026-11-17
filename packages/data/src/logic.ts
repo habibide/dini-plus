@@ -2,6 +2,7 @@ import {
   COURSE_MINUTES, DAY, ESCROW_HOURS, HOUR, generateSlots, zonedParts,
   type Booking, type CurrencyCode, type LanguageId, type Learner, type PaymentMethod, type PlanId, type SubjectId, type Subscription, type Teacher,
 } from '@dini/core'
+import { dataLocale } from './locale'
 
 // Types et calculs partagés par les deux implémentations de l'API (fictive et Supabase).
 
@@ -33,7 +34,7 @@ export type BookingDraft = {
 export const videoWindow = (b: { startsAt: number; minutes: number }) => ({ opensAt: b.startsAt - 10 * 60_000, closesAt: b.startsAt + (b.minutes + 15) * 60_000 })
 
 export class SlotTakenError extends Error {
-  constructor() { super('Ce créneau vient d’être réservé par quelqu’un d’autre.') }
+  constructor() { super(dataLocale() === 'en' ? 'This time slot has just been booked by someone else.' : 'Ce créneau vient d’être réservé par quelqu’un d’autre.') }
 }
 
 export type LearnerDashboard = {

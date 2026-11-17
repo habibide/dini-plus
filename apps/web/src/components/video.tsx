@@ -1,10 +1,10 @@
 'use client'
 
-import { formatTime } from '@dini/core'
 import { videoWindow } from '@dini/data'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { buttonCls, cx } from './styles'
+import { useFormat, useT } from '@/i18n/locale'
 
 /** Heure courante, rafraîchie chaque minute : le bouton s'active tout seul à l'ouverture de la salle. */
 function useMinute() {
@@ -15,13 +15,15 @@ function useMinute() {
 
 export function JoinButton({ booking, tz, className }: { booking: { id: string; startsAt: number; minutes: number }; tz: string; className?: string }) {
   const now = useMinute()
+  const t = useT()
+  const f = useFormat()
   const { opensAt, closesAt } = videoWindow(booking)
   if (now >= opensAt && now <= closesAt) {
-    return <Link href={`/cours/${booking.id}`} className={cx(buttonCls.primary, 'min-h-10', className)}>Rejoindre le cours</Link>
+    return <Link href={`/cours/${booking.id}`} className={cx(buttonCls.primary, 'min-h-10', className)}>{t.classroom.join}</Link>
   }
   return (
-    <span className={cx(buttonCls.ghost, 'min-h-10 cursor-default text-muted hover:border-line', className)} title="La salle ouvre 10 minutes avant le début.">
-      {now < opensAt ? `Salle ouverte à ${formatTime(opensAt, tz)}` : 'Cours terminé'}
+    <span className={cx(buttonCls.ghost, 'min-h-10 cursor-default text-muted hover:border-line', className)} title={t.classroom.opensHint}>
+      {now < opensAt ? t.classroom.opensAt(f.time(opensAt, tz)) : t.classroom.over}
     </span>
   )
 }

@@ -6,6 +6,7 @@ import type { PostgrestError, SupabaseClient } from '@supabase/supabase-js'
 import type { KeyValueStorage } from '../api'
 import { buildDashboard, filterTeachers, SlotTakenError, type BookingDraft, type TeacherCard, type TeacherFilters } from '../logic'
 import type { Database } from './database.types'
+import { dataLocale } from '../locale'
 
 // API DINE sur Supabase. Les lectures passent par PostgREST (protégé par RLS), les écritures sensibles
 // par des RPC qui recalculent tout côté serveur (prix, disponibilités, droits).
@@ -61,7 +62,7 @@ type TeacherRow = Omit<Row<'teachers'>, 'user_id' | 'created_at'> & {
 }
 type BookingRow = Row<'bookings'> & { session_reports: Row<'session_reports'> | null }
 
-const MESSAGES: Record<string, string> = {
+const MESSAGES_FR: Record<string, string> = {
   no_credit: 'Aucune séance restante sur ce forfait.',
   dispute_window_closed: 'Le délai de 48 h pour signaler cette séance est passé.',
   not_cancellable: 'Cette séance ne peut plus être annulée.',
@@ -72,7 +73,7 @@ const MESSAGES: Record<string, string> = {
   application_under_review: 'Votre candidature est en cours d’examen : elle ne peut pas être modifiée pour l’instant.',
   identity_locked: 'Votre nom et votre genre ont été vérifiés. Écrivez-nous pour les modifier.',
   credentials_locked: 'Vos diplômes ont déjà été vérifiés. Écrivez-nous pour en ajouter un.',
-  invalid_rate: 'Indiquez un tarif supérieur à zéro.',
+  invalid_rate: 'Indiquez un tarif valide.',
   not_submittable: 'Cette candidature a déjà été envoyée.',
   not_started: 'La séance n’a pas encore commencé.',
   too_early: 'Attendez au moins 10 minutes après le début avant de signaler une absence.',
@@ -86,17 +87,71 @@ const MESSAGES: Record<string, string> = {
   room_closed: 'Ce cours est terminé : la salle est fermée.',
   video_not_configured: 'La visioconférence n’est pas encore activée sur DINE.',
   video_unavailable: 'Le service de visioconférence ne répond pas. Réessayez dans un instant.',
+  oauth_cancelled: 'La connexion a été annulée.',
+  booking_failed: 'La réservation n’a pas abouti. Réessayez.',
+  incomplete_application: 'Il manque encore : {fields}.',
   'Invalid login credentials': 'E-mail ou mot de passe incorrect.',
   'Email not confirmed': 'Confirmez d’abord votre adresse avec le lien reçu par e-mail.',
   'User already registered': 'Un compte existe déjà avec cette adresse. Connectez-vous.',
 }
 
+const MESSAGES_EN: Record<string, string> = {
+  no_credit: 'No sessions left on this plan.',
+  dispute_window_closed: 'The 48-hour window to report this session has passed.',
+  not_cancellable: 'This session can no longer be cancelled.',
+  invalid_payment_method: 'This payment method is not available in your country.',
+  forbidden: 'You do not have access to this information.',
+  not_signed_in: 'Sign in to continue.',
+  not_a_teacher: 'This account has no teacher profile.',
+  application_under_review: 'Your application is being reviewed: it cannot be changed for now.',
+  identity_locked: 'Your name and gender have been verified. Contact us to change them.',
+  credentials_locked: 'Your qualifications have already been verified. Contact us to add one.',
+  invalid_rate: 'Enter a valid rate.',
+  not_submittable: 'This application has already been sent.',
+  not_started: 'The session has not started yet.',
+  too_early: 'Wait at least 10 minutes after the start before reporting an absence.',
+  not_scheduled: 'This session is no longer upcoming.',
+  report_required: 'At least say what was covered.',
+  note_required: 'Explain the rejection: the applicant will see this message.',
+  not_under_review: 'This application is no longer pending.',
+  credential_not_pending: 'This qualification has already been handled.',
+  trial_already_used: 'This student has already had a trial session with this teacher.',
+  room_not_open: 'The room opens 10 minutes before the lesson starts.',
+  room_closed: 'This lesson is over: the room is closed.',
+  video_not_configured: 'Video calls are not enabled on DINE yet.',
+  video_unavailable: 'The video service is not responding. Try again in a moment.',
+  oauth_cancelled: 'Sign-in was cancelled.',
+  booking_failed: 'The booking did not go through. Try again.',
+  incomplete_application: 'Still missing: {fields}.',
+  'Invalid login credentials': 'Incorrect email or password.',
+  'Email not confirmed': 'First confirm your address with the link we emailed you.',
+  'User already registered': 'An account already exists with this address. Sign in.',
+}
+
+/** Champs manquants d'une candidature, renvoyés par le serveur sous forme de codes. */
+const MISSING_FIELDS: Record<string, Record<'fr' | 'en', string>> = {
+  name: { fr: 'nom (3 caractères au moins)', en: 'name (at least 3 characters)' },
+  gender: { fr: 'genre', en: 'gender' },
+  city: { fr: 'ville', en: 'city' },
+  headline: { fr: 'titre (3 caractères au moins)', en: 'headline (at least 3 characters)' },
+  bio: { fr: 'présentation (80 caractères au moins)', en: 'introduction (at least 80 characters)' },
+  subjects: { fr: 'matières', en: 'subjects' },
+  languages: { fr: 'langues', en: 'languages' },
+  rate: { fr: 'tarif', en: 'rate' },
+  availability: { fr: 'disponibilités', en: 'availability' },
+}
+
+const msg = (key: string) => (dataLocale() === 'en' ? MESSAGES_EN : MESSAGES_FR)[key]
+
 function fail(error: { message: string; details?: string | null }): never {
   if (error.message === 'slot_taken') throw new SlotTakenError()
   // Deux essais réservés au même instant : l'index unique de la base départage.
-  if (error.message.includes('bookings_one_trial')) throw new Error(MESSAGES.trial_already_used)
-  if (error.message === 'incomplete_application') throw new Error(`Il manque encore : ${error.details ?? ''}.`)
-  throw new Error(MESSAGES[error.message] ?? error.message)
+  if (error.message.includes('bookings_one_trial')) throw new Error(msg('trial_already_used'))
+  if (error.message === 'incomplete_application') {
+    const fields = (error.details ?? '').split(',').filter(Boolean).map((f) => MISSING_FIELDS[f]?.[dataLocale()] ?? f).join(', ')
+    throw new Error(msg('incomplete_application').replace('{fields}', fields))
+  }
+  throw new Error(msg(error.message) ?? error.message)
 }
 
 /** Données d'une réponse réussie ; lève une erreur lisible sinon. */
@@ -169,7 +224,7 @@ export function createSupabaseApi(client: DiniClient, storage: KeyValueStorage, 
 
   async function userId(): Promise<string> {
     const { data } = await client.auth.getSession()
-    if (!data.session) throw new Error(MESSAGES.not_signed_in)
+    if (!data.session) throw new Error(msg('not_signed_in'))
     return data.session.user.id
   }
 
@@ -299,7 +354,7 @@ export function createSupabaseApi(client: DiniClient, storage: KeyValueStorage, 
 
     async completeOAuth(callbackUrl: string) {
       const code = new URL(callbackUrl).searchParams.get('code')
-      if (!code) throw new Error('La connexion a été annulée.')
+      if (!code) throw new Error(msg('oauth_cancelled'))
       const { error } = await client.auth.exchangeCodeForSession(code)
       if (error) fail(error)
     },
@@ -387,7 +442,7 @@ export function createSupabaseApi(client: DiniClient, storage: KeyValueStorage, 
         p_starts_at: new Date(draft.startsAt).toISOString(), p_choice: draft.choice, ...(draft.method ? { p_method: draft.method } : {}),
       })) as { booking_id: string; charged: number; currency: CurrencyCode }
       const booking = await bookingRow(res.booking_id)
-      if (!booking) throw new Error('La réservation n’a pas abouti. Réessayez.')
+      if (!booking) throw new Error(msg('booking_failed'))
       return { booking, charged: { amount: Number(res.charged), currency: res.currency } }
     },
 
