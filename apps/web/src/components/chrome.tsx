@@ -28,11 +28,11 @@ export function ErrorBanner() {
 type NavItem = { href: string; label: string }
 
 function navFor(account: Account | null | undefined, t: ReturnType<typeof useT>): NavItem[] {
-  const items: NavItem[] = [{ href: '/enseignants', label: t.nav.find }]
-  if (account?.role === 'teacher') items.push({ href: '/enseignant', label: t.nav.teacherSpace })
-  else if (account) items.push({ href: '/suivi', label: t.nav.tracking })
+  const items: NavItem[] = [{ href: '/teachers', label: t.nav.find }]
+  if (account?.role === 'teacher') items.push({ href: '/teacher', label: t.nav.teacherSpace })
+  else if (account) items.push({ href: '/progress', label: t.nav.tracking })
   if (account?.role === 'moderator' || account?.role === 'admin') items.push({ href: '/moderation', label: t.nav.moderation })
-  if (!account || account.role === 'family') items.push({ href: '/devenir-enseignant', label: t.nav.becomeTeacher })
+  if (!account || account.role === 'family') items.push({ href: '/become-a-teacher', label: t.nav.becomeTeacher })
   return items
 }
 
@@ -197,8 +197,8 @@ function MobileMenu() {
                   onClick={() => signOut.mutate(undefined, { onSettled: () => router.push('/') })}>{t.nav.signOut}</button>
               ) : (
                 <div className="flex flex-col gap-2">
-                  <Link href="/inscription" className="inline-flex min-h-12 items-center justify-center rounded-[14px] bg-green font-semibold text-white">{t.nav.signUp}</Link>
-                  <Link href="/connexion" className="inline-flex min-h-12 items-center justify-center rounded-[14px] border-[1.5px] border-[#d6d2c7] bg-white font-semibold text-ink">{t.nav.signIn}</Link>
+                  <Link href="/signup" className="inline-flex min-h-12 items-center justify-center rounded-[14px] bg-green font-semibold text-white">{t.nav.signUp}</Link>
+                  <Link href="/login" className="inline-flex min-h-12 items-center justify-center rounded-[14px] border-[1.5px] border-[#d6d2c7] bg-white font-semibold text-ink">{t.nav.signIn}</Link>
                 </div>
               )}
             </div>
@@ -239,10 +239,10 @@ function AccountArea() {
   if (!account) {
     return (
       <>
-        <Link href="/connexion" className="inline-flex min-h-11 items-center gap-2 rounded-[14px] px-3 font-semibold text-ink transition hover:bg-leaf">
+        <Link href="/login" className="inline-flex min-h-11 items-center gap-2 rounded-[14px] px-3 font-semibold text-ink transition hover:bg-leaf">
           <Icon d={ICONS.signIn} className="size-4" />{t.nav.signIn}
         </Link>
-        <Link href="/inscription" className="inline-flex min-h-11 items-center rounded-[14px] bg-green px-5 font-semibold text-white transition hover:bg-green2">{t.nav.signUp}</Link>
+        <Link href="/signup" className="inline-flex min-h-11 items-center rounded-[14px] bg-green px-5 font-semibold text-white transition hover:bg-green2">{t.nav.signUp}</Link>
       </>
     )
   }
@@ -255,7 +255,7 @@ function AccountArea() {
       </summary>
       <div className="absolute end-0 z-20 mt-2 flex min-w-56 flex-col overflow-hidden rounded-md border-[1.5px] border-line bg-white py-1 shadow-[0_12px_32px_rgba(0,0,0,0.12)]">
         <span className="truncate px-4 py-2 text-sm text-muted">{account.email}</span>
-        {navFor(account, t).filter((n) => n.href !== '/enseignants' && n.href !== '/devenir-enseignant').map((n) => (
+        {navFor(account, t).filter((n) => n.href !== '/teachers' && n.href !== '/become-a-teacher').map((n) => (
           <Link key={n.href} href={n.href} className="px-4 py-2 hover:bg-leaf">{n.label}</Link>
         ))}
         <button type="button" className="cursor-pointer px-4 py-2 text-start hover:bg-leaf"
@@ -277,9 +277,9 @@ export function SiteFooter() {
           <p>{t.footer.about}</p>
         </div>
         <nav aria-label={t.footer.info} className="flex flex-col gap-1 self-end">
-          <Link href="/devenir-enseignant" className="hover:text-white">{t.nav.becomeTeacher}</Link>
-          <Link href="/conditions" className="hover:text-white">{t.footer.terms}</Link>
-          <Link href="/confidentialite" className="hover:text-white">{t.footer.privacy}</Link>
+          <Link href="/become-a-teacher" className="hover:text-white">{t.nav.becomeTeacher}</Link>
+          <Link href="/terms" className="hover:text-white">{t.footer.terms}</Link>
+          <Link href="/privacy" className="hover:text-white">{t.footer.privacy}</Link>
           <span className="text-white/60">DATA &amp; BRAIN, Dakar</span>
         </nav>
       </div>

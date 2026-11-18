@@ -28,7 +28,7 @@ export function HomeScreen() {
         <ul className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-3">
           {SUBJECTS.map((s) => (
             <li key={s.id}>
-              <Link href={`/enseignants?matiere=${s.id}`} className="flex h-full flex-col gap-1 rounded-md border-[1.5px] border-line bg-white p-5 transition hover:-translate-y-0.5 hover:border-green hover:shadow-[0_0_0_3px_var(--color-soft)]">
+              <Link href={`/teachers?subject=${s.id}`} className="flex h-full flex-col gap-1 rounded-md border-[1.5px] border-line bg-white p-5 transition hover:-translate-y-0.5 hover:border-green hover:shadow-[0_0_0_3px_var(--color-soft)]">
                 <span lang="ar" dir="rtl" className="font-arabic text-3xl leading-snug text-green">{s.ar}</span>
                 <strong>{f.label(s.label)}</strong>
                 <span className="text-sm text-muted">{f.label(s.desc)}</span>
@@ -58,7 +58,7 @@ export function HomeScreen() {
           <h2 className="font-display text-3xl">{t.payTitle}</h2>
           <p className="max-w-[56ch] text-lg">{t.payText}</p>
         </div>
-        <Link href="/enseignants" className={buttonCls.primary}>{t.bookTrial}</Link>
+        <Link href="/teachers" className={buttonCls.primary}>{t.bookTrial}</Link>
       </section>
 
       <section id="enseigner" className="bg-brand text-white">
@@ -66,7 +66,7 @@ export function HomeScreen() {
           <div className="flex min-w-0 flex-[1_1_440px] flex-col gap-4">
             <h2 className="font-display text-4xl">{t.teachTitle}</h2>
             <p className="max-w-[50ch] text-lg text-white/85">{t.teachText}</p>
-            <Link href="/devenir-enseignant" className={`${buttonCls.sand} self-start`}>{t.createProfile}</Link>
+            <Link href="/become-a-teacher" className={`${buttonCls.sand} self-start`}>{t.createProfile}</Link>
           </div>
           <ul className="flex min-w-0 flex-[1_1_360px] flex-col gap-3">
             {t.perks.map(([title, d]) => <li key={title} className="rounded-md border border-white/25 bg-white/10 px-4 py-3"><strong>{title}</strong><br /><span className="text-white/80">{d}</span></li>)}

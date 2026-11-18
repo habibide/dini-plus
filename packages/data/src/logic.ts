@@ -1,5 +1,5 @@
 import {
-  COURSE_MINUTES, DAY, ESCROW_HOURS, HOUR, generateSlots, zonedParts,
+  COURSE_MINUTES, DAY, ESCROW_HOURS, HOUR, generateSlots, isConfirmed, zonedParts,
   type Booking, type CurrencyCode, type LanguageId, type Learner, type PaymentMethod, type PlanId, type SubjectId, type Subscription, type Teacher,
 } from '@dini/core'
 import { dataLocale } from './locale'
@@ -19,6 +19,39 @@ export type TeacherFilters = {
   ageGroup?: string
   maxPrice?: number
   timeOfDay?: 'morning' | 'afternoon' | 'evening'
+  minPrice?: number
+  /** Catégories de professeurs : chacune cochée doit être vérifiée. */
+  categories?: TeacherCategory[]
+  /** Tranches de 3 h (heure de début : 0, 3, 6… 21) où le professeur a au moins un créneau, dans le fuseau de la famille. */
+  hours?: number[]
+  /** Jours de la semaine (0 = dimanche) où le professeur a au moins un créneau. */
+  days?: number[]
+  sort?: TeacherSort
+}
+
+export type TeacherCategory = 'diploma' | 'ijaza' | 'confirmed'
+export type TeacherSort = 'selection' | 'price_asc' | 'price_desc' | 'rating' | 'reviews'
+
+const hasCategory = (t: TeacherCard, c: TeacherCategory) => (c === 'confirmed' ? isConfirmed(t) : t.verification[c])
+
+/** Le professeur a-t-il, dans les 7 prochains jours, un créneau qui respecte les filtres d'horaires ? */
+function matchesSchedule(t: TeacherCard, f: TeacherFilters, tz: string, now: number) {
+  if (!f.timeOfDay && !f.hours?.length && !f.days?.length) return true
+  return generateSlots(t.availability, t.timezone, now, 7, { leadMs: 0, duration: COURSE_MINUTES }).some((at) => {
+    const p = zonedParts(at, tz)
+    const hour = p.minutes / 60
+    if (f.timeOfDay && !(f.timeOfDay === 'morning' ? hour < 12 : f.timeOfDay === 'afternoon' ? hour >= 12 && hour < 18 : hour >= 18)) return false
+    if (f.hours?.length && !f.hours.some((h) => hour >= h && hour < h + 3)) return false
+    if (f.days?.length && !f.days.includes(p.weekday)) return false
+    return true
+  })
+}
+
+const SORTS: Record<Exclude<TeacherSort, 'selection'>, (a: TeacherCard, b: TeacherCard) => number> = {
+  price_asc: (a, b) => a.price.amount - b.price.amount,
+  price_desc: (a, b) => b.price.amount - a.price.amount,
+  rating: (a, b) => b.rating - a.rating || b.reviews.length - a.reviews.length,
+  reviews: (a, b) => b.reviews.length - a.reviews.length || b.rating - a.rating,
 }
 
 export type TeacherCard = Teacher & { price: { amount: number; currency: CurrencyCode } }
@@ -54,7 +87,7 @@ export type LearnerDashboard = {
 
 /** Filtres de la recherche. `tz` est le fuseau de la famille, pour le moment de la journée. */
 export function filterTeachers(list: TeacherCard[], f: TeacherFilters, tz: string, now: number): TeacherCard[] {
-  return list.filter((t) =>
+  const out = list.filter((t) =>
     (!f.subject || t.subjects.includes(f.subject)) &&
     (!f.riwaya || t.riwayat.includes(f.riwaya as never)) &&
     (!f.arabicTrack || t.arabicTracks.includes(f.arabicTrack as never)) &&
@@ -64,10 +97,10 @@ export function filterTeachers(list: TeacherCard[], f: TeacherFilters, tz: strin
     (!f.level || t.levels.includes(f.level as never)) &&
     (!f.ageGroup || t.ageGroups.includes(f.ageGroup as never)) &&
     (!f.maxPrice || t.price.amount <= f.maxPrice) &&
-    (!f.timeOfDay || generateSlots(t.availability, t.timezone, now, 7, { leadMs: 0, duration: COURSE_MINUTES }).some((at) => {
-      const hour = zonedParts(at, tz).minutes / 60
-      return f.timeOfDay === 'morning' ? hour < 12 : f.timeOfDay === 'afternoon' ? hour >= 12 && hour < 18 : hour >= 18
-    })))
+    (!f.minPrice || t.price.amount >= f.minPrice) &&
+    (f.categories ?? []).every((c) => hasCategory(t, c)) &&
+    matchesSchedule(t, f, tz, now))
+  return f.sort && f.sort !== 'selection' ? [...out].sort(SORTS[f.sort]) : out
 }
 
 /** Tableau de suivi de chaque élève : prochaine séance, assiduité sur 30 jours, mémorisation, séquestre. */

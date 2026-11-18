@@ -21,7 +21,7 @@ export default function Forgot() {
         <Input label={t.auth.email} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoComplete="email" placeholder={t.auth.emailPlaceholder} />
         <FormError message={send.error?.message} />
         <Button title={send.isPending ? t.common.sending : t.forgot.submit} disabled={send.isPending || !email}
-          onPress={() => send.mutate({ email, redirectTo: `${SITE_URL}/nouveau-mot-de-passe` })} />
+          onPress={() => send.mutate({ email, redirectTo: `${SITE_URL}/reset-password` })} />
       </>}
     </ScrollView>
   )

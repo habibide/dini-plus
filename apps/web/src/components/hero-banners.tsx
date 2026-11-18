@@ -17,9 +17,9 @@ import mobile3 from '@/assets/bannieres/3-mobile.jpg'
 // Défilement automatique toutes les 7 s, arrêté dès qu'on s'en sert et si l'appareil demande moins d'animations.
 
 const SLIDES: { web: StaticImageData; mobile: StaticImageData; href: string }[] = [
-  { web: web1, mobile: mobile1, href: '/enseignants' },
-  { web: web2, mobile: mobile2, href: '/enseignants?enseignant=F' },
-  { web: web3, mobile: mobile3, href: '/enseignants' },
+  { web: web1, mobile: mobile1, href: '/teachers' },
+  { web: web2, mobile: mobile2, href: '/teachers?teacher=F' },
+  { web: web3, mobile: mobile3, href: '/teachers' },
 ]
 const DELAY = 7000
 
