@@ -3,7 +3,6 @@ import { Image } from 'expo-image'
 import { router, type Href } from 'expo-router'
 import { useEffect, useRef, useState } from 'react'
 import { AccessibilityInfo, Pressable, ScrollView, View, useWindowDimensions, type NativeScrollEvent, type NativeSyntheticEvent, type ScrollViewInstance } from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Button, T, font } from '@/lib/ui'
 import { useFormat, useT } from '@/lib/i18n'
 
@@ -19,7 +18,6 @@ const DELAY = 7000
 function Banners() {
   const t = useT().home
   const { width } = useWindowDimensions()
-  const insets = useSafeAreaInsets()
   const scroller = useRef<ScrollViewInstance>(null)
   const [active, setActive] = useState(0)
   const [auto, setAuto] = useState(true)
@@ -42,10 +40,11 @@ function Banners() {
           const copy = t.banners[i]
           return (
             <View key={i} style={{ width }} accessibilityLabel={t.bannerGo(i + 1, BANNERS.length)}>
-              <View style={{ width, height: width * 0.78 + insets.top }}>
+              {/* Photo en carte : marges autour et coins arrondis, sur le fond vert. */}
+              <View style={{ marginTop: 8, marginHorizontal: 16, height: (width - 32) * 0.8, borderRadius: 20, overflow: 'hidden' }}>
                 <Image source={b.image} contentFit="cover" contentPosition={{ top: '70%' }} style={{ flex: 1 }} accessibilityIgnoresInvertColors />
                 {/* Marque DINE sur la photo. */}
-                <View style={{ position: 'absolute', top: insets.top + 8, left: 20, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.92)' }}>
+                <View style={{ position: 'absolute', top: 12, left: 12, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.92)' }}>
                   <View style={{ width: 26, height: 26, borderRadius: 8, backgroundColor: colors.green, alignItems: 'center', justifyContent: 'center' }}>
                     <T style={{ fontFamily: font.display, fontSize: 14, lineHeight: 18, color: colors.white }}>D</T>
                   </View>
