@@ -30,8 +30,8 @@
 /* Titres : la même police que le texte, en très gras et resserrée. */
 .font-display { font-weight: 800; letter-spacing: -0.02em; }
 
-/* En-têtes verts de la charte. */
-.bg-brand { background: linear-gradient(160deg, var(--color-green) 0%, var(--color-green2) 100%); }
+/* En-têtes verts de la charte (utilitaire Tailwind : accepte md:, hover:…). */
+@utility bg-brand { background-image: linear-gradient(160deg, var(--color-green) 0%, var(--color-green2) 100%); }
 
 /* Frise géométrique (motif d'Afrique de l'Ouest), en filigrane. */
 .pattern-strip {

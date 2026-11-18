@@ -22,7 +22,10 @@ function Group({ label, children }: { label: string; children: ReactNode }) {
 
 export function SearchScreen() {
   const params = useSearchParams()
-  const [f, setF] = useState<TeacherFilters>(() => ({ subject: (params.get('matiere') as SubjectId) || undefined }))
+  const [f, setF] = useState<TeacherFilters>(() => {
+    const g = params.get('enseignant')
+    return { subject: (params.get('matiere') as SubjectId) || undefined, gender: g === 'F' || g === 'M' ? g : undefined }
+  })
   const [sheet, setSheet] = useState(false)
   const toggle = <K extends keyof TeacherFilters>(k: K, v: TeacherFilters[K]) => setF((x) => ({ ...x, [k]: x[k] === v ? undefined : v }))
   const teachers = useTeachers(f)
