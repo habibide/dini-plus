@@ -72,7 +72,7 @@ export function Field({ label, children }: { label: string; children: (id: strin
   return <div className="flex flex-col gap-1.5"><label htmlFor={id} className="font-semibold">{label}</label>{children(id)}</div>
 }
 
-export const inputCls = 'min-h-12 w-full rounded-sm border border-line bg-white px-3.5 text-base outline-offset-0 focus:border-green'
+export const inputCls = 'min-h-[50px] w-full rounded-sm border-[1.5px] border-[#e1ddd2] bg-white px-3.5 text-base outline-offset-0 focus:border-green'
 
 export function PasswordInput({ id, value, onChange, autoComplete }: { id: string; value: string; onChange: (v: string) => void; autoComplete: 'current-password' | 'new-password' }) {
   const [shown, setShown] = useState(false)
@@ -80,9 +80,9 @@ export function PasswordInput({ id, value, onChange, autoComplete }: { id: strin
   return (
     <div className="relative">
       <input id={id} type={shown ? 'text' : 'password'} required minLength={autoComplete === 'new-password' ? 8 : undefined} value={value}
-        onChange={(e) => onChange(e.target.value)} autoComplete={autoComplete} placeholder={t.auth.passwordPlaceholder} className={cx(inputCls, 'pr-12')} />
+        onChange={(e) => onChange(e.target.value)} autoComplete={autoComplete} placeholder={t.auth.passwordPlaceholder} className={cx(inputCls, 'pe-12')} />
       <button type="button" onClick={() => setShown(!shown)} aria-label={shown ? t.auth.hidePassword : t.auth.showPassword} aria-pressed={shown}
-        className="absolute inset-y-0 right-0 grid w-12 cursor-pointer place-items-center text-muted hover:text-ink">
+        className="absolute inset-y-0 end-0 grid w-12 cursor-pointer place-items-center text-muted hover:text-ink">
         <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
           <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" /><circle cx="12" cy="12" r="3" />
           {shown && <path d="M3 3l18 18" />}
@@ -93,7 +93,7 @@ export function PasswordInput({ id, value, onChange, autoComplete }: { id: strin
 }
 
 export function FormError({ message }: { message?: string | null }) {
-  return message ? <p role="alert" className="bg-warnbg px-3 py-2 text-warn">{message}</p> : null
+  return message ? <p role="alert" className="rounded-sm bg-warnbg px-3 py-2 text-warn">{message}</p> : null
 }
 
 const PROVIDERS: Record<OAuthProvider, { label: string; icon: ReactNode }> = {

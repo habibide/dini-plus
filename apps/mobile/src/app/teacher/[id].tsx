@@ -62,7 +62,7 @@ export default function TeacherScreen() {
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
               {list.map((at) => (
                 <Pressable key={at} accessibilityRole="button" onPress={() => account ? router.push(`/book/${t.id}/${at}`) : router.push({ pathname: '/login', params: { next: `/book/${t.id}/${at}` } })}
-                  style={({ pressed }) => ({ minWidth: 72, minHeight: 44, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.green2, borderRadius: 3, backgroundColor: pressed ? colors.green : colors.white })}>
+                  style={({ pressed }) => ({ minWidth: 72, minHeight: 44, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: colors.green, borderRadius: 12, backgroundColor: pressed ? colors.green : colors.white })}>
                   <T style={{ fontFamily: font.semibold, color: colors.green }}>{fmt.time(at, tz)}</T>
                 </Pressable>
               ))}

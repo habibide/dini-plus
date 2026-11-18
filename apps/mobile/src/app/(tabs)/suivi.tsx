@@ -78,7 +78,7 @@ function LearnerView({ d, tz }: { d: LearnerDashboard; tz: string }) {
         </>}
       </Section>
       <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderColor: colors.line }}>
-        <View style={{ flex: 1, padding: 18, paddingLeft: 20, gap: 8, borderRightWidth: 1, borderColor: colors.line }}>
+        <View style={{ flex: 1, padding: 18, paddingStart: 20, gap: 8, borderEndWidth: 1, borderColor: colors.line }}>
           <T tone="label">{m.attendance}</T>
           <T><T style={{ fontFamily: font.display, fontSize: 26, color: colors.green }}>{d.attendance.present}</T>{m.outOf(d.attendance.held)}</T>
           <View style={{ flexDirection: 'row', gap: 9, padding: 3 }} accessibilityLabel={m.attendedLabel(d.attendance.present, d.attendance.held)}>
@@ -101,7 +101,7 @@ function LearnerView({ d, tz }: { d: LearnerDashboard; tz: string }) {
               <View style={{ flex: 1, height: 8, backgroundColor: colors.leaf, flexDirection: 'row-reverse' }}>
                 <View style={{ width: `${(p.reached / s.ayat) * 100}%`, backgroundColor: colors.green2 }} />
               </View>
-              <T tone="muted" style={{ width: 40, textAlign: 'right' }}>{p.reached}/{s.ayat}</T>
+              <T tone="muted" style={{ width: 40, textAlign: 'right', writingDirection: 'ltr' }}>{p.reached}/{s.ayat}</T>
             </View>
           )
         })}

@@ -17,7 +17,7 @@ export function Input({ label, ...p }: TextInputProps & { label: string }) {
     <View style={{ gap: 6 }}>
       <T style={{ fontFamily: font.semibold }}>{label}</T>
       <TextInput placeholderTextColor={colors.muted} accessibilityLabel={label} {...p}
-        style={[{ minHeight: 50, borderWidth: 1, borderColor: colors.line, borderRadius: 4, backgroundColor: colors.white, paddingHorizontal: 14, fontFamily: font.body, fontSize: 16, color: colors.ink }, p.style]} />
+        style={[{ minHeight: 50, borderWidth: 1.5, borderColor: '#E1DDD2', borderRadius: 12, backgroundColor: colors.white, paddingHorizontal: 14, fontFamily: font.body, fontSize: 16, color: colors.ink }, p.style]} />
     </View>
   )
 }
@@ -32,8 +32,8 @@ export function PasswordInput({ label: labelProp, value, onChangeText, isNew }: 
       <View>
         <TextInput value={value} onChangeText={onChangeText} secureTextEntry={!shown} autoCapitalize="none" autoComplete={isNew ? 'new-password' : 'current-password'}
           textContentType={isNew ? 'newPassword' : 'password'} accessibilityLabel={label} placeholder={t.passwordPlaceholder} placeholderTextColor={colors.muted}
-          style={{ minHeight: 50, borderWidth: 1, borderColor: colors.line, borderRadius: 4, backgroundColor: colors.white, paddingLeft: 14, paddingRight: 90, fontFamily: font.body, fontSize: 16, color: colors.ink }} />
-        <Pressable accessibilityRole="button" onPress={() => setShown(!shown)} style={{ position: 'absolute', right: 0, top: 0, bottom: 0, paddingHorizontal: 14, justifyContent: 'center' }}>
+          style={{ minHeight: 50, borderWidth: 1.5, borderColor: '#E1DDD2', borderRadius: 12, backgroundColor: colors.white, paddingStart: 14, paddingEnd: 90, fontFamily: font.body, fontSize: 16, color: colors.ink }} />
+        <Pressable accessibilityRole="button" onPress={() => setShown(!shown)} style={{ position: 'absolute', end: 0, top: 0, bottom: 0, paddingHorizontal: 14, justifyContent: 'center' }}>
           <T style={{ fontFamily: font.semibold, color: colors.green }}>{shown ? t.hide : t.show}</T>
         </Pressable>
       </View>
@@ -129,7 +129,7 @@ export function OAuthButtons({ providers: wanted, signUp = false, asTeacher = fa
           buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.WHITE_OUTLINE} />
       ) : (
         <Pressable key={p} accessibilityRole="button" disabled={!!pending} onPress={() => browser(p)}
-          style={({ pressed }) => ({ minHeight: 52, flexDirection: 'row', gap: 10, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: colors.ink, borderRadius: 4, backgroundColor: pressed ? colors.leaf : colors.white, opacity: pending && pending !== p ? 0.5 : 1 })}>
+          style={({ pressed }) => ({ minHeight: 52, flexDirection: 'row', gap: 10, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: '#D6D2C7', borderRadius: 14, backgroundColor: pressed ? colors.leaf : colors.white, opacity: pending && pending !== p ? 0.5 : 1 })}>
           <ProviderIcon p={p} />
           <T style={{ fontFamily: font.semibold, fontSize: 17 }}>{pending === p ? t.connecting : t.continueWith(verb, LABELS[p])}</T>
         </Pressable>

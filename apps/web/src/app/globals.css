@@ -1,23 +1,44 @@
 @import "tailwindcss";
 
-/* Identité DINE : mêmes valeurs que packages/core/src/theme.ts. */
+/* Identité DINE (charte du prototype Claude Design) : mêmes valeurs que packages/core/src/theme.ts. */
 @theme {
-  --color-paper: #fafaf5;
-  --color-leaf: #f1ecdd;
-  --color-sand: #e4d7b8;
-  --color-ochre: #96661a;
-  --color-green: #0f3d32;
-  --color-green2: #1b5a49;
-  --color-ink: #1b2522;
-  --color-muted: #5d6a63;
-  --color-line: #dcd8c8;
-  --color-warnbg: #f7ecd5;
-  --color-warn: #8a5a10;
-  --color-bad: #97362b;
+  --color-paper: #fafaf7;
+  --color-leaf: #f4f1ea;
+  --color-soft: #e8f5ee;
+  --color-sand: #fbf3dc;
+  --color-gold: #c9a02e;
+  --color-ochre: #7a5a1b;
+  --color-green: #20915b;
+  --color-green2: #176b43;
+  --color-ink: #1f1f1b;
+  --color-muted: #6e6b62;
+  --color-faint: #9c998f;
+  --color-line: #e9e6dd;
+  --color-warnbg: #fbf3dc;
+  --color-warn: #7a5a1b;
+  --color-bad: #c7503d;
 
-  --font-sans: var(--font-hanken), Arial, sans-serif;
-  --font-display: var(--font-young), Georgia, serif;
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+
+  --font-sans: var(--font-jakarta), var(--font-noto-arabic), system-ui, sans-serif;
+  --font-display: var(--font-jakarta), var(--font-noto-arabic), system-ui, sans-serif;
   --font-arabic: var(--font-amiri), 'Geeza Pro', serif;
+}
+
+/* Titres : la même police que le texte, en très gras et resserrée. */
+.font-display { font-weight: 800; letter-spacing: -0.02em; }
+
+/* En-têtes verts de la charte (utilitaire Tailwind : accepte md:, hover:…). */
+@utility bg-brand { background-image: linear-gradient(160deg, var(--color-green) 0%, var(--color-green2) 100%); }
+
+/* Frise géométrique (motif d'Afrique de l'Ouest), en filigrane. */
+.pattern-strip {
+  height: 10px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='10' viewBox='0 0 24 10'%3E%3Cpath d='M0 5 L6 0 L12 5 L18 0 L24 5 L18 10 L12 5 L6 10 Z' fill='%2320915b' fill-opacity='0.1'/%3E%3C/svg%3E");
+  background-size: 24px 10px;
+  background-repeat: repeat-x;
 }
 
 body {
@@ -38,3 +59,10 @@ body {
 
 /* Langue autre que le français : page masquée le temps d'appliquer la traduction (voir i18n/locale.tsx). */
 html[data-locale-pending] body { visibility: hidden; }
+
+/* Arabe : lecture de droite à gauche (dir="rtl"), police arabe pour le texte courant et les titres. */
+html[lang="ar"] {
+  --font-sans: var(--font-noto-arabic), var(--font-jakarta), sans-serif;
+  --font-display: var(--font-noto-arabic), var(--font-jakarta), sans-serif;
+}
+html[lang="ar"] body { line-height: 1.7; }

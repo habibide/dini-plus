@@ -44,11 +44,11 @@ export function SessionScreen() {
       </header>
 
       {b.status !== 'scheduled' ? (
-        <p className="bg-leaf px-4 py-3">{b.report ? <>{m.sent}<strong>{b.report.covered}</strong></> : m.over}</p>
+        <p className="rounded-sm bg-leaf px-4 py-3">{b.report ? <>{m.sent}<strong>{b.report.covered}</strong></> : m.over}</p>
       ) : !started ? (
-        <p className="bg-leaf px-4 py-3">{m.after}</p>
+        <p className="rounded-sm bg-leaf px-4 py-3">{m.after}</p>
       ) : (
-        <form className="flex flex-col gap-5 border border-line bg-white p-6" onSubmit={(e) => { e.preventDefault(); deliver.mutate({ id: b.id, report: r }, { onSuccess: done }) }}>
+        <form className="flex flex-col gap-5 overflow-hidden rounded-md border-[1.5px] border-line bg-white p-6" onSubmit={(e) => { e.preventDefault(); deliver.mutate({ id: b.id, report: r }, { onSuccess: done }) }}>
           <h2 className="font-display text-xl">{m.title}</h2>
           <Field label={m.covered}>{(fid) => <input id={fid} required value={r.covered} onChange={(e) => set({ covered: e.target.value })} placeholder={m.coveredPlaceholder} className={inputCls} />}</Field>
           {(b.subject === 'quran' || b.subject === 'tajwid') && (

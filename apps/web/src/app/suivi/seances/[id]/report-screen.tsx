@@ -26,7 +26,7 @@ export function ReportScreen() {
         <h1 className="font-display text-3xl">{m.title(teacher.name.split(' ')[0])}</h1>
       </header>
       {s && r.ayahTo && (
-        <section className="flex flex-col items-center gap-2 border border-sand bg-white p-6 text-center outline outline-sand outline-offset-4">
+        <section className="flex flex-col items-center gap-2 overflow-hidden rounded-md border-[1.5px] border-sand bg-white p-6 text-center outline outline-sand outline-offset-4">
           <span lang="ar" dir="rtl" className="font-arabic text-5xl leading-snug text-green">{s.ar}</span>
           <strong>{m.verses(s.name, r.ayahFrom ?? 1, r.ayahTo, s.ayat)}</strong>
         </section>
@@ -36,7 +36,7 @@ export function ReportScreen() {
         {r.tajwidNotes && <div><dt className="text-sm font-semibold text-muted">{m.tajwid}</dt><dd className="text-lg">{r.tajwidNotes}</dd></div>}
         <div><dt className="text-sm font-semibold text-muted">{m.homework}</dt><dd className="text-lg">{r.homework}</dd></div>
       </dl>
-      {r.comment && <blockquote className="bg-leaf px-5 py-4 text-lg">{r.comment}<span className="mt-2 block text-sm text-muted">{teacher.name}</span></blockquote>}
+      {r.comment && <blockquote className="rounded-sm bg-leaf px-5 py-4 text-lg">{r.comment}<span className="mt-2 block text-sm text-muted">{teacher.name}</span></blockquote>}
     </article>
   )
 }

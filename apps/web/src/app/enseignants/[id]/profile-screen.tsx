@@ -74,10 +74,10 @@ export function ProfileScreen() {
         </section>
       </div>
 
-      <aside className="flex flex-col gap-3 border border-line bg-white p-5 lg:sticky lg:top-4">
+      <aside className="flex flex-col gap-3 overflow-hidden rounded-md border-[1.5px] border-line bg-white p-5 lg:sticky lg:top-4">
         <span><strong className="font-display text-2xl text-green"><Money {...t.price} /></strong> <span className="text-sm text-muted">{all.common.perCourse}</span></span>
         <Stars value={t.rating} count={t.reviews.length} />
-        <p className="bg-leaf px-3 py-2 text-sm">{m.trial.before}<Money amount={trialPrice(t.price.amount, t.price.currency)} currency={t.price.currency} />{m.trial.after}</p>
+        <p className="rounded-sm bg-leaf px-3 py-2 text-sm">{m.trial.before}<Money amount={trialPrice(t.price.amount, t.price.currency)} currency={t.price.currency} />{m.trial.after}</p>
         <h2 className="mt-2 font-display text-lg">{m.pickSlot}</h2>
         <p className="text-sm text-muted">{m.timeNote(tzLabel ?? '', t.name.split(' ')[0], t.city)}</p>
         <div className="flex gap-2">

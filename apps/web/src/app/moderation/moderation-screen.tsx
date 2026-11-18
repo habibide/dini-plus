@@ -17,7 +17,7 @@ export function ModerationScreen() {
     <div className="mx-auto flex max-w-5xl flex-col gap-6 px-5 py-8">
       <h1 className="font-display text-3xl">{m.title}</h1>
       {list.isPending ? <p className="text-muted">{all.common.loading}</p>
-        : !list.data?.length ? <p className="bg-leaf px-4 py-3">{m.none}</p>
+        : !list.data?.length ? <p className="rounded-sm bg-leaf px-4 py-3">{m.none}</p>
         : list.data.map((a) => <Review key={a.id} a={a} />)}
       <PendingCredentials />
     </div>
@@ -35,7 +35,7 @@ function PendingCredentials() {
       <h2 className="font-display text-3xl">{m.pendingTitle}</h2>
       <p className="text-muted">{m.pendingText}</p>
       {list.isPending ? <p className="text-muted">{all.common.loading}</p>
-        : !list.data?.length ? <p className="bg-leaf px-4 py-3">{m.noPending}</p>
+        : !list.data?.length ? <p className="rounded-sm bg-leaf px-4 py-3">{m.noPending}</p>
         : list.data.map((c) => <PendingCredentialRow key={c.id} c={c} busy={review.isPending} onDecide={(approve) => review.mutate({ id: c.id, approve })} />)}
       <FormError message={review.error?.message} />
     </section>
@@ -46,7 +46,7 @@ function PendingCredentialRow({ c, busy, onDecide }: { c: PendingCredential; bus
   const m = useT().moderation
   const a = useT().application
   return (
-    <article className="flex flex-wrap items-center gap-4 border border-line bg-white p-4">
+    <article className="flex flex-wrap items-center gap-4 overflow-hidden rounded-md border-[1.5px] border-line bg-white p-4">
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <strong>{c.title} ({c.year})</strong>
         <span className="text-sm text-muted">{[c.kind === 'ijaza' ? a.ijaza : a.diploma, c.riwaya && m.riwayaOf(c.riwaya), c.institution].filter(Boolean).join(' · ')}</span>
@@ -73,7 +73,7 @@ function Review({ a }: { a: Application }) {
   const fmt = useFormat()
 
   return (
-    <article className="flex flex-col gap-5 border border-line bg-white p-6">
+    <article className="flex flex-col gap-5 overflow-hidden rounded-md border-[1.5px] border-line bg-white p-6">
       <header className="flex flex-wrap items-start gap-4">
         <Monogram name={a.name || '?'} size="sm" />
         <div className="flex min-w-0 flex-1 flex-col gap-1">
@@ -96,7 +96,7 @@ function Review({ a }: { a: Application }) {
         <h3 className="font-semibold">{m.declared}</h3>
         {!a.credentials.length && <p className="text-sm text-muted">{m.noneDeclared}</p>}
         {a.credentials.map((c, i) => (
-          <div key={i} className="flex flex-col gap-2 border-l-2 border-ochre pl-4">
+          <div key={i} className="flex flex-col gap-2 border-s-2 border-ochre ps-4">
             <strong>{c.title} ({c.year})</strong>
             <span className="text-sm text-muted">{c.kind === 'ijaza' ? all.application.ijaza : all.application.diploma}{c.riwaya ? `, ${m.riwayaOf(c.riwaya)}` : ''}{c.institution ? ` · ${c.institution}` : ''}</span>
             {c.sanad?.length ? <Sanad chain={c.sanad} /> : null}
@@ -104,7 +104,7 @@ function Review({ a }: { a: Application }) {
         ))}
       </div>
 
-      <fieldset className="flex flex-col gap-2 bg-leaf p-4">
+      <fieldset className="flex flex-col gap-2 rounded-sm bg-leaf p-4">
         <legend className="sr-only">{m.checks}</legend>
         <p className="font-semibold">{m.checked}</p>
         <label className="flex items-center gap-2"><input type="checkbox" checked={checks.identity} onChange={(e) => setChecks({ ...checks, identity: e.target.checked })} className="size-4 accent-green" />{m.identity}</label>

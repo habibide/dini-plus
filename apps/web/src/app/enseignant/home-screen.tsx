@@ -52,21 +52,21 @@ export function TeacherHome() {
 
       {t.status === 'approved' && <>
         {toComplete.length > 0 && (
-          <section className="flex flex-col border border-ochre bg-white">
+          <section className="flex flex-col overflow-hidden rounded-md border-[1.5px] border-ochre bg-white">
             <h2 className="border-b border-line px-6 py-4 font-display text-xl">{m.toComplete}</h2>
             <p className="px-6 pt-4 text-muted">{m.toCompleteText}</p>
             <SessionList items={toComplete} action={m.writeReport} />
           </section>
         )}
 
-        <section className="flex flex-col border border-line bg-white">
+        <section className="flex flex-col overflow-hidden rounded-md border-[1.5px] border-line bg-white">
           <h2 className="border-b border-line px-6 py-4 font-display text-xl">{m.upcoming}</h2>
           {agenda.isPending ? <p className="px-6 py-5 text-muted">{all.common.loading}</p>
             : upcoming.length ? <SessionList items={upcoming} />
             : <p className="px-6 py-5 text-muted">{m.noUpcoming}</p>}
         </section>
 
-        <section className="grid gap-px border border-line bg-line md:grid-cols-3">
+        <section className="grid gap-px overflow-hidden rounded-md border-[1.5px] border-line bg-line md:grid-cols-3">
           <div className="flex flex-col gap-1 bg-white px-6 py-5">
             <h2 className="text-sm font-semibold text-muted">{m.earned}</h2>
             <p className="font-display text-3xl text-green">{fmt.euros(earnings.data?.releasedEur ?? 0)}</p>

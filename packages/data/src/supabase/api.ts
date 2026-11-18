@@ -1,6 +1,6 @@
 import {
   DAY, PLANS, country,
-  type Booking, type Country, type CurrencyCode, type Family, type Learner, type PaymentMethod, type Report, type Subscription, type Teacher,
+  type Booking, type Country, type CurrencyCode, type Family, type Learner, type Locale, type PaymentMethod, type Report, type Subscription, type Teacher,
 } from '@dini/core'
 import type { PostgrestError, SupabaseClient } from '@supabase/supabase-js'
 import type { KeyValueStorage } from '../api'
@@ -128,20 +128,54 @@ const MESSAGES_EN: Record<string, string> = {
   'User already registered': 'An account already exists with this address. Sign in.',
 }
 
-/** Champs manquants d'une candidature, renvoyés par le serveur sous forme de codes. */
-const MISSING_FIELDS: Record<string, Record<'fr' | 'en', string>> = {
-  name: { fr: 'nom (3 caractères au moins)', en: 'name (at least 3 characters)' },
-  gender: { fr: 'genre', en: 'gender' },
-  city: { fr: 'ville', en: 'city' },
-  headline: { fr: 'titre (3 caractères au moins)', en: 'headline (at least 3 characters)' },
-  bio: { fr: 'présentation (80 caractères au moins)', en: 'introduction (at least 80 characters)' },
-  subjects: { fr: 'matières', en: 'subjects' },
-  languages: { fr: 'langues', en: 'languages' },
-  rate: { fr: 'tarif', en: 'rate' },
-  availability: { fr: 'disponibilités', en: 'availability' },
+const MESSAGES_AR: Record<string, string> = {
+  no_credit: 'لم يبق أي حصة في هذه الباقة.',
+  dispute_window_closed: 'انقضت مهلة 48 ساعة للإبلاغ عن هذه الحصة.',
+  not_cancellable: 'لم يعد بالإمكان إلغاء هذه الحصة.',
+  invalid_payment_method: 'وسيلة الدفع هذه غير متاحة في بلدك.',
+  forbidden: 'ليس لديك صلاحية الاطلاع على هذه المعلومة.',
+  not_signed_in: 'سجّل الدخول للمتابعة.',
+  not_a_teacher: 'هذا الحساب ليس له ملف معلّم.',
+  application_under_review: 'طلبك قيد المراجعة: لا يمكن تعديله حاليًا.',
+  identity_locked: 'تم التحقق من اسمك وجنسك. راسلنا لتعديلهما.',
+  credentials_locked: 'تم التحقق من شهاداتك. راسلنا لإضافة شهادة.',
+  invalid_rate: 'أدخل سعرًا صحيحًا.',
+  not_submittable: 'تم إرسال هذا الطلب من قبل.',
+  not_started: 'لم تبدأ الحصة بعد.',
+  too_early: 'انتظر 10 دقائق على الأقل بعد البداية قبل الإبلاغ عن غياب.',
+  not_scheduled: 'هذه الحصة لم تعد قادمة.',
+  report_required: 'اذكر على الأقل ما تمت دراسته.',
+  note_required: 'اشرح سبب الرفض: سيرى المترشح هذه الرسالة.',
+  not_under_review: 'هذا الطلب لم يعد قيد الانتظار.',
+  credential_not_pending: 'تمت معالجة هذه الشهادة من قبل.',
+  trial_already_used: 'استفاد هذا الطالب من حصته التجريبية مع هذا المعلّم من قبل.',
+  room_not_open: 'تُفتح القاعة قبل بداية الدرس بعشر دقائق.',
+  room_closed: 'انتهى هذا الدرس: القاعة مغلقة.',
+  video_not_configured: 'المكالمات المرئية غير مفعّلة بعد على DINE.',
+  video_unavailable: 'خدمة الفيديو لا تستجيب. أعد المحاولة بعد قليل.',
+  oauth_cancelled: 'تم إلغاء تسجيل الدخول.',
+  booking_failed: 'لم يكتمل الحجز. أعد المحاولة.',
+  incomplete_application: 'ما زال ينقص: {fields}.',
+  'Invalid login credentials': 'البريد الإلكتروني أو كلمة المرور غير صحيحة.',
+  'Email not confirmed': 'أكّد عنوانك أولًا عبر الرابط المرسل إلى بريدك.',
+  'User already registered': 'يوجد حساب بهذا العنوان. سجّل الدخول.',
 }
 
-const msg = (key: string) => (dataLocale() === 'en' ? MESSAGES_EN : MESSAGES_FR)[key]
+/** Champs manquants d'une candidature, renvoyés par le serveur sous forme de codes. */
+const MISSING_FIELDS: Record<string, Record<Locale, string>> = {
+  name: { fr: 'nom (3 caractères au moins)', en: 'name (at least 3 characters)', ar: 'الاسم (3 أحرف على الأقل)' },
+  gender: { fr: 'genre', en: 'gender', ar: 'الجنس' },
+  city: { fr: 'ville', en: 'city', ar: 'المدينة' },
+  headline: { fr: 'titre (3 caractères au moins)', en: 'headline (at least 3 characters)', ar: 'العنوان (3 أحرف على الأقل)' },
+  bio: { fr: 'présentation (80 caractères au moins)', en: 'introduction (at least 80 characters)', ar: 'التقديم (80 حرفًا على الأقل)' },
+  subjects: { fr: 'matières', en: 'subjects', ar: 'المواد' },
+  languages: { fr: 'langues', en: 'languages', ar: 'اللغات' },
+  rate: { fr: 'tarif', en: 'rate', ar: 'السعر' },
+  availability: { fr: 'disponibilités', en: 'availability', ar: 'أوقات التوفر' },
+}
+
+const MESSAGES: Record<Locale, Record<string, string>> = { fr: MESSAGES_FR, en: MESSAGES_EN, ar: MESSAGES_AR }
+const msg = (key: string) => MESSAGES[dataLocale()][key]
 
 function fail(error: { message: string; details?: string | null }): never {
   if (error.message === 'slot_taken') throw new SlotTakenError()
