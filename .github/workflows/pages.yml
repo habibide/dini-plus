@@ -26,11 +26,14 @@ jobs:
         with:
           node-version: 20
           cache: npm
+          cache-dependency-path: prototype/package-lock.json
       - run: npm ci
+        working-directory: prototype
       - run: npm run build
-      - run: rm -f dist/dini-prototype.html
+        working-directory: prototype
+      - run: rm -f prototype/dist/dini-prototype.html
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: prototype/dist
       - id: deployment
         uses: actions/deploy-pages@v4

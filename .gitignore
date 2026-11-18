@@ -2,3 +2,9 @@ node_modules
 dist
 .DS_Store
 .claude
+.next
+.expo
+.turbo
+*.tsbuildinfo
+next-env.d.ts
+.vercel
