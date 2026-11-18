@@ -1,29 +1,94 @@
 import { SUBJECTS, colors } from '@dini/core'
-import { router } from 'expo-router'
-import { Pressable, ScrollView, View } from 'react-native'
+import { Image } from 'expo-image'
+import { router, type Href } from 'expo-router'
+import { useEffect, useRef, useState } from 'react'
+import { AccessibilityInfo, Pressable, ScrollView, View, useWindowDimensions, type NativeScrollEvent, type NativeSyntheticEvent, type ScrollViewInstance } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Button, T, font } from '@/lib/ui'
 import { useFormat, useT } from '@/lib/i18n'
+
+// Accueil : mêmes bannières photo que le site (version mobile des images), les chiffres, puis les matières.
+
+const BANNERS: { image: number; href: Href }[] = [
+  { image: require('../../../assets/images/banners/1.jpg'), href: '/search' },
+  { image: require('../../../assets/images/banners/2.jpg'), href: { pathname: '/search', params: { teacher: 'F' } } },
+  { image: require('../../../assets/images/banners/3.jpg'), href: '/search' },
+]
+const DELAY = 7000
+
+function Banners() {
+  const t = useT().home
+  const { width } = useWindowDimensions()
+  const insets = useSafeAreaInsets()
+  const scroller = useRef<ScrollViewInstance>(null)
+  const [active, setActive] = useState(0)
+  const [auto, setAuto] = useState(true)
+
+  // Pas de défilement automatique si l'appareil demande moins d'animations.
+  useEffect(() => { AccessibilityInfo.isReduceMotionEnabled().then((r) => { if (r) setAuto(false) }).catch(() => {}) }, [])
+  useEffect(() => {
+    if (!auto) return
+    const id = setTimeout(() => scroller.current?.scrollTo({ x: ((active + 1) % BANNERS.length) * width, animated: true }), DELAY)
+    return () => clearTimeout(id)
+  }, [auto, active, width])
+
+  const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => setActive(Math.round(e.nativeEvent.contentOffset.x / width))
+
+  return (
+    <View style={{ backgroundColor: colors.green, borderBottomLeftRadius: 24, borderBottomRightRadius: 24, overflow: 'hidden' }}>
+      <ScrollView ref={scroller} horizontal pagingEnabled showsHorizontalScrollIndicator={false} onMomentumScrollEnd={onScroll}
+        onScrollBeginDrag={() => setAuto(false)} style={{ direction: 'ltr' }}>
+        {BANNERS.map((b, i) => {
+          const copy = t.banners[i]
+          return (
+            <View key={i} style={{ width }} accessibilityLabel={t.bannerGo(i + 1, BANNERS.length)}>
+              <View style={{ width, height: width * 0.78 + insets.top }}>
+                <Image source={b.image} contentFit="cover" contentPosition={{ top: '70%' }} style={{ flex: 1 }} accessibilityIgnoresInvertColors />
+                {/* Marque DINE sur la photo. */}
+                <View style={{ position: 'absolute', top: insets.top + 8, left: 20, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.92)' }}>
+                  <View style={{ width: 26, height: 26, borderRadius: 8, backgroundColor: colors.green, alignItems: 'center', justifyContent: 'center' }}>
+                    <T style={{ fontFamily: font.display, fontSize: 14, lineHeight: 18, color: colors.white }}>D</T>
+                  </View>
+                  <T style={{ fontFamily: font.display, fontSize: 17, lineHeight: 22, letterSpacing: -0.4, color: colors.ink }}>DINE</T>
+                </View>
+              </View>
+              <View style={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 52, gap: 12, minHeight: 250 }}>
+                <T style={{ fontFamily: font.display, fontSize: 26, lineHeight: 31, letterSpacing: -0.6, color: colors.white }}>{copy.title}</T>
+                <T style={{ color: 'rgba(255,255,255,0.85)' }}>{copy.text}</T>
+                <Button title={copy.cta} kind="sand" onPress={() => router.navigate(b.href)} style={{ alignSelf: 'flex-start', marginTop: 4 }} />
+              </View>
+            </View>
+          )
+        })}
+      </ScrollView>
+      {/* Points de pagination. */}
+      <View style={{ position: 'absolute', bottom: 20, left: 20, flexDirection: 'row', gap: 6 }}>
+        {BANNERS.map((_, i) => (
+          <Pressable key={i} accessibilityRole="button" accessibilityLabel={t.bannerGo(i + 1, BANNERS.length)} hitSlop={8}
+            onPress={() => { setAuto(false); scroller.current?.scrollTo({ x: i * width, animated: true }); setActive(i) }}
+            style={{ height: 8, width: i === active ? 24 : 8, borderRadius: 4, backgroundColor: i === active ? colors.white : 'rgba(255,255,255,0.45)' }} />
+        ))}
+      </View>
+    </View>
+  )
+}
 
 export default function Home() {
   const t = useT()
   const fmt = useFormat()
   return (
-    <ScrollView style={{ backgroundColor: colors.paper }} contentContainerStyle={{ flexGrow: 1, paddingBottom: 110, backgroundColor: colors.paper }}>
-      {/* Vert au-dessus de l'en-tête quand on tire la page vers le bas ; le reste du fond reste clair (pas de bande verte sous la barre d'onglets). */}
+    <ScrollView style={{ backgroundColor: colors.paper }} contentInsetAdjustmentBehavior="never" contentContainerStyle={{ flexGrow: 1, paddingBottom: 110, backgroundColor: colors.paper }}>
+      {/* Vert au-dessus de l'en-tête quand on tire la page vers le bas ; le reste du fond reste clair. */}
       <View pointerEvents="none" style={{ position: 'absolute', top: -1000, left: 0, right: 0, height: 1000, backgroundColor: colors.green }} />
-      <View style={{ backgroundColor: colors.green, borderBottomLeftRadius: 24, borderBottomRightRadius: 24 }}>
-        <View style={{ paddingHorizontal: 20, paddingTop: 12, paddingBottom: 28, gap: 18 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-            {/* Marque : pastille « D » de la charte. */}
-            <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.18)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)', alignItems: 'center', justifyContent: 'center' }}>
-              <T style={{ fontFamily: font.display, fontSize: 18, lineHeight: 22, color: colors.white }}>D</T>
-            </View>
-            <T style={{ fontFamily: font.display, fontSize: 22, lineHeight: 28, letterSpacing: -0.5, color: colors.white }}>DINE</T>
+      <Banners />
+
+      <View style={{ flexDirection: 'row', paddingHorizontal: 20, paddingTop: 22, gap: 12 }}>
+        {t.home.stats.map(([a, b]) => (
+          <View key={a} style={{ flex: 1, gap: 2 }}>
+            <T style={{ fontFamily: font.display, fontSize: 20, lineHeight: 25, letterSpacing: -0.4, color: colors.green }}>{a}</T>
+            <T tone="muted" style={{ fontSize: 12.5, lineHeight: 17 }}>{b}</T>
           </View>
-          <T style={{ fontFamily: font.display, fontSize: 30, lineHeight: 34, color: colors.white, letterSpacing: -0.6 }}>{t.home.hero}</T>
-          <T style={{ color: 'rgba(255,255,255,0.85)' }}>{t.home.heroText}</T>
-          <Button title={t.common.findTeacher} kind="sand" onPress={() => router.navigate('/search')} />
-        </View>
+        ))}
       </View>
 
       <View style={{ padding: 20, gap: 12 }}>
@@ -39,7 +104,6 @@ export default function Home() {
           ))}
         </View>
       </View>
-
     </ScrollView>
   )
 }

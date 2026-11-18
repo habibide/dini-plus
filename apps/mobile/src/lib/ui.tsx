@@ -1,7 +1,7 @@
-import { colors, isConfirmed, radius, type CurrencyCode, type Teacher } from '@dini/core'
+import { COUNTRIES, colors, isConfirmed, radius, type CurrencyCode, type Teacher } from '@dini/core'
 import { useDini } from '@dini/data/react'
 import type { ReactNode } from 'react'
-import { Pressable, StyleSheet, Text, View, type TextProps, type ViewStyle } from 'react-native'
+import { Alert, Pressable, StyleSheet, Text, View, type TextProps, type ViewStyle } from 'react-native'
 import { useFormat, useT } from './i18n'
 
 export const font = {
@@ -59,13 +59,13 @@ export function Option({ on, onPress, title, detail, right }: { on: boolean; onP
 
 export const Money = ({ amount, currency }: { amount: number; currency: CurrencyCode }) => useFormat().money(amount, currency)
 
-export function Monogram({ name, size = 56 }: { name: string; size?: number }) {
+export function Monogram({ name, size = 56, square }: { name: string; size?: number; square?: boolean }) {
   const initials = name.split(' ').map((w) => w[0]).slice(0, 2).join('')
   // Couleur stable par personne, dans la gamme de la charte (mêmes teintes que le site).
   const palette = ['#20915B', '#176B43', '#B8901F', '#2F7D6D', '#3B8B5A', '#8A6A1E']
   const bg = palette[[...name].reduce((a, c) => a + c.charCodeAt(0), 0) % palette.length]
   return (
-    <View accessible={false} style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: bg, alignItems: 'center', justifyContent: 'center' }}>
+    <View accessible={false} style={{ width: size, height: size, borderRadius: square ? 14 : size / 2, backgroundColor: bg, alignItems: 'center', justifyContent: 'center' }}>
       <Text style={{ fontFamily: font.bold, fontSize: size * 0.36, color: colors.white }}>{initials}</Text>
     </View>
   )
@@ -131,3 +131,47 @@ const s = StyleSheet.create({
   option: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: radius.card, borderWidth: 1.5, borderColor: colors.line, backgroundColor: colors.white },
   optionOn: { borderColor: colors.green, backgroundColor: colors.white, boxShadow: `0 0 0 3px ${colors.soft}` },
 })
+
+/** Pays d'un professeur depuis le libellé saisi : nom traduit et drapeau (libellé inconnu : tel quel, sans drapeau). */
+export function useCountryOf() {
+  const fmt = useFormat()
+  return (label: string) => {
+    const l = label.trim().toLowerCase()
+    const c = COUNTRIES.find((x) => Object.values(x.label).some((v) => v.toLowerCase() === l))
+    if (!c) return { name: label, flag: '' }
+    return { name: fmt.label(c.label), flag: [...c.code].map((ch) => String.fromCodePoint(0x1f1e6 + ch.charCodeAt(0) - 65)).join('') }
+  }
+}
+
+/** Pastille « identité vérifiée », à côté du nom. */
+export function VerifiedMark({ label }: { label: string }) {
+  return (
+    <View accessible accessibilityLabel={label} style={{ width: 20, height: 20, borderRadius: 6, backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center' }}>
+      <Text style={{ color: colors.white, fontSize: 12, fontFamily: font.bold, lineHeight: 15 }}>✓</Text>
+    </View>
+  )
+}
+
+/** Étiquettes de catégorie (ijaza, diplôme, confirmé), comme « Prof qualifié » / « Super prof ». */
+export function CategoryTags({ t }: { t: Teacher }) {
+  const m = useT().badges
+  const tags: { key: string; label: string; bg: string; fg: string }[] = []
+  if (t.verification.ijaza) tags.push({ key: 'ijaza', label: m.ijaza, bg: colors.soft, fg: colors.green2 })
+  if (t.verification.diploma) tags.push({ key: 'diploma', label: m.diploma, bg: '#E6EEF8', fg: '#245A92' })
+  if (isConfirmed(t)) tags.push({ key: 'confirmed', label: t.gender === 'F' ? m.confirmedF : m.confirmedM, bg: colors.sand, fg: colors.ochre })
+  if (!tags.length) return null
+  return (
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+      {tags.map((x) => <View key={x.key} style={{ paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, backgroundColor: x.bg }}><Text style={{ fontFamily: font.semibold, fontSize: 12.5, color: x.fg }}>{x.label}</Text></View>)}
+    </View>
+  )
+}
+
+/** « Envoyer un message » : la messagerie n'existe pas encore ; on le dit et on propose l'essai. */
+export function MessageButton({ name, onBook, style }: { name: string; onBook: () => void; style?: ViewStyle }) {
+  const m = useT().search
+  return (
+    <Button title={m.message} kind="ghost" style={style}
+      onPress={() => Alert.alert(m.messageSoon.title, m.messageSoon.text(name.split(' ')[0]), [{ text: 'OK', style: 'cancel' }, { text: m.book, onPress: onBook }])} />
+  )
+}
