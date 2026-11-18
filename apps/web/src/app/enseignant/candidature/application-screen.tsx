@@ -191,7 +191,7 @@ function Credentials({ approved, verified, credentials, onChange }: {
   const list = (
     <div className="flex flex-col gap-4">
       {verified.map((c, i) => (
-        <div key={`v${i}`} className="flex flex-col gap-1 border-l-2 border-green pl-4">
+        <div key={`v${i}`} className="flex flex-col gap-1 border-s-2 border-green ps-4">
           <strong>{c.title}</strong>
           <span className="text-sm text-muted">{[c.kind === 'ijaza' ? m.ijaza : m.diploma, c.riwaya && m.riwayaOf(c.riwaya), c.institution, c.year].filter(Boolean).join(' · ')}</span>
           <span className="text-sm text-green">{m.verified}</span>

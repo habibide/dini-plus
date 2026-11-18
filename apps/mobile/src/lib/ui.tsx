@@ -97,7 +97,7 @@ export function Section({ title, children, style }: { title?: string; children: 
 
 export function Sanad({ chain }: { chain: string[] }) {
   return (
-    <View style={{ borderLeftWidth: 1, borderColor: colors.ochre, paddingLeft: 14, gap: 6 }}>
+    <View style={{ borderStartWidth: 1, borderColor: colors.ochre, paddingStart: 14, gap: 6 }}>
       {chain.map((n, i) => <T key={n} style={i === 0 ? { fontFamily: font.semibold } : undefined}>{n}</T>)}
     </View>
   )

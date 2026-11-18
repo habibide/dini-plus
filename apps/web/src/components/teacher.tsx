@@ -77,7 +77,7 @@ export function StatusBanner({ t, action }: { t: MyTeacher; action?: ReactNode }
       <div className="flex max-w-prose flex-col gap-1">
         <strong>{s.title}</strong>
         <span>{s.text}</span>
-        {t.reviewNote && t.status === 'rejected' && <span className="mt-1 border-l-2 border-warn pl-3">« {t.reviewNote} »</span>}
+        {t.reviewNote && t.status === 'rejected' && <span className="mt-1 border-s-2 border-warn ps-3">« {t.reviewNote} »</span>}
       </div>
       {action ?? (t.status === 'approved'
         ? <Link href={`/enseignants/${t.id}`} className={buttonCls.ghost}>{m.publicProfile}</Link>

@@ -5,7 +5,7 @@ import { ScrollView, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { SignInPrompt } from '@/lib/auth'
 import { Button, Chip, Section, T } from '@/lib/ui'
-import { LOCALES, setLocale, useFormat, useT } from '@/lib/i18n'
+import { LOCALE_NAMES, LOCALES, setLocale, useFormat, useT } from '@/lib/i18n'
 
 export default function Compte() {
   const account = useAccount()
@@ -27,7 +27,7 @@ export default function Compte() {
       )}
       <Section title={m.language}>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
-          {LOCALES.map((l) => <Chip key={l} label={l === 'fr' ? 'Français' : 'English'} on={fmt.locale === l} onPress={() => setLocale(l)} />)}
+          {LOCALES.map((l) => <Chip key={l} label={LOCALE_NAMES[l]} on={fmt.locale === l} onPress={() => setLocale(l)} />)}
         </View>
       </Section>
       <Section title={m.livesIn}>

@@ -61,7 +61,7 @@ function LearnerBlock({ d, tz }: { d: LearnerDashboard; tz: string }) {
         )}
       </header>
       <div className="grid md:grid-cols-2">
-        <section className="flex flex-col gap-2 border-b border-line px-6 py-5 md:border-r">
+        <section className="flex flex-col gap-2 border-b border-line px-6 py-5 md:border-e">
           <h3 className="text-sm font-semibold text-muted">{m.next}</h3>
           {d.next ? <>
             <p className="font-display text-xl first-letter:uppercase">{fmt.dateTime(d.next.startsAt, tz)}</p>
@@ -81,7 +81,7 @@ function LearnerBlock({ d, tz }: { d: LearnerDashboard; tz: string }) {
             </div>
           </> : <p className="text-muted">{m.noAttendance}</p>}
         </section>
-        <section className="flex flex-col gap-2 border-b border-line px-6 py-5 md:border-b-0 md:border-r">
+        <section className="flex flex-col gap-2 border-b border-line px-6 py-5 md:border-b-0 md:border-e">
           <h3 className="text-sm font-semibold text-muted">{m.memorisation}</h3>
           {d.progress.length === 0 ? <p className="text-muted">{m.noProgress}</p> : (
             <ul className="flex flex-col gap-1.5">
@@ -91,7 +91,7 @@ function LearnerBlock({ d, tz }: { d: LearnerDashboard; tz: string }) {
                   <li key={p.surah} className="grid grid-cols-[90px_minmax(0,1fr)_44px] items-center gap-3">
                     <span lang="ar" dir="rtl" className="font-arabic text-xl">{s.ar}</span>
                     <span dir="rtl" role="img" aria-label={m.versesOf(s.name, p.reached, s.ayat)} className="block h-2 bg-leaf"><span className="block h-2 bg-green2" style={{ width: `${(p.reached / s.ayat) * 100}%` }} /></span>
-                    <span className="text-right text-sm tabular-nums text-muted">{p.reached}/{s.ayat}</span>
+                    <span className="text-end text-sm tabular-nums text-muted">{p.reached}/{s.ayat}</span>
                   </li>
                 )
               })}

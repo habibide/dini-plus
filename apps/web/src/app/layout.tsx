@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
-import { Amiri, Hanken_Grotesk, Young_Serif } from 'next/font/google'
+import { Amiri, Hanken_Grotesk, Noto_Sans_Arabic, Young_Serif } from 'next/font/google'
 import { Providers } from '@/components/providers'
 import { ErrorBanner, SiteFooter, SiteHeader } from '@/components/chrome'
 import { LOCALE_BOOT_SCRIPT, LocaleSync } from '@/i18n/locale'
@@ -8,6 +8,7 @@ import './globals.css'
 
 const hanken = Hanken_Grotesk({ variable: '--font-hanken', subsets: ['latin'] })
 const young = Young_Serif({ variable: '--font-young', subsets: ['latin'], weight: '400' })
+const notoArabic = Noto_Sans_Arabic({ variable: '--font-noto-arabic', subsets: ['arabic'] })
 const amiri = Amiri({ variable: '--font-amiri', subsets: ['arabic'], weight: ['400', '700'] })
 
 export const metadata: Metadata = {
@@ -17,8 +18,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    // lang est ajusté avant l'affichage par le script de langue : React ne doit pas s'en étonner.
-    <html lang="fr" suppressHydrationWarning className={`${hanken.variable} ${young.variable} ${amiri.variable} antialiased`}>
+    // lang et dir sont ajustés avant l'affichage par le script de langue : React ne doit pas s'en étonner.
+    <html lang="fr" suppressHydrationWarning className={`${hanken.variable} ${young.variable} ${amiri.variable} ${notoArabic.variable} antialiased`}>
       <head><script dangerouslySetInnerHTML={{ __html: LOCALE_BOOT_SCRIPT }} /></head>
       <body className="flex min-h-screen flex-col font-sans">
         <Providers>

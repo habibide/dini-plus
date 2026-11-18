@@ -87,12 +87,12 @@ function AccountArea() {
         <span aria-hidden className="grid size-7 place-items-center rounded-full bg-leaf font-display text-sm text-green">{first[0]?.toUpperCase()}</span>
         {first}
       </summary>
-      <div className="absolute right-0 z-20 mt-1 flex min-w-56 flex-col border border-line bg-white py-1 shadow-lg">
+      <div className="absolute end-0 z-20 mt-1 flex min-w-56 flex-col border border-line bg-white py-1 shadow-lg">
         <span className="truncate px-4 py-2 text-sm text-muted">{account.email}</span>
         {navFor(account, t).filter((n) => n.href !== '/enseignants' && n.href !== '/devenir-enseignant').map((n) => (
           <Link key={n.href} href={n.href} className="px-4 py-2 hover:bg-leaf">{n.label}</Link>
         ))}
-        <button type="button" className="cursor-pointer px-4 py-2 text-left hover:bg-leaf"
+        <button type="button" className="cursor-pointer px-4 py-2 text-start hover:bg-leaf"
           onClick={() => signOut.mutate(undefined, { onSettled: () => router.push('/') })}>{t.nav.signOut}</button>
       </div>
     </details>

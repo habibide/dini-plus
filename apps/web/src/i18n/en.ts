@@ -24,7 +24,7 @@ export const en: Messages = {
     loadError: (e) => `Could not load: ${e}`,
     and: 'and',
   },
-  lang: { label: 'Language', fr: 'Français', en: 'English' },
+  lang: { label: 'Language', fr: 'Français', en: 'English', ar: 'العربية' },
   nav: {
     find: 'Find a teacher',
     teacherSpace: 'Teacher area',

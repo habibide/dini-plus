@@ -12,7 +12,7 @@ import { useFormat, useT } from '@/i18n/locale'
 function Option({ on, onClick, children }: { on: boolean; onClick: () => void; children: ReactNode }) {
   return (
     <button type="button" aria-pressed={on} onClick={onClick}
-      className={cx('grid w-full cursor-pointer grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 rounded-sm border bg-white px-4 py-3 text-left', on ? 'border-green shadow-[inset_0_0_0_1px] shadow-green' : 'border-line hover:border-green')}>
+      className={cx('grid w-full cursor-pointer grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-0.5 rounded-sm border bg-white px-4 py-3 text-start', on ? 'border-green shadow-[inset_0_0_0_1px] shadow-green' : 'border-line hover:border-green')}>
       {children}
     </button>
   )
@@ -163,7 +163,7 @@ export function BookingScreen() {
       <aside className="flex flex-col gap-3 bg-leaf p-5 lg:sticky lg:top-4">
         <div className="flex items-center gap-3"><Monogram name={t.name} size="sm" /><strong>{t.name}</strong></div>
         <dl className="flex flex-col gap-2 text-sm">
-          <div className="flex justify-between gap-4"><dt className="text-muted">{m.date}</dt><dd className="text-right first-letter:uppercase">{fmt.day(at, tz)}</dd></div>
+          <div className="flex justify-between gap-4"><dt className="text-muted">{m.date}</dt><dd className="text-end first-letter:uppercase">{fmt.day(at, tz)}</dd></div>
           <div className="flex justify-between gap-4"><dt className="text-muted">{m.time}</dt><dd>{m.timeIn(fmt.time(at, tz), tzLabel ?? '')}</dd></div>
           <div className="flex justify-between gap-4"><dt className="text-muted">{m.atTeacher}</dt><dd>{m.atCity(fmt.time(at, t.timezone), t.city)}</dd></div>
           <div className="flex justify-between gap-4"><dt className="text-muted">{m.subject}</dt><dd>{fmt.label(subject(subjectId).label)}</dd></div>

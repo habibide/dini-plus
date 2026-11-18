@@ -80,9 +80,9 @@ export function PasswordInput({ id, value, onChange, autoComplete }: { id: strin
   return (
     <div className="relative">
       <input id={id} type={shown ? 'text' : 'password'} required minLength={autoComplete === 'new-password' ? 8 : undefined} value={value}
-        onChange={(e) => onChange(e.target.value)} autoComplete={autoComplete} placeholder={t.auth.passwordPlaceholder} className={cx(inputCls, 'pr-12')} />
+        onChange={(e) => onChange(e.target.value)} autoComplete={autoComplete} placeholder={t.auth.passwordPlaceholder} className={cx(inputCls, 'pe-12')} />
       <button type="button" onClick={() => setShown(!shown)} aria-label={shown ? t.auth.hidePassword : t.auth.showPassword} aria-pressed={shown}
-        className="absolute inset-y-0 right-0 grid w-12 cursor-pointer place-items-center text-muted hover:text-ink">
+        className="absolute inset-y-0 end-0 grid w-12 cursor-pointer place-items-center text-muted hover:text-ink">
         <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
           <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" /><circle cx="12" cy="12" r="3" />
           {shown && <path d="M3 3l18 18" />}

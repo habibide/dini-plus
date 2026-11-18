@@ -15,7 +15,7 @@
   --color-warn: #8a5a10;
   --color-bad: #97362b;
 
-  --font-sans: var(--font-hanken), Arial, sans-serif;
+  --font-sans: var(--font-hanken), var(--font-noto-arabic), Arial, sans-serif;
   --font-display: var(--font-young), Georgia, serif;
   --font-arabic: var(--font-amiri), 'Geeza Pro', serif;
 }
@@ -38,3 +38,10 @@ body {
 
 /* Langue autre que le français : page masquée le temps d'appliquer la traduction (voir i18n/locale.tsx). */
 html[data-locale-pending] body { visibility: hidden; }
+
+/* Arabe : lecture de droite à gauche (dir="rtl"), police arabe pour le texte courant et les titres. */
+html[lang="ar"] {
+  --font-sans: var(--font-noto-arabic), var(--font-hanken), Arial, sans-serif;
+  --font-display: var(--font-amiri), var(--font-young), serif;
+}
+html[lang="ar"] body { line-height: 1.7; }

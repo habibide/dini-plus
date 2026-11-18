@@ -27,8 +27,8 @@ export function HomeScreen() {
             <div className="absolute inset-[0_60px_40px_0] grid place-items-center border border-sand bg-green2">
               <span className="flex flex-col items-center gap-2 text-sm text-sand"><span className="grid size-28 place-items-center bg-leaf font-display text-4xl text-green">AN</span>{t.teacherPhoto}</span>
             </div>
-            <div className="absolute left-6 top-6 grid h-36 w-28 place-items-center border border-sand bg-[#24493f] p-2 text-center text-xs text-sand">{t.studentPhoto}</div>
-            <div className="absolute bottom-0 left-10 right-24 flex flex-col gap-1 bg-paper px-4 py-3 text-ink">
+            <div className="absolute start-6 top-6 grid h-36 w-28 place-items-center border border-sand bg-[#24493f] p-2 text-center text-xs text-sand">{t.studentPhoto}</div>
+            <div className="absolute bottom-0 start-10 end-24 flex flex-col gap-1 bg-paper px-4 py-3 text-ink">
               <span className="text-xs text-muted">{t.reportPreview}</span>
               <span className="flex items-baseline justify-between gap-3"><strong>{t.reportVerses}</strong><span lang="ar" dir="rtl" className="font-arabic text-xl text-green">المسد</span></span>
             </div>
@@ -46,10 +46,10 @@ export function HomeScreen() {
 
       <section className="mx-auto flex max-w-6xl flex-col gap-6 px-5 py-14">
         <h2 className="font-display text-3xl">{t.startWith}</h2>
-        <ul className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] border-l border-t border-line">
+        <ul className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] border-s border-t border-line">
           {SUBJECTS.map((s) => (
             <li key={s.id}>
-              <Link href={`/enseignants?matiere=${s.id}`} className="flex h-full flex-col gap-1 border-b border-r border-line p-5 hover:bg-leaf">
+              <Link href={`/enseignants?matiere=${s.id}`} className="flex h-full flex-col gap-1 border-b border-e border-line p-5 hover:bg-leaf">
                 <span lang="ar" dir="rtl" className="font-arabic text-3xl leading-snug text-green">{s.ar}</span>
                 <strong>{f.label(s.label)}</strong>
                 <span className="text-sm text-muted">{f.label(s.desc)}</span>
@@ -89,7 +89,7 @@ export function HomeScreen() {
             <p className="max-w-[50ch] text-lg text-[#d6dde5]">{t.teachText}</p>
             <Link href="/devenir-enseignant" className={`${buttonCls.sand} self-start`}>{t.createProfile}</Link>
           </div>
-          <ul className="flex min-w-0 flex-[1_1_360px] flex-col gap-4 border-l border-ochre pl-5">
+          <ul className="flex min-w-0 flex-[1_1_360px] flex-col gap-4 border-s border-ochre ps-5">
             {t.perks.map(([title, d]) => <li key={title}><strong>{title}</strong><br /><span className="text-[#d6dde5]">{d}</span></li>)}
           </ul>
         </div>

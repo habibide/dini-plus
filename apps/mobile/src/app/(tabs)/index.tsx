@@ -22,10 +22,10 @@ export default function Home() {
 
       <View style={{ padding: 20, gap: 12 }}>
         <T tone="h2">{t.home.startWith}</T>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', borderTopWidth: 1, borderLeftWidth: 1, borderColor: colors.line }}>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', borderTopWidth: 1, borderStartWidth: 1, borderColor: colors.line }}>
           {SUBJECTS.map((s) => (
             <Pressable key={s.id} accessibilityRole="button" onPress={() => router.navigate({ pathname: '/search', params: { subject: s.id } })}
-              style={({ pressed }) => ({ width: '50%', minHeight: 96, padding: 14, gap: 2, borderRightWidth: 1, borderBottomWidth: 1, borderColor: colors.line, backgroundColor: pressed ? colors.leaf : 'transparent' })}>
+              style={({ pressed }) => ({ width: '50%', minHeight: 96, padding: 14, gap: 2, borderEndWidth: 1, borderBottomWidth: 1, borderColor: colors.line, backgroundColor: pressed ? colors.leaf : 'transparent' })}>
               <T tone="arabic" style={{ textAlign: 'right' }}>{s.ar}</T>
               <T style={{ fontFamily: font.semibold }}>{fmt.label(s.label)}</T>
             </Pressable>

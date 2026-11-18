@@ -32,8 +32,8 @@ export function PasswordInput({ label: labelProp, value, onChangeText, isNew }: 
       <View>
         <TextInput value={value} onChangeText={onChangeText} secureTextEntry={!shown} autoCapitalize="none" autoComplete={isNew ? 'new-password' : 'current-password'}
           textContentType={isNew ? 'newPassword' : 'password'} accessibilityLabel={label} placeholder={t.passwordPlaceholder} placeholderTextColor={colors.muted}
-          style={{ minHeight: 50, borderWidth: 1, borderColor: colors.line, borderRadius: 4, backgroundColor: colors.white, paddingLeft: 14, paddingRight: 90, fontFamily: font.body, fontSize: 16, color: colors.ink }} />
-        <Pressable accessibilityRole="button" onPress={() => setShown(!shown)} style={{ position: 'absolute', right: 0, top: 0, bottom: 0, paddingHorizontal: 14, justifyContent: 'center' }}>
+          style={{ minHeight: 50, borderWidth: 1, borderColor: colors.line, borderRadius: 4, backgroundColor: colors.white, paddingStart: 14, paddingEnd: 90, fontFamily: font.body, fontSize: 16, color: colors.ink }} />
+        <Pressable accessibilityRole="button" onPress={() => setShown(!shown)} style={{ position: 'absolute', end: 0, top: 0, bottom: 0, paddingHorizontal: 14, justifyContent: 'center' }}>
           <T style={{ fontFamily: font.semibold, color: colors.green }}>{shown ? t.hide : t.show}</T>
         </Pressable>
       </View>

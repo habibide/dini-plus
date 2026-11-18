@@ -108,7 +108,7 @@ export function Modal({ title, onClose, children }: { title: string; onClose: ()
 export function Sanad({ chain }: { chain: string[] }) {
   const t = useT()
   return (
-    <ol aria-label={t.badges.sanad} className="flex flex-col gap-2 border-l border-ochre pl-4">
+    <ol aria-label={t.badges.sanad} className="flex flex-col gap-2 border-s border-ochre ps-4">
       {chain.map((n, i) => <li key={n} className={cx('relative before:absolute before:-left-[21px] before:top-2 before:size-1.5 before:rotate-45 before:bg-ochre', i === 0 && 'font-semibold')}>{n}</li>)}
       <li className="text-sm text-muted">{t.badges.sanadFull}</li>
     </ol>

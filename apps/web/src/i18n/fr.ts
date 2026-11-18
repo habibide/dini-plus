@@ -22,7 +22,7 @@ export const fr = {
     loadError: (e: string) => `Chargement impossible : ${e}`,
     and: 'et',
   },
-  lang: { label: 'Langue', fr: 'Français', en: 'English' },
+  lang: { label: 'Langue', fr: 'Français', en: 'English', ar: 'العربية' },
   nav: {
     find: 'Trouver un enseignant',
     teacherSpace: 'Espace enseignant',

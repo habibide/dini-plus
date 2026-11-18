@@ -8,9 +8,10 @@ import { Stack } from 'expo-router'
 import * as SplashScreen from 'expo-splash-screen'
 import { StatusBar } from 'expo-status-bar'
 import { useEffect } from 'react'
+import { View } from 'react-native'
 import { api, storage } from '@/lib/api'
 import { ErrorBanner } from '@/lib/ui'
-import { useT } from '@/lib/i18n'
+import { useIsRTL, useT } from '@/lib/i18n'
 
 SplashScreen.preventAutoHideAsync()
 
@@ -18,9 +19,12 @@ export default function RootLayout() {
   const [loaded] = useFonts({ YoungSerif_400Regular, HankenGrotesk_400Regular, HankenGrotesk_500Medium, HankenGrotesk_600SemiBold, HankenGrotesk_700Bold, Amiri_400Regular })
   useEffect(() => { if (loaded) SplashScreen.hideAsync() }, [loaded])
   const t = useT()
+  const rtl = useIsRTL()
   if (!loaded) return null
   return (
     <DiniProvider api={api} storage={storage}>
+      {/* En arabe, toute la mise en page passe de droite à gauche, sans redémarrer l'app. */}
+      <View style={{ flex: 1, direction: rtl ? 'rtl' : 'ltr' }}>
       <StatusBar style="dark" />
       <Stack screenOptions={{ headerTintColor: colors.green, headerStyle: { backgroundColor: colors.paper }, contentStyle: { backgroundColor: colors.paper }, headerBackTitle: t.common.back, headerTitleStyle: { fontFamily: 'HankenGrotesk_600SemiBold' } }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -34,6 +38,7 @@ export default function RootLayout() {
         <Stack.Screen name="auth-callback" options={{ headerShown: false }} />
       </Stack>
       <ErrorBanner />
+      </View>
     </DiniProvider>
   )
 }

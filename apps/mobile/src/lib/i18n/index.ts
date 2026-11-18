@@ -2,16 +2,20 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { formatDateTime, formatDay, formatMoney, formatTime, type CurrencyCode, type Label, type Locale } from '@dini/core'
 import { setDataLocale } from '@dini/data'
 import { useSyncExternalStore } from 'react'
+import { ar } from './ar'
 import { en } from './en'
 import { fr, type Messages } from './fr'
 
-// Langue de l'app : choisie dans l'onglet Compte, sinon celle du téléphone (anglais ou français), sinon le français.
+// Langue de l'app : choisie dans l'onglet Compte, sinon celle du téléphone (français, anglais ou arabe), sinon le français.
 // Le choix est gardé entre deux lancements.
 
-export const LOCALES: Locale[] = ['fr', 'en']
-const MESSAGES: Record<Locale, Messages> = { fr, en }
+export const LOCALES: Locale[] = ['fr', 'en', 'ar']
+const MESSAGES: Record<Locale, Messages> = { fr, en, ar }
 const STORAGE_KEY = 'dine.locale'
-const isLocale = (v: unknown): v is Locale => v === 'fr' || v === 'en'
+const isLocale = (v: unknown): v is Locale => v === 'fr' || v === 'en' || v === 'ar'
+
+/** Nom de chaque langue, écrit dans cette langue. */
+export const LOCALE_NAMES: Record<Locale, string> = { fr: 'Français', en: 'English', ar: 'العربية' }
 
 /** Langue du téléphone, lue par le moteur Intl (pas de module natif supplémentaire). */
 function deviceLocale(): Locale {
@@ -46,7 +50,11 @@ const subscribe = (f: () => void) => { listeners.add(f); return () => { listener
 export const useLocale = () => useSyncExternalStore(subscribe, () => current)
 export const useT = () => MESSAGES[useLocale()]
 
-const INTL: Record<Locale, string> = { fr: 'fr-FR', en: 'en-GB' }
+/** Sens de lecture : l'arabe se lit de droite à gauche. */
+export const useIsRTL = () => useLocale() === 'ar'
+
+// Arabe avec chiffres latins, comme les montants, les téléphones et les horaires au Sénégal.
+const INTL: Record<Locale, string> = { fr: 'fr-FR', en: 'en-GB', ar: 'ar-u-nu-latn' }
 
 /** Formats de date, d'heure et de montant, et libellés du catalogue, dans la langue courante. */
 export function useFormat() {

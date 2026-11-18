@@ -96,7 +96,7 @@ function Review({ a }: { a: Application }) {
         <h3 className="font-semibold">{m.declared}</h3>
         {!a.credentials.length && <p className="text-sm text-muted">{m.noneDeclared}</p>}
         {a.credentials.map((c, i) => (
-          <div key={i} className="flex flex-col gap-2 border-l-2 border-ochre pl-4">
+          <div key={i} className="flex flex-col gap-2 border-s-2 border-ochre ps-4">
             <strong>{c.title} ({c.year})</strong>
             <span className="text-sm text-muted">{c.kind === 'ijaza' ? all.application.ijaza : all.application.diploma}{c.riwaya ? `, ${m.riwayaOf(c.riwaya)}` : ''}{c.institution ? ` · ${c.institution}` : ''}</span>
             {c.sanad?.length ? <Sanad chain={c.sanad} /> : null}
