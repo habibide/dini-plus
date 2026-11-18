@@ -3,7 +3,7 @@ import { Suspense } from 'react'
 import { ClientOnly } from '@/components/client-only'
 import { SearchScreen } from './search-screen'
 
-export const metadata: Metadata = { title: 'Trouver un enseignant' }
+export const metadata: Metadata = { title: 'Trouver un professeur' }
 
 export default function Page() {
   return (

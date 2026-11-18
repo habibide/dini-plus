@@ -39,7 +39,7 @@ export const en: Messages = {
     signUp: 'Sign up',
     menu: 'Menu',
     closeMenu: 'Close the menu',
-    currency: (cur) => `Country and currency (${cur})`,
+    currencyLabel: 'Currency',
   },
   footer: {
     about: 'DINE connects families and teachers and takes no doctrinal position. All madhahib and all riwayat are welcome and shown transparently.',
@@ -198,6 +198,8 @@ export const en: Messages = {
     allSubjects: 'All subjects',
     language: 'Lesson language',
     riwaya: 'Riwaya',
+    arabicTrack: 'Focus',
+    madhhab: 'Madhhab',
     teacher: 'Teacher',
     woman: 'A woman',
     man: 'A man',

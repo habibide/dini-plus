@@ -1,15 +1,16 @@
 'use client'
 
-import { COUNTRIES } from '@dini/core'
+import { COUNTRIES, type Locale } from '@dini/core'
 import { useAccount, useDini, usePlace, useSignOut } from '@dini/data/react'
 import type { Account } from '@dini/data/supabase'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { ClientOnly } from './client-only'
 import { DineLogo } from './logo'
 import { cx } from './styles'
-import { LOCALES, setLocale, useFormat, useLocale, useT } from '@/i18n/locale'
+import { LOCALES, dirOf, setLocale, useFormat, useLocale, useT } from '@/i18n/locale'
 
 /** Erreur de chargement (réseau, accès refusé), sous l'en-tête. */
 export function ErrorBanner() {
@@ -48,20 +49,18 @@ function ActiveNavLinks() {
   return <NavLinks path={usePathname()} />
 }
 
-// ─── Icônes noires de l'en-tête ────────────────────────────────────────────
+// ─── Icônes de l'en-tête ────────────────────────────────────────────
 const ICONS = {
-  globe: 'M12 22a10 10 0 100-20 10 10 0 000 20zM2 12h20M12 2a15 15 0 010 20M12 2a15 15 0 000 20',
-  coins: 'M3 6h18a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V7a1 1 0 011-1zM12 15a3 3 0 100-6 3 3 0 000 6zM6 12h.01M18 12h.01',
   menu: 'M4 6h16M4 12h16M4 18h16',
   close: 'M18 6L6 18M6 6l12 12',
-  check: 'M20 6L9 17l-5-5',
+  chevron: 'M6 9l6 6 6-6',
   signIn: 'M10 17l5-5-5-5M15 12H3M14 3h5a2 2 0 012 2v14a2 2 0 01-2 2h-5',
 }
 function Icon({ d, className = 'size-5' }: { d: string; className?: string }) {
-  return <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d={d} /></svg>
+  return <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d={d} /></svg>
 }
 
-/** Ferme un menu au clic à l'extérieur et avec Échap. */
+/** Ferme un panneau au clic à l'extérieur et avec Échap. */
 function useDismiss(open: boolean, close: () => void) {
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -75,62 +74,160 @@ function useDismiss(open: boolean, close: () => void) {
   return ref
 }
 
-/** Bouton-icône qui ouvre une petite liste de choix (langue, pays). */
-function IconMenu({ icon, label, children }: { icon: string; label: string; children: (close: () => void) => ReactNode }) {
+function usePlaceCurrency() {
+  const { place } = usePlace()
+  return COUNTRIES.find((c) => c.code === place.country)?.currency ?? ''
+}
+
+const selectCls = 'min-h-12 w-full cursor-pointer appearance-none rounded-sm border-[1.5px] border-[#d6d2c7] bg-white bg-[length:18px] bg-[position:right_14px_center] bg-no-repeat pe-10 ps-4 text-base text-ink rtl:bg-[position:left_14px_center]'
+const chevronBg = { backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231f1f1b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")` }
+
+/** Les deux réglages, langue et devise (pays de résidence), comme chez Preply. */
+function LocaleCurrencyFields() {
+  const t = useT()
+  const f = useFormat()
+  const locale = useLocale()
+  const { place, setPlace } = usePlace()
+  return (
+    <div className="flex flex-col gap-4">
+      <label className="flex flex-col gap-2">
+        <span className="text-[15px] font-semibold text-ink">{t.lang.label}</span>
+        <select value={locale} onChange={(e) => setLocale(e.target.value as Locale)} className={selectCls} style={chevronBg}>
+          {LOCALES.map((l) => <option key={l} value={l} lang={l}>{t.lang[l]}</option>)}
+        </select>
+      </label>
+      <label className="flex flex-col gap-2">
+        <span className="text-[15px] font-semibold text-ink">{t.nav.currencyLabel}</span>
+        <select value={`${place.country}|${place.timezone}`} className={selectCls} style={chevronBg}
+          onChange={(e) => { const [c, tz] = e.target.value.split('|'); setPlace({ country: c as typeof place.country, timezone: tz }) }}>
+          {COUNTRIES.map((c) => c.timezones.map((tz) => (
+            <option key={tz.id} value={`${c.code}|${tz.id}`}>
+              {c.currency} · {c.timezones.length > 1 ? `${f.label(c.label)}, ${tz.label}` : f.label(c.label)}
+            </option>
+          )))}
+        </select>
+      </label>
+    </div>
+  )
+}
+
+/** « Français, XOF ⌄ » : ouvre le panneau langue et devise. */
+function LocaleCurrencyMenu() {
+  const t = useT()
+  const locale = useLocale()
+  const currency = usePlaceCurrency()
   const [open, setOpen] = useState(false)
   const close = useCallback(() => setOpen(false), [])
   const ref = useDismiss(open, close)
   return (
     <div ref={ref} className="relative">
-      <button type="button" onClick={() => setOpen(!open)} aria-label={label} title={label} aria-expanded={open} aria-haspopup="true"
-        className={cx('grid size-10 cursor-pointer place-items-center rounded-full text-ink transition hover:bg-leaf', open && 'bg-leaf')}>
-        <Icon d={icon} />
+      <button type="button" onClick={() => setOpen(!open)} aria-expanded={open} aria-haspopup="dialog"
+        className="flex min-h-11 cursor-pointer items-center gap-2 rounded-sm px-3 text-[15px] font-medium text-ink transition hover:bg-leaf">
+        {t.lang[locale]}, {currency}
+        <Icon d={ICONS.chevron} className={cx('size-4 transition', open && 'rotate-180')} />
       </button>
       {open && (
-        <div className="absolute end-0 z-40 mt-2 max-h-[70vh] w-64 overflow-y-auto rounded-md border-[1.5px] border-line bg-white py-1.5 shadow-[0_12px_32px_rgba(0,0,0,0.12)]">
-          <p className="px-4 pb-1 pt-1.5 text-xs font-bold uppercase tracking-wider text-faint">{label}</p>
-          {children(close)}
+        <div role="dialog" aria-label={`${t.lang.label}, ${t.nav.currencyLabel}`}
+          className="absolute end-0 z-40 mt-2 w-80 rounded-md border border-line bg-white p-5 shadow-[0_16px_40px_rgba(0,0,0,0.14)]">
+          <LocaleCurrencyFields />
         </div>
       )}
     </div>
   )
 }
 
-function Choice({ on, onClick, children, lang }: { on: boolean; onClick: () => void; children: ReactNode; lang?: string }) {
+/** Grand écran : langue et devise, puis connexion et inscription. */
+function DesktopTools() {
   return (
-    <button type="button" role="menuitemradio" aria-checked={on} lang={lang} onClick={onClick}
-      className={cx('flex w-full cursor-pointer items-center justify-between gap-3 px-4 py-2 text-start text-[15px] hover:bg-leaf', on && 'font-semibold text-green2')}>
-      <span>{children}</span>{on && <Icon d={ICONS.check} className="size-4 shrink-0" />}
-    </button>
+    <div className="hidden items-center gap-2 md:flex">
+      <LocaleCurrencyMenu />
+      <div className="ms-1 flex items-center gap-2"><AccountArea /></div>
+    </div>
   )
 }
 
-/** Liste des langues, commune au menu-icône et au menu mobile. */
-function LanguageChoices({ onPick }: { onPick?: () => void }) {
-  const locale = useLocale()
+/** Mobile : icône menu qui ouvre un tiroir latéral (liens, compte, puis langue et devise en bas). */
+function MobileMenu() {
   const t = useT()
-  return LOCALES.map((l) => <Choice key={l} lang={l} on={locale === l} onClick={() => { setLocale(l); onPick?.() }}>{t.lang[l]}</Choice>)
-}
-
-/** Pays de résidence (et donc devise et fuseau), commun au menu-icône et au menu mobile. */
-function PlaceChoices({ onPick }: { onPick?: () => void }) {
-  const { place, setPlace } = usePlace()
-  const f = useFormat()
-  return COUNTRIES.map((c) => (
-    <div key={c.code} role="group" aria-label={f.label(c.label)}>
-      {c.timezones.map((tz) => (
-        <Choice key={tz.id} on={place.country === c.code && place.timezone === tz.id}
-          onClick={() => { setPlace({ country: c.code, timezone: tz.id }); onPick?.() }}>
-          {c.timezones.length > 1 ? `${f.label(c.label)}, ${tz.label}` : f.label(c.label)} <span className="text-sm font-normal text-faint">{c.currency}</span>
-        </Choice>
-      ))}
+  const locale = useLocale()
+  const account = useAccount()
+  const signOut = useSignOut()
+  const router = useRouter()
+  const path = usePathname()
+  const [open, setOpen] = useState(false)
+  useEffect(() => { setOpen(false) }, [path])
+  useEffect(() => {
+    if (!open) return
+    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
+    document.addEventListener('keydown', key)
+    document.body.style.overflow = 'hidden'
+    return () => { document.removeEventListener('keydown', key); document.body.style.overflow = '' }
+  }, [open])
+  const link = (href: string, label: string) => (
+    <Link key={href} href={href} aria-current={path === href ? 'page' : undefined}
+      className={cx('relative py-2.5 text-[17px] font-semibold', path === href || path.startsWith(`${href}/`) ? 'text-ink before:absolute before:-start-6 before:inset-y-1.5 before:w-1 before:bg-green' : 'text-muted hover:text-ink')}>{label}</Link>
+  )
+  const first = account ? account.name.split(' ')[0] || account.email : null
+  return (
+    <div className="md:hidden">
+      <button type="button" onClick={() => setOpen(true)} aria-expanded={open} aria-controls="menu-mobile" aria-label={t.nav.menu}
+        className="grid size-11 cursor-pointer place-items-center rounded-full text-ink hover:bg-leaf">
+        <Icon d={ICONS.menu} className="size-6" />
+      </button>
+      {/* Rendu dans <body> : le flou de l'en-tête confinerait sinon le tiroir à sa hauteur. */}
+      {open && createPortal(
+        <div className="fixed inset-0 z-50" dir={dirOf(locale)}>
+          <button type="button" aria-label={t.nav.closeMenu} onClick={() => setOpen(false)} className="absolute inset-0 cursor-default bg-ink/30" />
+          <div id="menu-mobile" role="dialog" aria-modal="true" aria-label={t.nav.menu}
+            className="absolute inset-y-0 end-0 flex w-[85%] max-w-sm flex-col overflow-y-auto bg-white px-6 pb-6 pt-5 shadow-[-12px_0_32px_rgba(0,0,0,0.12)]">
+            <div className="flex items-center justify-between gap-3 border-b border-line pb-4">
+              {first
+                ? <span className="flex min-w-0 items-center gap-3 font-semibold"><span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-full bg-green text-sm font-bold text-white">{first[0]?.toUpperCase()}</span><span className="truncate">{first}</span></span>
+                : <DineLogo />}
+              <button type="button" onClick={() => setOpen(false)} aria-label={t.nav.closeMenu} className="-me-2 grid size-10 cursor-pointer place-items-center rounded-full text-ink hover:bg-leaf">
+                <Icon d={ICONS.close} className="size-6" />
+              </button>
+            </div>
+            <nav aria-label={t.nav.main} className="flex flex-col border-b border-line py-4">
+              {navFor(account, t).map((n) => link(n.href, n.label))}
+            </nav>
+            <div className="flex flex-col py-4">
+              {account ? (
+                <button type="button" className="cursor-pointer py-2.5 text-start text-[17px] font-semibold text-muted hover:text-ink"
+                  onClick={() => signOut.mutate(undefined, { onSettled: () => router.push('/') })}>{t.nav.signOut}</button>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  <Link href="/inscription" className="inline-flex min-h-12 items-center justify-center rounded-[14px] bg-green font-semibold text-white">{t.nav.signUp}</Link>
+                  <Link href="/connexion" className="inline-flex min-h-12 items-center justify-center rounded-[14px] border-[1.5px] border-[#d6d2c7] bg-white font-semibold text-ink">{t.nav.signIn}</Link>
+                </div>
+              )}
+            </div>
+            <div className="mt-auto pt-4"><LocaleCurrencyFields /></div>
+          </div>
+        </div>,
+        document.body,
+      )}
     </div>
-  ))
+  )
 }
 
-function usePlaceCurrency() {
-  const { place } = usePlace()
-  return COUNTRIES.find((c) => c.code === place.country)?.currency ?? ''
+export function SiteHeader() {
+  const t = useT()
+  return (
+    <header className="sticky top-0 z-30 border-b border-line bg-paper/90 backdrop-blur">
+      <div className="relative mx-auto flex max-w-6xl items-center gap-x-6 px-5 py-3">
+        <Link href="/" className="flex items-center" aria-label={t.nav.home}>
+          <DineLogo />
+        </Link>
+        <nav aria-label={t.nav.main} className="hidden flex-1 gap-x-1 md:flex">
+          <ClientOnly fallback={null}><Suspense fallback={<NavLinks path="" />}><ActiveNavLinks /></Suspense></ClientOnly>
+        </nav>
+        <div className="ms-auto flex items-center">
+          <ClientOnly fallback={null}><DesktopTools /><Suspense fallback={null}><MobileMenu /></Suspense></ClientOnly>
+        </div>
+      </div>
+    </header>
+  )
 }
 
 function AccountArea() {
@@ -168,95 +265,6 @@ function AccountArea() {
   )
 }
 
-/** Grand écran : langue et pays en icônes, puis connexion et inscription. */
-function DesktopTools() {
-  const t = useT()
-  const currency = usePlaceCurrency()
-  return (
-    <div className="hidden items-center gap-1 md:flex">
-      <IconMenu icon={ICONS.globe} label={t.lang.label}>{(close) => <LanguageChoices onPick={close} />}</IconMenu>
-      <IconMenu icon={ICONS.coins} label={t.nav.currency(currency)}>{(close) => <PlaceChoices onPick={close} />}</IconMenu>
-      <div className="ms-2 flex items-center gap-2"><AccountArea /></div>
-    </div>
-  )
-}
-
-/** Mobile : une icône menu qui déroule la navigation, la langue, le pays et le compte. */
-function MobileMenu() {
-  const t = useT()
-  const locale = useLocale()
-  const account = useAccount()
-  const signOut = useSignOut()
-  const router = useRouter()
-  const path = usePathname()
-  const [open, setOpen] = useState(false)
-  const close = useCallback(() => setOpen(false), [])
-  const ref = useDismiss(open, close)
-  useEffect(() => { setOpen(false) }, [path])
-  const section = 'border-t border-line px-1 py-3'
-  const heading = 'px-4 pb-1 text-xs font-bold uppercase tracking-wider text-faint'
-  return (
-    <div ref={ref} className="md:hidden">
-      <button type="button" onClick={() => setOpen(!open)} aria-expanded={open} aria-controls="menu-mobile" aria-label={open ? t.nav.closeMenu : t.nav.menu}
-        className="grid size-11 cursor-pointer place-items-center rounded-full text-ink hover:bg-leaf">
-        <Icon d={open ? ICONS.close : ICONS.menu} className="size-6" />
-      </button>
-      {open && (
-        <div id="menu-mobile" className="absolute inset-x-0 top-full max-h-[calc(100dvh-64px)] overflow-y-auto border-b border-line bg-paper shadow-[0_16px_32px_rgba(0,0,0,0.12)]">
-          <nav aria-label={t.nav.main} className="flex flex-col gap-1 p-3">
-            {navFor(account, t).map((n) => (
-              <Link key={n.href} href={n.href} aria-current={path === n.href ? 'page' : undefined}
-                className={cx('rounded-sm px-4 py-3 text-[17px] font-semibold', path === n.href || path.startsWith(`${n.href}/`) ? 'bg-soft text-green2' : 'text-ink hover:bg-leaf')}>{n.label}</Link>
-            ))}
-          </nav>
-          <div className="flex flex-col gap-2 border-t border-line px-4 py-3">
-            {account ? (
-              <>
-                <span className="truncate text-sm text-muted">{account.email}</span>
-                <button type="button" className="min-h-12 cursor-pointer rounded-[14px] border-[1.5px] border-[#d6d2c7] bg-white font-semibold"
-                  onClick={() => signOut.mutate(undefined, { onSettled: () => router.push('/') })}>{t.nav.signOut}</button>
-              </>
-            ) : (
-              <>
-                <Link href="/inscription" className="inline-flex min-h-12 items-center justify-center rounded-[14px] bg-green font-semibold text-white">{t.nav.signUp}</Link>
-                <Link href="/connexion" className="inline-flex min-h-12 items-center justify-center rounded-[14px] border-[1.5px] border-[#d6d2c7] bg-white font-semibold text-ink">{t.nav.signIn}</Link>
-              </>
-            )}
-          </div>
-          <div className={section}>
-            <p className={heading}>{t.lang.label}</p>
-            <div className="flex gap-2 px-3">
-              {LOCALES.map((l) => (
-                <button key={l} type="button" lang={l} aria-pressed={locale === l} onClick={() => setLocale(l)}
-                  className={cx('min-h-10 flex-1 cursor-pointer rounded-full border-[1.5px] text-[15px] font-semibold', locale === l ? 'border-green bg-green text-white' : 'border-line bg-white text-ink')}>{t.lang[l]}</button>
-              ))}
-            </div>
-          </div>
-          <div className={section}><p className={heading}>{t.nav.livesIn}</p><PlaceChoices /></div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-export function SiteHeader() {
-  const t = useT()
-  return (
-    <header className="sticky top-0 z-30 border-b border-line bg-paper/90 backdrop-blur">
-      <div className="relative mx-auto flex max-w-6xl items-center gap-x-6 px-5 py-3">
-        <Link href="/" className="flex items-center" aria-label={t.nav.home}>
-          <DineLogo />
-        </Link>
-        <nav aria-label={t.nav.main} className="hidden flex-1 gap-x-1 md:flex">
-          <ClientOnly fallback={null}><Suspense fallback={<NavLinks path="" />}><ActiveNavLinks /></Suspense></ClientOnly>
-        </nav>
-        <div className="ms-auto flex items-center">
-          <ClientOnly fallback={null}><DesktopTools /><Suspense fallback={null}><MobileMenu /></Suspense></ClientOnly>
-        </div>
-      </div>
-    </header>
-  )
-}
 
 export function SiteFooter() {
   const t = useT()

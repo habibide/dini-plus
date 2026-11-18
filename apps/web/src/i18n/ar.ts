@@ -44,7 +44,7 @@ export const ar: Messages = {
     signUp: 'إنشاء حساب',
     menu: 'القائمة',
     closeMenu: 'إغلاق القائمة',
-    currency: (cur) => `البلد والعملة (${cur})`,
+    currencyLabel: 'العملة',
   },
   footer: {
     about: 'تربط DINE بين الأسر والمعلّمين ولا تتبنّى أي موقف عقدي. جميع المذاهب وجميع الروايات مرحّب بها ومعروضة بشفافية.',
@@ -203,6 +203,8 @@ export const ar: Messages = {
     allSubjects: 'جميع المواد',
     language: 'لغة الدرس',
     riwaya: 'الرواية',
+    arabicTrack: 'المجال',
+    madhhab: 'المذهب',
     teacher: 'المعلّم',
     woman: 'امرأة',
     man: 'رجل',

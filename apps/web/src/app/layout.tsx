@@ -11,8 +11,8 @@ const notoArabic = Noto_Sans_Arabic({ variable: '--font-noto-arabic', subsets: [
 const amiri = Amiri({ variable: '--font-amiri', subsets: ['arabic'], weight: ['400', '700'] })
 
 export const metadata: Metadata = {
-  title: { default: 'DINE, enseignants vérifiés en sciences islamiques', template: '%s · DINE' },
-  description: 'Coran, tajwid, arabe, fiqh : choisissez un enseignant vérifié, voyez ses diplômes et son sanad, suivez les progrès de vos enfants.',
+  title: { default: 'DINE, professeurs vérifiés en sciences islamiques', template: '%s · DINE' },
+  description: 'Coran, tajwid, arabe, fiqh : choisissez un professeur vérifié, voyez ses diplômes et son sanad, suivez les progrès de vos enfants.',
 }
 
 export default function RootLayout({ children }: { children: ReactNode }) {

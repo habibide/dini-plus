@@ -9,6 +9,10 @@ import { dataLocale } from './locale'
 export type TeacherFilters = {
   subject?: SubjectId
   riwaya?: string
+  /** Arabe : lecture, écriture ou pratique orale. */
+  arabicTrack?: string
+  /** Fiqh : école juridique. */
+  madhhab?: string
   gender?: 'F' | 'M'
   language?: LanguageId
   level?: string
@@ -53,6 +57,8 @@ export function filterTeachers(list: TeacherCard[], f: TeacherFilters, tz: strin
   return list.filter((t) =>
     (!f.subject || t.subjects.includes(f.subject)) &&
     (!f.riwaya || t.riwayat.includes(f.riwaya as never)) &&
+    (!f.arabicTrack || t.arabicTracks.includes(f.arabicTrack as never)) &&
+    (!f.madhhab || t.madhahib.includes(f.madhhab as never)) &&
     (!f.gender || t.gender === f.gender) &&
     (!f.language || t.languages.includes(f.language)) &&
     (!f.level || t.levels.includes(f.level as never)) &&

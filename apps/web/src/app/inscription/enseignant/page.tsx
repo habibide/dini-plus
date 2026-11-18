@@ -3,7 +3,7 @@ import { Suspense } from 'react'
 import { ClientOnly } from '@/components/client-only'
 import { TeacherSignup } from '../signup-screen'
 
-export const metadata: Metadata = { title: 'Inscription enseignant' }
+export const metadata: Metadata = { title: 'Inscription professeur' }
 
 export default function Page() {
   return (

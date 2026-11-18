@@ -1,6 +1,6 @@
 'use client'
 
-import { AGE_GROUPS, LANGUAGES, LEVELS, RIWAYAT, SUBJECTS, country, subject, type LanguageId, type SubjectId } from '@dini/core'
+import { AGE_GROUPS, ARABIC_TRACKS, LANGUAGES, LEVELS, MADHAHIB, RIWAYAT, SUBJECTS, country, subject, type LanguageId, type SubjectId } from '@dini/core'
 import type { TeacherCard, TeacherFilters } from '@dini/data'
 import { usePlace, useTeachers } from '@dini/data/react'
 import Link from 'next/link'
@@ -8,6 +8,19 @@ import { useSearchParams } from 'next/navigation'
 import { useState, type ReactNode } from 'react'
 import { useFormat, useT } from '@/i18n/locale'
 import { Badge, Modal, Money, Monogram, RecitationPreview, Stars, badgesOf, buttonCls, cx } from '@/components/ui'
+
+/** La riwaya ne concerne que la récitation : Coran, tajwid, ou toutes matières confondues. */
+const showsRiwaya = (s?: SubjectId) => !s || s === 'quran' || s === 'tajwid'
+
+/** En changeant de matière, on retire les filtres qui ne la concernent plus. */
+function forSubject(f: TeacherFilters): TeacherFilters {
+  return {
+    ...f,
+    riwaya: showsRiwaya(f.subject) ? f.riwaya : undefined,
+    arabicTrack: f.subject === 'arabic' ? f.arabicTrack : undefined,
+    madhhab: f.subject === 'fiqh' ? f.madhhab : undefined,
+  }
+}
 
 function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; children: ReactNode }) {
   return (
@@ -39,13 +52,16 @@ export function SearchScreen() {
     <div className="flex flex-col gap-5">
       <div className="flex flex-col gap-2">
         <label htmlFor="f-subject" className="text-sm font-semibold">{t.subject}</label>
-        <select id="f-subject" value={f.subject ?? ''} onChange={(e) => setF({ ...f, subject: (e.target.value || undefined) as SubjectId })} className="min-h-10 rounded-sm border border-line bg-white px-2">
+        <select id="f-subject" value={f.subject ?? ''} onChange={(e) => setF(forSubject({ ...f, subject: (e.target.value || undefined) as SubjectId }))} className="min-h-10 rounded-sm border border-line bg-white px-2">
           <option value="">{t.allSubjects}</option>
           {SUBJECTS.map((s) => <option key={s.id} value={s.id}>{fmt.label(s.label)}</option>)}
         </select>
       </div>
       <Group label={t.language}>{LANGUAGES.map((l) => <Chip key={l.id} on={f.language === l.id} onClick={() => toggle('language', l.id as LanguageId)}>{fmt.label(l.label)}</Chip>)}</Group>
-      <Group label={t.riwaya}>{RIWAYAT.map((r) => <Chip key={r} on={f.riwaya === r} onClick={() => toggle('riwaya', r)}>{r}</Chip>)}</Group>
+      {/* Filtres propres à la matière : riwaya pour le Coran et le tajwid, volet pour l'arabe, madhhab pour le fiqh. */}
+      {showsRiwaya(f.subject) && <Group label={t.riwaya}>{RIWAYAT.map((r) => <Chip key={r} on={f.riwaya === r} onClick={() => toggle('riwaya', r)}>{r}</Chip>)}</Group>}
+      {f.subject === 'arabic' && <Group label={t.arabicTrack}>{ARABIC_TRACKS.map((a) => <Chip key={a.id} on={f.arabicTrack === a.id} onClick={() => toggle('arabicTrack', a.id)}>{fmt.label(a.label)}</Chip>)}</Group>}
+      {f.subject === 'fiqh' && <Group label={t.madhhab}>{MADHAHIB.map((m) => <Chip key={m} on={f.madhhab === m} onClick={() => toggle('madhhab', m)}>{m}</Chip>)}</Group>}
       <Group label={t.teacher}>{[['F', t.woman], ['M', t.man]].map(([g, l]) => <Chip key={g} on={f.gender === g} onClick={() => toggle('gender', g as 'F' | 'M')}>{l}</Chip>)}</Group>
       <Group label={t.available(tzLabel ?? '')}>{[['morning', t.morning], ['afternoon', t.afternoon], ['evening', t.evening]].map(([k, l]) => <Chip key={k} on={f.timeOfDay === k} onClick={() => toggle('timeOfDay', k as TeacherFilters['timeOfDay'])}>{l}</Chip>)}</Group>
       <Group label={t.age}>{AGE_GROUPS.map((a) => <Chip key={a.id} on={f.ageGroup === a.id} onClick={() => toggle('ageGroup', a.id)}>{fmt.label(a.label)}</Chip>)}</Group>
