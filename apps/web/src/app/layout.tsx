@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 import { Amiri, Noto_Sans_Arabic, Plus_Jakarta_Sans } from 'next/font/google'
 import { Providers } from '@/components/providers'
-import { ErrorBanner, SiteFooter, SiteHeader } from '@/components/chrome'
+import { ErrorBanner, NameBanner, SiteFooter, SiteHeader } from '@/components/chrome'
 import { LOCALE_BOOT_SCRIPT, LocaleSync } from '@/i18n/locale'
 import './globals.css'
 
@@ -25,6 +25,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <LocaleSync />
           <SiteHeader />
           <ErrorBanner />
+          <NameBanner />
           <main className="flex-1">{children}</main>
           <SiteFooter />
         </Providers>

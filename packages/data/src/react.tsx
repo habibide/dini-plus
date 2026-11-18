@@ -144,6 +144,7 @@ export const useAddLearner = () => useWrite((api, a: { name: string; birthYear: 
 export const useSignIn = () => useWrite((api, a: { email: string; password: string }) => api.signIn(a.email, a.password))
 export const useSignUp = () => useWrite((api, a: { name?: string; email: string; password: string; asTeacher: boolean; redirectTo?: string }) => api.signUp(a))
 export const useSignOut = () => useWrite((api, _: void) => api.signOut())
+export const useUpdateName = () => useWrite((api, name: string) => api.updateName(name))
 export const useSendPasswordReset = () => useWrite((api, a: { email: string; redirectTo: string }) => api.sendPasswordReset(a.email, a.redirectTo))
 export const useUpdatePassword = () => useWrite((api, password: string) => api.updatePassword(password))
 /** Fournisseurs de connexion activés (Google, Apple), lus une fois par session. */

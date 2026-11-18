@@ -90,6 +90,7 @@ const MESSAGES_FR: Record<string, string> = {
   oauth_cancelled: 'La connexion a été annulée.',
   booking_failed: 'La réservation n’a pas abouti. Réessayez.',
   incomplete_application: 'Il manque encore : {fields}.',
+  name_required: 'Indiquez votre nom (2 caractères au moins).',
   'Invalid login credentials': 'E-mail ou mot de passe incorrect.',
   'Email not confirmed': 'Confirmez d’abord votre adresse avec le lien reçu par e-mail.',
   'User already registered': 'Un compte existe déjà avec cette adresse. Connectez-vous.',
@@ -123,6 +124,7 @@ const MESSAGES_EN: Record<string, string> = {
   oauth_cancelled: 'Sign-in was cancelled.',
   booking_failed: 'The booking did not go through. Try again.',
   incomplete_application: 'Still missing: {fields}.',
+  name_required: 'Enter your name (at least 2 characters).',
   'Invalid login credentials': 'Incorrect email or password.',
   'Email not confirmed': 'First confirm your address with the link we emailed you.',
   'User already registered': 'An account already exists with this address. Sign in.',
@@ -156,6 +158,7 @@ const MESSAGES_AR: Record<string, string> = {
   oauth_cancelled: 'تم إلغاء تسجيل الدخول.',
   booking_failed: 'لم يكتمل الحجز. أعد المحاولة.',
   incomplete_application: 'ما زال ينقص: {fields}.',
+  name_required: 'أدخل اسمك (حرفان على الأقل).',
   'Invalid login credentials': 'البريد الإلكتروني أو كلمة المرور غير صحيحة.',
   'Email not confirmed': 'أكّد عنوانك أولًا عبر الرابط المرسل إلى بريدك.',
   'User already registered': 'يوجد حساب بهذا العنوان. سجّل الدخول.',
@@ -401,6 +404,15 @@ export function createSupabaseApi(client: DiniClient, storage: KeyValueStorage, 
     async updatePassword(password: string) {
       const { error } = await client.auth.updateUser({ password })
       if (error) fail(error)
+    },
+
+    /** Nom affiché du compte connecté (Apple ne le transmet pas toujours, notamment sur le web). */
+    async updateName(name: string) {
+      const clean = name.trim().replace(/\s+/g, ' ').slice(0, 120)
+      if (clean.length < 2) throw new Error(msg('name_required'))
+      const { data: { user } } = await client.auth.getUser()
+      if (!user) throw new Error(msg('not_signed_in'))
+      must(await client.from('profiles').update({ full_name: clean }).eq('id', user.id).select('id').single())
     },
 
     async signOut() {
