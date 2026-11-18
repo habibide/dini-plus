@@ -36,6 +36,10 @@ export const en: Messages = {
     signIn: 'Sign in',
     signOut: 'Sign out',
     livesIn: 'I live in',
+    signUp: 'Sign up',
+    menu: 'Menu',
+    closeMenu: 'Close the menu',
+    currency: (cur) => `Country and currency (${cur})`,
   },
   footer: {
     about: 'DINE connects families and teachers and takes no doctrinal position. All madhahib and all riwayat are welcome and shown transparently.',
@@ -134,7 +138,6 @@ export const en: Messages = {
       ['5 countries', 'Senegal, The Gambia, France, United States, Canada'],
       ['7 languages', 'to learn in your own'],
       ['6 steps', 'of verification before the badge'],
-      ['48 h', 'to report a lesson before payment'],
     ],
     startWith: 'Where would you like to start?',
     howTitle: 'How does DINE work?',
