@@ -50,7 +50,7 @@ function PendingCredentialRow({ c, busy, onDecide }: { c: PendingCredential; bus
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <strong>{c.title} ({c.year})</strong>
         <span className="text-sm text-muted">{[c.kind === 'ijaza' ? a.ijaza : a.diploma, c.riwaya && m.riwayaOf(c.riwaya), c.institution].filter(Boolean).join(' · ')}</span>
-        <a href={`/enseignants/${c.teacherId}`} className="text-sm underline">{c.teacherName}</a>
+        <a href={`/teachers/${c.teacherId}`} className="text-sm underline">{c.teacherName}</a>
       </div>
       <div className="flex flex-wrap gap-2">
         <button type="button" className={buttonCls.primary} disabled={busy} onClick={() => onDecide(true)}>{m.verify}</button>

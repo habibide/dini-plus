@@ -1,6 +1,6 @@
 'use client'
 
-import { isConfirmed, type CurrencyCode, type Teacher } from '@dini/core'
+import { COUNTRIES, isConfirmed, type CurrencyCode, type Teacher } from '@dini/core'
 import { useEffect, useState, type ReactNode } from 'react'
 
 import { buttonCls, cx } from './styles'
@@ -12,13 +12,13 @@ export function Money({ amount, currency }: { amount: number; currency: Currency
   return <>{useFormat().money(amount, currency)}</>
 }
 
-export function Monogram({ name, size = 'md' }: { name: string; size?: 'sm' | 'md' | 'lg' }) {
+export function Monogram({ name, size = 'md', square }: { name: string; size?: 'sm' | 'md' | 'lg' | 'xl'; square?: boolean }) {
   const initials = name.split(' ').map((w) => w[0]).slice(0, 2).join('')
-  const s = { sm: 'size-10 text-base', md: 'size-16 text-xl', lg: 'size-24 text-3xl' }[size]
+  const s = { sm: 'size-10 text-base', md: 'size-16 text-xl', lg: 'size-24 text-3xl', xl: 'size-28 text-4xl sm:size-32' }[size]
   // Couleur stable par personne, dans la gamme de la charte.
   const palette = ['#20915B', '#176B43', '#B8901F', '#2F7D6D', '#3B8B5A', '#8A6A1E']
   const bg = palette[[...name].reduce((a, c) => a + c.charCodeAt(0), 0) % palette.length]
-  return <span aria-hidden="true" className={cx('grid shrink-0 place-items-center rounded-full font-bold tracking-wide text-white shadow-[inset_0_-8px_16px_rgba(0,0,0,0.12)]', s)} style={{ background: bg }}>{initials}</span>
+  return <span aria-hidden="true" className={cx('grid shrink-0 place-items-center font-bold tracking-wide text-white shadow-[inset_0_-8px_16px_rgba(0,0,0,0.12)]', square ? 'rounded-md' : 'rounded-full', s)} style={{ background: bg }}>{initials}</span>
 }
 
 export function Stars({ value, count }: { value: number; count?: number }) {
@@ -115,5 +115,67 @@ export function Sanad({ chain }: { chain: string[] }) {
       {chain.map((n, i) => <li key={n} className={cx('relative before:absolute before:-left-[21px] before:top-2 before:size-1.5 before:rotate-45 before:bg-ochre', i === 0 && 'font-semibold')}>{n}</li>)}
       <li className="text-sm text-muted">{t.badges.sanadFull}</li>
     </ol>
+  )
+}
+
+/**
+ * Pays d'un professeur, retrouvé depuis le libellé saisi (« Sénégal », « Senegal »…) :
+ * nom traduit dans la langue du site et drapeau. Libellé inconnu : on le garde tel quel, sans drapeau.
+ */
+export function useCountryOf() {
+  const f = useFormat()
+  return (label: string) => {
+    const l = label.trim().toLowerCase()
+    const c = COUNTRIES.find((x) => Object.values(x.label).some((v) => v.toLowerCase() === l))
+    if (!c) return { name: label, flag: '' }
+    const flag = [...c.code].map((ch) => String.fromCodePoint(0x1f1e6 + ch.charCodeAt(0) - 65)).join('')
+    return { name: f.label(c.label), flag }
+  }
+}
+
+/** Bouclier « identité vérifiée », à côté du nom. */
+export function VerifiedShield({ title }: { title: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className="size-5 shrink-0 text-ink" fill="currentColor" role="img" aria-label={title}>
+      <title>{title}</title>
+      <path d="M12 2l8 3v6c0 5-3.4 9.3-8 11-4.6-1.7-8-6-8-11V5l8-3z" /><path d="M8.5 12l2.5 2.5 4.5-5" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+/** Petites icônes de ligne (matières, langues, etc.). */
+export const LINE_ICONS = {
+  cap: 'M22 10L12 5 2 10l10 5 10-5zM6 12v5c0 1 3 3 6 3s6-2 6-3v-5',
+  languages: 'M5 8h10M5 12h7M9 4v4M11 14l4 8M19 14l-4 8M14 18h6',
+  pin: 'M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0zM12 13a3 3 0 100-6 3 3 0 000 6z',
+  message: 'M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2zM8 9h8M8 13h5',
+  share: 'M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13',
+  bolt: 'M13 2L3 14h9l-1 8 10-12h-9l1-8z',
+  clock: 'M12 22a10 10 0 100-20 10 10 0 000 20zM12 6v6l4 2',
+  info: 'M12 22a10 10 0 100-20 10 10 0 000 20zM12 16v-4M12 8h.01',
+}
+export function LineIcon({ d, className = 'size-5' }: { d: string; className?: string }) {
+  return <svg viewBox="0 0 24 24" className={cx('shrink-0', className)} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d={d} /></svg>
+}
+
+/**
+ * « Envoyer un message » : la messagerie n'existe pas encore. Le bouton l'annonce honnêtement
+ * et propose la séance d'essai, seul moyen d'échanger avec le professeur pour l'instant.
+ */
+export function MessageButton({ name, bookHref, className }: { name: string; bookHref: string; className?: string }) {
+  const t = useT().search
+  const [open, setOpen] = useState(false)
+  return (
+    <>
+      <button type="button" onClick={() => setOpen(true)} className={cx(buttonCls.ghost, 'w-full', className)}>
+        <LineIcon d={LINE_ICONS.message} />{t.message}
+      </button>
+      {open && (
+        <Modal title={t.messageSoon.title} onClose={() => setOpen(false)}>
+          <p>{t.messageSoon.text(name.split(' ')[0])}</p>
+          <a href={bookHref} onClick={() => setOpen(false)} className={buttonCls.primary}>{t.book}</a>
+        </Modal>
+      )}
+    </>
   )
 }

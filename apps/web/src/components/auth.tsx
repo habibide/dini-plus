@@ -18,7 +18,7 @@ export function RequireAccount({ roles, children }: { roles?: Role[]; children: 
   const search = useSearchParams().toString()
   const t = useT()
   useEffect(() => {
-    if (account === null) router.replace(`/connexion?suite=${encodeURIComponent(path + (search ? `?${search}` : ''))}`)
+    if (account === null) router.replace(`/login?next=${encodeURIComponent(path + (search ? `?${search}` : ''))}`)
   }, [account, router, path, search])
   if (!account) return <Loading />
   if (roles && !roles.includes(account.role)) {
@@ -29,7 +29,8 @@ export function RequireAccount({ roles, children }: { roles?: Role[]; children: 
 
 /** Adresse de retour après connexion : uniquement un chemin du site, jamais une autre origine (y compris « /\\site.com »). */
 export function useNextPath(fallback = '/') {
-  const next = useSearchParams().get('suite')
+  const params = useSearchParams()
+  const next = params.get('next') ?? params.get('suite')
   if (!next) return fallback
   try {
     const u = new URL(next, window.location.origin)
@@ -61,8 +62,8 @@ export function Terms({ action }: { action: string }) {
   const m = useT().auth.terms(action)
   return (
     <p className="text-center text-sm text-muted">
-      {m.before}<Link href="/conditions" className="underline">{m.termsLink}</Link>{m.middle}
-      <Link href="/confidentialite" className="underline">{m.privacyLink}</Link>{m.after}
+      {m.before}<Link href="/terms" className="underline">{m.termsLink}</Link>{m.middle}
+      <Link href="/privacy" className="underline">{m.privacyLink}</Link>{m.after}
     </p>
   )
 }

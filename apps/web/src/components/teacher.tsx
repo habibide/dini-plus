@@ -80,8 +80,8 @@ export function StatusBanner({ t, action }: { t: MyTeacher; action?: ReactNode }
         {t.reviewNote && t.status === 'rejected' && <span className="mt-1 border-s-2 border-warn ps-3">« {t.reviewNote} »</span>}
       </div>
       {action ?? (t.status === 'approved'
-        ? <Link href={`/enseignants/${t.id}`} className={buttonCls.ghost}>{m.publicProfile}</Link>
-        : t.status !== 'submitted' && <Link href="/enseignant/candidature" className={buttonCls.primary}>{t.status === 'draft' ? m.complete : m.resume}</Link>)}
+        ? <Link href={`/teachers/${t.id}`} className={buttonCls.ghost}>{m.publicProfile}</Link>
+        : t.status !== 'submitted' && <Link href="/teacher/application" className={buttonCls.primary}>{t.status === 'draft' ? m.complete : m.resume}</Link>)}
     </div>
   )
 }

@@ -19,7 +19,7 @@ export function JoinButton({ booking, tz, className }: { booking: { id: string; 
   const f = useFormat()
   const { opensAt, closesAt } = videoWindow(booking)
   if (now >= opensAt && now <= closesAt) {
-    return <Link href={`/cours/${booking.id}`} className={cx(buttonCls.primary, 'min-h-10', className)}>{t.classroom.join}</Link>
+    return <Link href={`/lesson/${booking.id}`} className={cx(buttonCls.primary, 'min-h-10', className)}>{t.classroom.join}</Link>
   }
   return (
     <span className={cx(buttonCls.ghost, 'min-h-10 cursor-default text-muted hover:border-line', className)} title={t.classroom.opensHint}>
