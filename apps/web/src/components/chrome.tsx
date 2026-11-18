@@ -1,7 +1,7 @@
 'use client'
 
 import { COUNTRIES, type Locale } from '@dini/core'
-import { useAccount, useDini, usePlace, useSignOut } from '@dini/data/react'
+import { useAccount, useDini, usePlace, useSignOut, useUpdateName } from '@dini/data/react'
 import type { Account } from '@dini/data/supabase'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
@@ -11,6 +11,39 @@ import { ClientOnly } from './client-only'
 import { DineLogo } from './logo'
 import { cx } from './styles'
 import { LOCALES, dirOf, setLocale, useFormat, useLocale, useT } from '@/i18n/locale'
+
+/** Prénom du compte ; vide si le nom n'est pas connu (on n'affiche jamais l'e-mail à la place). */
+const firstName = (a: Account) => a.name.trim().split(/\s+/)[0] ?? ''
+/** Adresse relais d'Apple (« Masquer mon adresse e-mail ») : illisible, on ne l'affiche pas. */
+const isRelayEmail = (email: string) => email.endsWith('@privaterelay.appleid.com')
+
+/**
+ * Compte sans nom (Apple ne le transmet pas toujours) : on le demande une fois, sous l'en-tête,
+ * pour que les professeurs et les familles sachent à qui ils ont affaire.
+ */
+export function NameBanner() {
+  const account = useAccount()
+  const t = useT().nameAsk
+  const save = useUpdateName()
+  const [name, setName] = useState('')
+  if (!account || account.name.trim()) return null
+  return (
+    <div className="border-b border-line bg-sand">
+      <form className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-2 px-5 py-3"
+        onSubmit={(e) => { e.preventDefault(); save.mutate(name) }}>
+        <label htmlFor="ask-name" className="font-semibold text-ochre">{t.title}</label>
+        <input id="ask-name" value={name} onChange={(e) => setName(e.target.value)} placeholder={t.placeholder} autoComplete="name" maxLength={120}
+          className="min-h-11 min-w-0 flex-1 basis-56 rounded-sm border-[1.5px] border-[#e1ddd2] bg-white px-3.5" />
+        <button type="submit" disabled={save.isPending || name.trim().length < 2}
+          className="inline-flex min-h-11 cursor-pointer items-center rounded-[14px] bg-green px-5 font-semibold text-white hover:bg-green2 disabled:cursor-not-allowed disabled:opacity-40">
+          {save.isPending ? t.saving : t.save}
+        </button>
+        {save.error && <p role="alert" className="w-full text-sm text-bad">{save.error.message}</p>}
+        <p className="w-full text-sm text-muted">{t.why}</p>
+      </form>
+    </div>
+  )
+}
 
 /** Erreur de chargement (réseau, accès refusé), sous l'en-tête. */
 export function ErrorBanner() {
@@ -167,7 +200,7 @@ function MobileMenu() {
     <Link key={href} href={href} aria-current={path === href ? 'page' : undefined}
       className={cx('relative py-2.5 text-[17px] font-semibold', path === href || path.startsWith(`${href}/`) ? 'text-ink before:absolute before:-start-6 before:inset-y-1.5 before:w-1 before:bg-green' : 'text-muted hover:text-ink')}>{label}</Link>
   )
-  const first = account ? account.name.split(' ')[0] || account.email : null
+  const first = account ? firstName(account) || t.nav.myAccount : null
   return (
     <div className="md:hidden">
       <button type="button" onClick={() => setOpen(true)} aria-expanded={open} aria-controls="menu-mobile" aria-label={t.nav.menu}
@@ -246,7 +279,7 @@ function AccountArea() {
       </>
     )
   }
-  const first = account.name.split(' ')[0] || account.email
+  const first = firstName(account) || t.nav.myAccount
   return (
     <details className="relative">
       <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-[14px] border-[1.5px] border-line bg-white px-3 font-semibold hover:border-green">
@@ -254,7 +287,7 @@ function AccountArea() {
         {first}
       </summary>
       <div className="absolute end-0 z-20 mt-2 flex min-w-56 flex-col overflow-hidden rounded-md border-[1.5px] border-line bg-white py-1 shadow-[0_12px_32px_rgba(0,0,0,0.12)]">
-        <span className="truncate px-4 py-2 text-sm text-muted">{account.email}</span>
+        {!isRelayEmail(account.email) && <span className="truncate px-4 py-2 text-sm text-muted">{account.email}</span>}
         {navFor(account, t).filter((n) => n.href !== '/teachers' && n.href !== '/become-a-teacher').map((n) => (
           <Link key={n.href} href={n.href} className="px-4 py-2 hover:bg-leaf">{n.label}</Link>
         ))}

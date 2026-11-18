@@ -40,6 +40,14 @@ export const en: Messages = {
     menu: 'Menu',
     closeMenu: 'Close the menu',
     currencyLabel: 'Currency',
+    myAccount: 'My account',
+  },
+  nameAsk: {
+    title: 'What is your name?',
+    placeholder: 'First and last name',
+    save: 'Save',
+    saving: 'Saving…',
+    why: 'Apple did not share your name with us. Teachers will see it, and so will you in your account.',
   },
   footer: {
     about: 'DINE connects families and teachers and takes no doctrinal position. All madhahib and all riwayat are welcome and shown transparently.',

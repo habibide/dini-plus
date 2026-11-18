@@ -38,6 +38,14 @@ export const fr = {
     menu: 'Menu',
     closeMenu: 'Fermer le menu',
     currencyLabel: 'Devise',
+    myAccount: 'Mon compte',
+  },
+  nameAsk: {
+    title: 'Comment vous appelez-vous ?',
+    placeholder: 'Prénom et nom',
+    save: 'Enregistrer',
+    saving: 'Enregistrement…',
+    why: 'Apple ne nous a pas transmis votre nom. Il s’affichera pour les professeurs et dans votre compte.',
   },
   footer: {
     about: 'DINE met en relation et ne prend pas position doctrinale. Tous les madhahib et toutes les riwayat sont accueillis, affichés en toute transparence.',
