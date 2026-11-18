@@ -72,7 +72,7 @@ export function Field({ label, children }: { label: string; children: (id: strin
   return <div className="flex flex-col gap-1.5"><label htmlFor={id} className="font-semibold">{label}</label>{children(id)}</div>
 }
 
-export const inputCls = 'min-h-12 w-full rounded-sm border border-line bg-white px-3.5 text-base outline-offset-0 focus:border-green'
+export const inputCls = 'min-h-[50px] w-full rounded-sm border-[1.5px] border-[#e1ddd2] bg-white px-3.5 text-base outline-offset-0 focus:border-green'
 
 export function PasswordInput({ id, value, onChange, autoComplete }: { id: string; value: string; onChange: (v: string) => void; autoComplete: 'current-password' | 'new-password' }) {
   const [shown, setShown] = useState(false)
@@ -93,7 +93,7 @@ export function PasswordInput({ id, value, onChange, autoComplete }: { id: strin
 }
 
 export function FormError({ message }: { message?: string | null }) {
-  return message ? <p role="alert" className="bg-warnbg px-3 py-2 text-warn">{message}</p> : null
+  return message ? <p role="alert" className="rounded-sm bg-warnbg px-3 py-2 text-warn">{message}</p> : null
 }
 
 const PROVIDERS: Record<OAuthProvider, { label: string; icon: ReactNode }> = {

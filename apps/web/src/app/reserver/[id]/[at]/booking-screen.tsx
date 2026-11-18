@@ -76,7 +76,7 @@ export function BookingScreen() {
           ))}
         </ol>
 
-        <section className="flex flex-col gap-4 border border-line bg-white p-6">
+        <section className="flex flex-col gap-4 overflow-hidden rounded-md border-[1.5px] border-line bg-white p-6">
           {step === 0 && <>
             <h2 className="font-display text-xl">{m.forWhom}</h2>
             <div className="flex flex-col gap-2">
@@ -144,12 +144,12 @@ export function BookingScreen() {
                     <span />
                   </Option>
                 ))}
-                <p className="bg-leaf px-3 py-2 text-sm">{m.simulated}</p>
+                <p className="rounded-sm bg-leaf px-3 py-2 text-sm">{m.simulated}</p>
               </div>
             )}
             <p>{total ? m.escrow(ESCROW_HOURS) : m.usesCredit}</p>
             <p className="text-sm text-muted">{m.cancelRule(FREE_CANCEL_HOURS)}</p>
-            {error && <p role="alert" className="bg-warnbg px-3 py-2 text-warn">{error} <Link href={`/enseignants/${t.id}`} className="font-semibold underline">{m.otherSlot}</Link></p>}
+            {error && <p role="alert" className="rounded-sm bg-warnbg px-3 py-2 text-warn">{error} <Link href={`/enseignants/${t.id}`} className="font-semibold underline">{m.otherSlot}</Link></p>}
             <div className="flex gap-2">
               <button type="button" className={buttonCls.ghost} disabled={create.isPending} onClick={() => setStep(1)}>{all.common.back}</button>
               <button type="button" className={buttonCls.primary} disabled={create.isPending} onClick={confirm}>
@@ -160,7 +160,7 @@ export function BookingScreen() {
         </section>
       </div>
 
-      <aside className="flex flex-col gap-3 bg-leaf p-5 lg:sticky lg:top-4">
+      <aside className="flex flex-col gap-3 rounded-sm bg-leaf p-5 lg:sticky lg:top-4">
         <div className="flex items-center gap-3"><Monogram name={t.name} size="sm" /><strong>{t.name}</strong></div>
         <dl className="flex flex-col gap-2 text-sm">
           <div className="flex justify-between gap-4"><dt className="text-muted">{m.date}</dt><dd className="text-end first-letter:uppercase">{fmt.day(at, tz)}</dd></div>

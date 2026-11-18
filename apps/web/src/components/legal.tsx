@@ -8,7 +8,7 @@ export function LegalDraft({ kind }: { kind: 'terms' | 'privacy' }) {
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-4 px-5 py-12">
       <h1 className="font-display text-4xl">{t[kind]}</h1>
-      <p className="bg-warnbg px-4 py-3 text-warn">{t.draft}</p>
+      <p className="rounded-sm bg-warnbg px-4 py-3 text-warn">{t.draft}</p>
     </div>
   )
 }

@@ -1,8 +1,7 @@
 import { colors } from '@dini/core'
 import { DiniProvider } from '@dini/data/react'
 import { Amiri_400Regular } from '@expo-google-fonts/amiri'
-import { HankenGrotesk_400Regular, HankenGrotesk_500Medium, HankenGrotesk_600SemiBold, HankenGrotesk_700Bold } from '@expo-google-fonts/hanken-grotesk'
-import { YoungSerif_400Regular } from '@expo-google-fonts/young-serif'
+import { PlusJakartaSans_400Regular, PlusJakartaSans_500Medium, PlusJakartaSans_600SemiBold, PlusJakartaSans_700Bold, PlusJakartaSans_800ExtraBold } from '@expo-google-fonts/plus-jakarta-sans'
 import { useFonts } from 'expo-font'
 import { Stack } from 'expo-router'
 import * as SplashScreen from 'expo-splash-screen'
@@ -16,7 +15,7 @@ import { useIsRTL, useT } from '@/lib/i18n'
 SplashScreen.preventAutoHideAsync()
 
 export default function RootLayout() {
-  const [loaded] = useFonts({ YoungSerif_400Regular, HankenGrotesk_400Regular, HankenGrotesk_500Medium, HankenGrotesk_600SemiBold, HankenGrotesk_700Bold, Amiri_400Regular })
+  const [loaded] = useFonts({ PlusJakartaSans_400Regular, PlusJakartaSans_500Medium, PlusJakartaSans_600SemiBold, PlusJakartaSans_700Bold, PlusJakartaSans_800ExtraBold, Amiri_400Regular })
   useEffect(() => { if (loaded) SplashScreen.hideAsync() }, [loaded])
   const t = useT()
   const rtl = useIsRTL()
@@ -26,7 +25,7 @@ export default function RootLayout() {
       {/* En arabe, toute la mise en page passe de droite à gauche, sans redémarrer l'app. */}
       <View style={{ flex: 1, direction: rtl ? 'rtl' : 'ltr' }}>
       <StatusBar style="dark" />
-      <Stack screenOptions={{ headerTintColor: colors.green, headerStyle: { backgroundColor: colors.paper }, contentStyle: { backgroundColor: colors.paper }, headerBackTitle: t.common.back, headerTitleStyle: { fontFamily: 'HankenGrotesk_600SemiBold' } }}>
+      <Stack screenOptions={{ headerTintColor: colors.green, headerStyle: { backgroundColor: colors.paper }, contentStyle: { backgroundColor: colors.paper }, headerBackTitle: t.common.back, headerTitleStyle: { fontFamily: 'PlusJakartaSans_700Bold' }, headerShadowVisible: false }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="teacher/[id]" options={{ title: t.titles.profile }} />
         <Stack.Screen name="book/[id]/[at]" options={{ title: t.titles.booking }} />

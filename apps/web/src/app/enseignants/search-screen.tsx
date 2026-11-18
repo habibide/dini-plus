@@ -12,7 +12,7 @@ import { Badge, Modal, Money, Monogram, RecitationPreview, Stars, badgesOf, butt
 function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; children: ReactNode }) {
   return (
     <button type="button" aria-pressed={on} onClick={onClick}
-      className={cx('min-h-9 cursor-pointer rounded-sm border px-3 text-sm', on ? 'border-green bg-green text-white' : 'border-line bg-white hover:border-green')}>{children}</button>
+      className={cx('min-h-9 cursor-pointer rounded-full border-[1.5px] px-3.5 text-sm font-semibold transition', on ? 'border-green bg-green text-white' : 'border-line bg-white text-ink hover:border-green')}>{children}</button>
   )
 }
 
@@ -64,13 +64,13 @@ export function SearchScreen() {
           <button type="button" className={cx(buttonCls.ghost, 'min-h-10 lg:hidden')} onClick={() => setSheet(true)}>{t.filters}{active ? ` (${active})` : ''}</button>
         </div>
         {!teachers.isPending && list.length === 0 && (
-          <div className="flex flex-col items-start gap-3 bg-leaf p-6">
+          <div className="flex flex-col items-start gap-3 rounded-sm bg-leaf p-6">
             <strong>{t.noneTitle}</strong>
             <span>{t.noneText}</span>
             <button type="button" className={buttonCls.ghost} onClick={() => setF({})}>{t.clear}</button>
           </div>
         )}
-        <ul className={cx('border-t border-line transition-opacity', teachers.isFetching && 'opacity-60')}>
+        <ul className={cx('flex flex-col gap-3 transition-opacity', teachers.isFetching && 'opacity-60')}>
           {list.map((t) => <li key={t.id}><TeacherRow t={t} /></li>)}
         </ul>
       </div>
@@ -84,7 +84,7 @@ function TeacherRow({ t }: { t: TeacherCard }) {
   const per = useT().common.perCourse
   const fmt = useFormat()
   return (
-    <article className="grid grid-cols-[64px_minmax(0,1fr)] gap-x-5 gap-y-3 border-b border-line py-6 sm:grid-cols-[84px_minmax(0,1fr)_200px]">
+    <article className="grid grid-cols-[64px_minmax(0,1fr)] gap-x-5 gap-y-3 rounded-md border-[1.5px] border-line bg-white p-5 shadow-[0_1px_2px_rgba(20,20,18,0.03)] transition hover:border-green hover:shadow-[0_0_0_3px_var(--color-soft)] sm:grid-cols-[72px_minmax(0,1fr)_200px]">
       <Monogram name={t.name} size="md" />
       <div className="flex min-w-0 flex-col gap-2">
         <h2 className="font-display text-xl"><Link href={`/enseignants/${t.id}`} className="hover:underline">{t.name}</Link></h2>
@@ -100,7 +100,7 @@ function TeacherRow({ t }: { t: TeacherCard }) {
         <span><strong className="font-display text-2xl text-green"><Money {...t.price} /></strong> <span className="text-sm text-muted">{per}</span></span>
         <Stars value={t.rating} count={t.reviews.length} />
         <RecitationPreview seed={t.id} />
-        <Link href={`/enseignants/${t.id}`} className={cx(buttonCls.ghost, 'min-h-10 w-full')}>{m.viewProfile}</Link>
+        <Link href={`/enseignants/${t.id}`} className="inline-flex min-h-10 w-full items-center justify-center rounded-[10px] border border-[#e1ddd2] bg-paper text-sm font-bold text-ink transition hover:border-green">{m.viewProfile}</Link>
       </div>
     </article>
   )

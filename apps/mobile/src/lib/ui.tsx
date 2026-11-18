@@ -1,15 +1,15 @@
-import { colors, isConfirmed, type CurrencyCode, type Teacher } from '@dini/core'
+import { colors, isConfirmed, radius, type CurrencyCode, type Teacher } from '@dini/core'
 import { useDini } from '@dini/data/react'
 import type { ReactNode } from 'react'
 import { Pressable, StyleSheet, Text, View, type TextProps, type ViewStyle } from 'react-native'
 import { useFormat, useT } from './i18n'
 
 export const font = {
-  display: 'YoungSerif_400Regular',
-  body: 'HankenGrotesk_400Regular',
-  medium: 'HankenGrotesk_500Medium',
-  bold: 'HankenGrotesk_700Bold',
-  semibold: 'HankenGrotesk_600SemiBold',
+  display: 'PlusJakartaSans_800ExtraBold',
+  body: 'PlusJakartaSans_400Regular',
+  medium: 'PlusJakartaSans_500Medium',
+  bold: 'PlusJakartaSans_700Bold',
+  semibold: 'PlusJakartaSans_600SemiBold',
   arabic: 'Amiri_400Regular',
 }
 
@@ -18,9 +18,9 @@ const tones: Record<Tone, object> = {
   body: { fontFamily: font.body, fontSize: 16, lineHeight: 23, color: colors.ink },
   muted: { fontFamily: font.body, fontSize: 14, lineHeight: 20, color: colors.muted },
   label: { fontFamily: font.semibold, fontSize: 14, color: colors.muted },
-  title: { fontFamily: font.display, fontSize: 19, color: colors.ink },
-  h2: { fontFamily: font.display, fontSize: 22, color: colors.ink },
-  h1: { fontFamily: font.display, fontSize: 28, lineHeight: 33, color: colors.ink },
+  title: { fontFamily: font.display, fontSize: 18, letterSpacing: -0.3, color: colors.ink },
+  h2: { fontFamily: font.display, fontSize: 22, letterSpacing: -0.5, color: colors.ink },
+  h1: { fontFamily: font.display, fontSize: 28, lineHeight: 33, letterSpacing: -0.6, color: colors.ink },
   arabic: { fontFamily: font.arabic, fontSize: 24, color: colors.green, writingDirection: 'rtl' },
 }
 
@@ -31,8 +31,8 @@ export function T({ tone = 'body', style, ...p }: TextProps & { tone?: Tone }) {
 export function Button({ title, onPress, kind = 'primary', disabled, style }: { title: string; onPress?: () => void; kind?: 'primary' | 'ghost' | 'sand'; disabled?: boolean; style?: ViewStyle }) {
   return (
     <Pressable accessibilityRole="button" accessibilityState={{ disabled }} disabled={disabled} onPress={onPress}
-      style={({ pressed }) => [s.btn, s[kind], disabled && (kind === 'primary' ? s.disabled : { opacity: 0.4 }), pressed && { opacity: 0.85 }, style]}>
-      <Text style={[s.btnText, kind === 'primary' ? { color: colors.white } : { color: kind === 'sand' ? colors.green : colors.ink }]}>{title}</Text>
+      style={({ pressed }) => [s.btn, s[kind], disabled && { opacity: 0.4 }, pressed && { transform: [{ scale: 0.98 }] }, style]}>
+      <Text style={[s.btnText, kind === 'primary' ? { color: colors.white } : { color: kind === 'sand' ? colors.green2 : colors.ink }]}>{title}</Text>
     </Pressable>
   )
 }
@@ -61,9 +61,12 @@ export const Money = ({ amount, currency }: { amount: number; currency: Currency
 
 export function Monogram({ name, size = 56 }: { name: string; size?: number }) {
   const initials = name.split(' ').map((w) => w[0]).slice(0, 2).join('')
+  // Couleur stable par personne, dans la gamme de la charte (mêmes teintes que le site).
+  const palette = ['#20915B', '#176B43', '#B8901F', '#2F7D6D', '#3B8B5A', '#8A6A1E']
+  const bg = palette[[...name].reduce((a, c) => a + c.charCodeAt(0), 0) % palette.length]
   return (
-    <View accessible={false} style={{ width: size, height: size, borderRadius: 3, backgroundColor: colors.leaf, borderWidth: 1, borderColor: colors.sand, alignItems: 'center', justifyContent: 'center' }}>
-      <Text style={{ fontFamily: font.display, fontSize: size * 0.36, color: colors.green }}>{initials}</Text>
+    <View accessible={false} style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: bg, alignItems: 'center', justifyContent: 'center' }}>
+      <Text style={{ fontFamily: font.bold, fontSize: size * 0.36, color: colors.white }}>{initials}</Text>
     </View>
   )
 }
@@ -78,8 +81,8 @@ export function Badges({ t }: { t: Teacher }) {
   return (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 5 }}>
       {list.map((b) => (
-        <View key={b.label} style={{ paddingHorizontal: 7, paddingVertical: 2, borderRadius: 3, backgroundColor: b.dark ? colors.green : b.gold ? '#F3E5C4' : colors.leaf }}>
-          <Text style={{ fontFamily: font.semibold, fontSize: 12, color: b.dark ? colors.white : b.gold ? '#6F4A0F' : colors.green }}>{b.label}</Text>
+        <View key={b.label} style={{ paddingHorizontal: 9, paddingVertical: 3, borderRadius: 999, backgroundColor: b.dark ? colors.green : b.gold ? colors.sand : colors.soft }}>
+          <Text style={{ fontFamily: font.bold, fontSize: 12, color: b.dark ? colors.white : b.gold ? colors.ochre : colors.green2 }}>{b.label}</Text>
         </View>
       ))}
     </View>
@@ -109,7 +112,7 @@ export function ErrorBanner() {
   const t = useT()
   if (!error) return null
   return (
-    <Pressable accessibilityRole="alert" onPress={clearError} style={{ position: 'absolute', left: 12, right: 12, bottom: 104, padding: 12, borderRadius: 4, backgroundColor: colors.warnBg, borderWidth: 1, borderColor: colors.sand }}>
+    <Pressable accessibilityRole="alert" onPress={clearError} style={{ position: 'absolute', left: 12, right: 12, bottom: 104, padding: 12, borderRadius: radius.input, backgroundColor: colors.warnBg, borderWidth: 1, borderColor: colors.gold }}>
       <T style={{ color: colors.warn, fontSize: 15 }}>{t.common.loadError(error)}</T>
       <T tone="muted" style={{ marginTop: 4 }}>{t.common.tapToClose}</T>
     </Pressable>
@@ -117,15 +120,14 @@ export function ErrorBanner() {
 }
 
 const s = StyleSheet.create({
-  btn: { minHeight: 48, borderRadius: 4, paddingHorizontal: 18, alignItems: 'center', justifyContent: 'center' },
-  primary: { backgroundColor: colors.green },
-  ghost: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.line },
-  sand: { backgroundColor: colors.sand },
-  disabled: { backgroundColor: '#A9B4AE', borderWidth: 0 },
+  btn: { minHeight: 52, borderRadius: radius.button, borderWidth: 1.5, borderColor: 'transparent', paddingHorizontal: 20, alignItems: 'center', justifyContent: 'center' },
+  primary: { backgroundColor: colors.green, borderColor: colors.green },
+  ghost: { backgroundColor: colors.white, borderColor: '#D6D2C7' },
+  sand: { backgroundColor: colors.white },
   btnText: { fontFamily: font.semibold, fontSize: 16 },
-  chip: { minHeight: 40, paddingHorizontal: 13, borderRadius: 3, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.white, justifyContent: 'center' },
+  chip: { minHeight: 38, paddingHorizontal: 14, borderRadius: 999, borderWidth: 1.5, borderColor: colors.line, backgroundColor: colors.white, justifyContent: 'center' },
   chipOn: { backgroundColor: colors.green, borderColor: colors.green },
-  chipText: { fontFamily: font.medium, fontSize: 14, color: colors.ink },
-  option: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 4, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.white },
-  optionOn: { borderColor: colors.green, borderWidth: 2, padding: 13, backgroundColor: '#F4F6EF' },
+  chipText: { fontFamily: font.semibold, fontSize: 14, color: colors.ink },
+  option: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: radius.card, borderWidth: 1.5, borderColor: colors.line, backgroundColor: colors.white },
+  optionOn: { borderColor: colors.green, backgroundColor: colors.white, boxShadow: `0 0 0 3px ${colors.soft}` },
 })

@@ -1,22 +1,27 @@
-// Identité DINE (§11), commune au web et au mobile.
+// Identité DINE, commune au web et au mobile : charte du prototype Claude Design (vert, or, blanc cassé chaud).
 export const colors = {
-  paper: '#FAFAF5',
-  leaf: '#F1ECDD',
-  sand: '#E4D7B8',
-  ochre: '#96661A',
-  green: '#0F3D32',
-  green2: '#1B5A49',
-  ink: '#1B2522',
-  muted: '#5D6A63',
-  line: '#DCD8C8',
+  paper: '#FAFAF7', // fond
+  leaf: '#F4F1EA', // fond chaud : survols, encadrés
+  soft: '#E8F5EE', // vert très clair : pastilles, sélection
+  sand: '#FBF3DC', // or très clair
+  gold: '#C9A02E', // or : étoiles, accents décoratifs
+  ochre: '#7A5A1B', // or foncé : texte et filets sur fond clair
+  green: '#20915B', // vert DINE : boutons, liens, en-têtes
+  green2: '#176B43', // vert foncé : survol, dégradés
+  ink: '#1F1F1B',
+  muted: '#6E6B62',
+  faint: '#9C998F',
+  line: '#E9E6DD',
   white: '#FFFFFF',
-  warnBg: '#F7ECD5',
-  warn: '#8A5A10',
-  bad: '#97362B',
+  warnBg: '#FBF3DC',
+  warn: '#7A5A1B',
+  bad: '#C7503D',
 } as const
 
+export const radius = { input: 12, button: 14, card: 16 } as const
+
 export const fonts = {
-  display: 'Young Serif',
-  body: 'Hanken Grotesk',
+  display: 'Plus Jakarta Sans',
+  body: 'Plus Jakarta Sans',
   arabic: 'Amiri',
 } as const

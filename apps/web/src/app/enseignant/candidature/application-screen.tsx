@@ -29,7 +29,7 @@ const eurFromXof = (xof: number) => Math.max(0.5, Math.round((xof / 655.957) * 2
 
 function Section({ title, hint, children }: { title: string; hint?: string; children: ReactNode }) {
   return (
-    <section className="flex flex-col gap-4 border border-line bg-white p-6">
+    <section className="flex flex-col gap-4 overflow-hidden rounded-md border-[1.5px] border-line bg-white p-6">
       <div><h2 className="font-display text-2xl">{title}</h2>{hint && <p className="mt-1 text-muted">{hint}</p>}</div>
       {children}
     </section>
@@ -200,7 +200,7 @@ function Credentials({ approved, verified, credentials, onChange }: {
       {credentials.map((c, i) => {
         const upd = (patch: Partial<Credential>) => onChange(credentials.map((x, j) => (j === i ? { ...x, ...patch } : x)))
         return (
-          <div key={i} className="flex flex-col gap-3 border border-line p-4">
+          <div key={i} className="flex flex-col gap-3 overflow-hidden rounded-md border-[1.5px] border-line p-4">
             <div className="grid gap-3 sm:grid-cols-[160px_minmax(0,1fr)_110px]">
               <Field label={m.type}>{(id) => (
                 <select id={id} value={c.kind} onChange={(e) => upd({ kind: e.target.value as Credential['kind'] })} className={inputCls}>
@@ -236,7 +236,7 @@ function Credentials({ approved, verified, credentials, onChange }: {
     )
   }
   return (
-    <details className="group border border-line bg-white p-6" open={credentials.length > 0}>
+    <details className="group overflow-hidden rounded-md border-[1.5px] border-line bg-white p-6" open={credentials.length > 0}>
       <summary className="flex cursor-pointer list-none items-center justify-between gap-4">
         <span><span className="font-display text-xl">{m.credTitle}</span> <span className="text-muted">{m.optional}</span></span>
         <span aria-hidden className="text-muted group-open:rotate-180">▾</span>

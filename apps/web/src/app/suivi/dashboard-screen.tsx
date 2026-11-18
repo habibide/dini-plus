@@ -27,9 +27,9 @@ export function DashboardScreen() {
         </div>
         <Link href="/enseignants" className={buttonCls.ghost}>{all.nav.find}</Link>
       </div>
-      {justBooked && <p role="status" className="bg-leaf px-4 py-3"><strong>{m.booked}</strong>{m.bookedText}</p>}
+      {justBooked && <p role="status" className="rounded-sm bg-leaf px-4 py-3"><strong>{m.booked}</strong>{m.bookedText}</p>}
       {dash.data.length === 0 && (
-        <div className="flex flex-col items-start gap-3 border border-line bg-white p-6">
+        <div className="flex flex-col items-start gap-3 overflow-hidden rounded-md border-[1.5px] border-line bg-white p-6">
           <p className="text-lg">{m.empty}</p>
           <Link href="/enseignants" className={buttonCls.primary}>{m.choose}</Link>
         </div>
@@ -52,7 +52,7 @@ function LearnerBlock({ d, tz }: { d: LearnerDashboard; tz: string }) {
   const age = new Date().getFullYear() - d.learner.birthYear
 
   return (
-    <article className="flex flex-col border border-line bg-white">
+    <article className="flex flex-col overflow-hidden rounded-md border-[1.5px] border-line bg-white">
       <header className="flex flex-wrap items-center gap-4 border-b border-line px-6 py-4">
         <Monogram name={d.learner.name} size="sm" />
         <div className="min-w-[200px] flex-1"><h2 className="font-display text-xl">{d.learner.name}</h2><p className="text-sm text-muted">{m.goal(age, d.learner.goals)}</p></div>
@@ -90,7 +90,7 @@ function LearnerBlock({ d, tz }: { d: LearnerDashboard; tz: string }) {
                 return (
                   <li key={p.surah} className="grid grid-cols-[90px_minmax(0,1fr)_44px] items-center gap-3">
                     <span lang="ar" dir="rtl" className="font-arabic text-xl">{s.ar}</span>
-                    <span dir="rtl" role="img" aria-label={m.versesOf(s.name, p.reached, s.ayat)} className="block h-2 bg-leaf"><span className="block h-2 bg-green2" style={{ width: `${(p.reached / s.ayat) * 100}%` }} /></span>
+                    <span dir="rtl" role="img" aria-label={m.versesOf(s.name, p.reached, s.ayat)} className="block h-2 overflow-hidden rounded-full bg-leaf"><span className="block h-2 bg-green2" style={{ width: `${(p.reached / s.ayat) * 100}%` }} /></span>
                     <span className="text-end text-sm tabular-nums text-muted">{p.reached}/{s.ayat}</span>
                   </li>
                 )

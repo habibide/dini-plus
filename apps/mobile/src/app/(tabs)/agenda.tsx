@@ -70,7 +70,7 @@ function Row({ b, highlight }: { b: AgendaItem; highlight?: boolean }) {
   const fmt = useFormat()
   return (
     <Pressable accessibilityRole="button" onPress={() => router.push(`/session/${b.id}`)}
-      style={({ pressed }) => ({ padding: 14, gap: 3, borderWidth: 1, borderRadius: 4, borderColor: highlight ? colors.ochre : colors.line, backgroundColor: pressed ? colors.leaf : colors.white })}>
+      style={({ pressed }) => ({ padding: 14, gap: 3, borderWidth: 1.5, borderRadius: 16, borderColor: highlight ? colors.ochre : colors.line, backgroundColor: pressed ? colors.leaf : colors.white })}>
       <T style={{ fontFamily: font.semibold, textTransform: 'capitalize' }}>{fmt.dateTime(b.startsAt, tz)}</T>
       <T tone="muted">{b.learner.name} · {fmt.label(subject(b.subject).label)}{b.kind === 'trial' ? m.trial : ''}</T>
       {highlight && <T style={{ color: colors.green, fontFamily: font.semibold }}>{m.writeReport}</T>}

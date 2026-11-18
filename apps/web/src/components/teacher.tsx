@@ -17,7 +17,7 @@ export function ChipSet<T extends string>({ legend, options, value, onChange }: 
           const on = value.includes(o.id)
           return (
             <button key={o.id} type="button" aria-pressed={on} onClick={() => onChange(on ? value.filter((x) => x !== o.id) : [...value, o.id])}
-              className={cx('min-h-10 cursor-pointer rounded-sm border px-3 text-sm', on ? 'border-green bg-green text-white' : 'border-line bg-white hover:border-green')}>{o.label}</button>
+              className={cx('min-h-10 cursor-pointer rounded-full border-[1.5px] px-3.5 text-sm font-semibold', on ? 'border-green bg-green text-white' : 'border-line bg-white hover:border-green')}>{o.label}</button>
           )
         })}
       </div>
@@ -37,7 +37,7 @@ export function AvailabilityEditor({ value, onChange }: { value: Rule[]; onChang
   const { availability: t, common } = useT()
   const WEEKDAYS = t.weekdays
   return (
-    <div className="flex flex-col divide-y divide-line border border-line bg-white">
+    <div className="flex flex-col divide-y divide-line overflow-hidden rounded-md border-[1.5px] border-line bg-white">
       {ORDER.map((weekday) => {
         const rows = value.map((r, i) => ({ r, i })).filter((x) => x.r.weekday === weekday)
         return (
