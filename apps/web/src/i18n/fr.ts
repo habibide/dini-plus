@@ -34,6 +34,10 @@ export const fr = {
     signIn: 'Se connecter',
     signOut: 'Se déconnecter',
     livesIn: 'J’habite',
+    signUp: 'S’inscrire',
+    menu: 'Menu',
+    closeMenu: 'Fermer le menu',
+    currency: (cur: string) => `Pays et devise (${cur})`,
   },
   footer: {
     about: 'DINE met en relation et ne prend pas position doctrinale. Tous les madhahib et toutes les riwayat sont accueillis, affichés en toute transparence.',
@@ -132,7 +136,6 @@ export const fr = {
       ['5 pays', 'Sénégal, Gambie, France, États-Unis, Canada'],
       ['7 langues', 'pour apprendre dans la sienne'],
       ['6 étapes', 'de vérification avant le badge'],
-      ['48 h', 'pour signaler une séance avant paiement'],
     ] as [string, string][],
     startWith: 'Par quoi voulez-vous commencer ?',
     howTitle: 'Comment fonctionne DINE ?',

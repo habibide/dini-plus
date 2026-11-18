@@ -92,18 +92,3 @@ export const LOCALE_BOOT_SCRIPT = `(function(){try{var d=document.documentElemen
 if(!ok(l)){var ls=navigator.languages&&navigator.languages.length?navigator.languages:[navigator.language];l='fr';
 for(var i=0;i<ls.length;i++){var b=(ls[i]||'').slice(0,2).toLowerCase();if(ok(b)){l=b;break}}}
 if(l!=='fr'){d.lang=l;if(l==='ar')d.dir='rtl';d.setAttribute('data-locale-pending','');setTimeout(function(){d.removeAttribute('data-locale-pending')},1500)}}catch(e){}})()`
-
-/** Sélecteur de langue (en-tête et pied de page). */
-export function LanguageSelect({ className }: { className?: string }) {
-  const locale = useLocale()
-  const t = useT()
-  return (
-    <label className={className}>
-      <span className="sr-only">{t.lang.label}</span>
-      <select value={locale} onChange={(e) => setLocale(e.target.value as Locale)} aria-label={t.lang.label}
-        className="rounded-sm border border-line bg-white px-2 py-1.5 text-sm text-ink">
-        {LOCALES.map((l) => <option key={l} value={l} lang={l}>{t.lang[l]}</option>)}
-      </select>
-    </label>
-  )
-}
