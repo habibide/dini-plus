@@ -65,7 +65,8 @@ function navFor(account: Account | null | undefined, t: ReturnType<typeof useT>)
   if (account?.role === 'teacher') items.push({ href: '/teacher', label: t.nav.teacherSpace })
   else if (account) items.push({ href: '/progress', label: t.nav.tracking })
   if (account?.role === 'moderator' || account?.role === 'admin') items.push({ href: '/moderation', label: t.nav.moderation })
-  if (!account || account.role === 'family') items.push({ href: '/become-a-teacher', label: t.nav.becomeTeacher })
+  // « Devenir professeur » s'adresse aux visiteurs : une fois connecté (élève, parent ou professeur), le lien disparaît.
+  if (!account) items.push({ href: '/become-a-teacher', label: t.nav.becomeTeacher })
   return items
 }
 
