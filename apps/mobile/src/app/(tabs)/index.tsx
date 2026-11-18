@@ -8,7 +8,9 @@ export default function Home() {
   const t = useT()
   const fmt = useFormat()
   return (
-    <ScrollView style={{ backgroundColor: colors.green }} contentContainerStyle={{ paddingBottom: 110, backgroundColor: colors.paper }}>
+    <ScrollView style={{ backgroundColor: colors.paper }} contentContainerStyle={{ flexGrow: 1, paddingBottom: 110, backgroundColor: colors.paper }}>
+      {/* Vert au-dessus de l'en-tête quand on tire la page vers le bas ; le reste du fond reste clair (pas de bande verte sous la barre d'onglets). */}
+      <View pointerEvents="none" style={{ position: 'absolute', top: -1000, left: 0, right: 0, height: 1000, backgroundColor: colors.green }} />
       <View style={{ backgroundColor: colors.green, borderBottomLeftRadius: 24, borderBottomRightRadius: 24 }}>
         <View style={{ paddingHorizontal: 20, paddingTop: 12, paddingBottom: 28, gap: 18 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
