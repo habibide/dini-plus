@@ -12,9 +12,9 @@ export type Database = {
       availability_rules: Table<{ end_min: number; id: number; start_min: number; teacher_id: string; weekday: number }>
       bookings: Table<{
         amount: number; created_at: string; currency: string; delivered_at: string | null; id: string; kind: string; learner_id: string; video_room: string | null
-        minutes: number; starts_at: string; status: string; subject: string; subscription_id: string | null; teacher_id: string
+        minutes: number; starts_at: string; status: string; subject: string; subscription_id: string | null; teacher_id: string; hold_until: string | null
       }>
-      countries: Table<{ code: string; currency: string; payments: string[] }>
+      countries: Table<{ code: string; currency: string; payments: string[]; payment_provider: string }>
       disputes: Table<{ booking_id: string; created_at: string; id: string; reason: string; status: string }>
       families: Table<{
         country: string; created_at: string; id: string; is_adult_learner: boolean
@@ -28,6 +28,7 @@ export type Database = {
       payments: Table<{
         amount: number; booking_id: string | null; created_at: string; currency: string; family_id: string; id: string; method: string
         provider: string; provider_ref: string | null; status: string; subscription_id: string | null
+        checkout_url: string | null; paid_at: string | null; provider_payload: Json | null; updated_at: string
       }>
       plans: Table<{ id: string; sessions: number }>
       pricing_settings: Table<{
@@ -42,7 +43,7 @@ export type Database = {
       }>
       subscriptions: Table<{
         created_at: string; currency: string; id: string; learner_id: string; plan_id: string; price: number; renews_at: string
-        sessions_per_month: number; sessions_remaining: number; teacher_id: string
+        sessions_per_month: number; sessions_remaining: number; teacher_id: string; active: boolean
       }>
       teacher_credentials: Table<{
         id: number; institution: string; kind: string; position: number; riwaya: string | null; sanad: string[] | null

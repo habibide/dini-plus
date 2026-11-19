@@ -106,7 +106,7 @@ export const BookingSchema = z.object({
   minutes: z.number().int(),
   amount: z.number(),
   currency,
-  status: z.enum(['scheduled', 'delivered', 'validated', 'disputed', 'cancelled', 'refunded', 'missed']),
+  status: z.enum(['pending_payment', 'scheduled', 'delivered', 'validated', 'disputed', 'cancelled', 'refunded', 'missed']),
   deliveredAt: z.number().optional(),
   report: ReportSchema.optional(),
 })

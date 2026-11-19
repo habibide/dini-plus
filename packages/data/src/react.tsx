@@ -122,6 +122,18 @@ export function useDashboard() {
   return useQuery({ queryKey: ['dashboard', account?.userId], queryFn: () => api.getDashboard(), enabled: !!account })
 }
 
+/** Suit un paiement Bictorys toutes les 3 secondes tant qu'il est en attente (le webhook décide de l'issue). */
+export function usePaymentStatus(paymentId: string | null | undefined) {
+  const { api, account } = useDini()
+  return useQuery({
+    queryKey: ['payment', paymentId],
+    queryFn: () => api.paymentStatus(paymentId!),
+    enabled: !!account && !!paymentId,
+    staleTime: 0,
+    refetchInterval: (q) => (q.state.data?.status === 'pending' || !q.state.data ? 3000 : false),
+  })
+}
+
 export function useBookingDetails(id: string) {
   const { api, account } = useDini()
   return useQuery({ queryKey: ['booking', id], queryFn: () => api.getBooking(id), enabled: !!account })
@@ -135,6 +147,7 @@ function useWrite<A, R>(fn: (api: DiniApi, arg: A) => Promise<R>) {
 }
 
 export const useCreateBooking = () => useWrite((api, draft: BookingDraft) => api.createBooking(draft))
+export const useStartPayment = () => useWrite((api, a: { paymentId: string; returnUrl?: string }) => api.startPayment(a.paymentId, a.returnUrl))
 export const useCancelBooking = () => useWrite((api, id: string) => api.cancelBooking(id))
 export const useDisputeBooking = () => useWrite((api, id: string) => api.disputeBooking(id))
 export const useAddLearner = () => useWrite((api, a: { name: string; birthYear: number }) => api.addLearner(a.name, a.birthYear))

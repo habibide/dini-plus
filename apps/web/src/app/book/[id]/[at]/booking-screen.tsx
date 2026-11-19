@@ -2,7 +2,7 @@
 
 import { ESCROW_HOURS, FREE_CANCEL_HOURS, subject, type PaymentMethod, type SubjectId } from '@dini/core'
 import { SlotTakenError, type BookingChoice } from '@dini/data'
-import { useAddLearner, useCreateBooking, useFamily, useQuote, useTeacher } from '@dini/data/react'
+import { useAddLearner, useCreateBooking, useFamily, useQuote, useStartPayment, useTeacher } from '@dini/data/react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { useState, type ReactNode } from 'react'
@@ -32,6 +32,8 @@ export function BookingScreen() {
   const [newChild, setNewChild] = useState('')
   const quote = useQuote(id, learnerId)
   const create = useCreateBooking()
+  const startPayment = useStartPayment()
+  const [redirecting, setRedirecting] = useState(false)
   const addLearner = useAddLearner()
   const [error, setError] = useState<string>()
   const all = useT()
@@ -48,6 +50,8 @@ export function BookingScreen() {
   const subjectId = subj ?? t.subjects[0]
   const total = !q ? 0 : choice === 'trial' ? q.trial : choice === 'credit' ? 0 : q.plans.find((p) => p.id === choice)!.total
   const pay = method ?? q?.payments[0]
+  // Pays sans paiement réel : seules les séances prises sur un forfait déjà payé sont possibles.
+  const blocked = total > 0 && q?.provider !== 'bictorys'
 
   if (learnerId === undefined && learner) setLearnerId(learner.id)
   // Essai déjà fait avec cet enseignant : on propose le forfait en cours, sinon la première formule.
@@ -56,10 +60,20 @@ export function BookingScreen() {
   async function confirm() {
     setError(undefined)
     try {
-      const { booking } = await create.mutateAsync({ learnerId: learner!.id, teacherId: t.id, subject: subjectId, startsAt: at, choice, method: pay })
-      router.push(`/progress?booked=${booking.id}`)
+      const { booking, payment } = await create.mutateAsync({ learnerId: learner!.id, teacherId: t.id, subject: subjectId, startsAt: at, choice, method: pay })
+      if (!payment) return router.push(`/progress?booked=${booking.id}`)
+      // Paiement réel : la séance est confirmée par Bictorys, au retour sur /book/return.
+      setRedirecting(true)
+      try {
+        const { url } = await startPayment.mutateAsync({ paymentId: payment.id, returnUrl: `${window.location.origin}/book/return` })
+        window.location.assign(url)
+      } catch {
+        // Le créneau reste bloqué : la page de retour permet de relancer le paiement.
+        setRedirecting(false)
+        router.push(`/book/return?payment=${payment.id}&failed=1`)
+      }
     } catch (e) {
-      setError(e instanceof SlotTakenError ? e.message : m.failed)
+      setError(e instanceof SlotTakenError ? e.message : e instanceof Error && e.message ? e.message : m.failed)
     }
   }
 
@@ -135,7 +149,8 @@ export function BookingScreen() {
 
           {step === 2 && q && <>
             <h2 className="font-display text-xl">{total ? m.howPay : m.check}</h2>
-            {total > 0 && (
+            {blocked && <p role="alert" className="rounded-sm bg-warnbg px-3 py-2 text-warn">{m.notOpen}</p>}
+            {total > 0 && !blocked && (
               <div className="flex flex-col gap-2">
                 {q.payments.map((pm) => (
                   <Option key={pm} on={pay === pm} onClick={() => setMethod(pm)}>
@@ -144,16 +159,16 @@ export function BookingScreen() {
                     <span />
                   </Option>
                 ))}
-                <p className="rounded-sm bg-leaf px-3 py-2 text-sm">{m.simulated}</p>
+                <p className="rounded-sm bg-leaf px-3 py-2 text-sm">{m.secure}</p>
               </div>
             )}
             <p>{total ? m.escrow(ESCROW_HOURS) : m.usesCredit}</p>
             <p className="text-sm text-muted">{m.cancelRule(FREE_CANCEL_HOURS)}</p>
             {error && <p role="alert" className="rounded-sm bg-warnbg px-3 py-2 text-warn">{error} <Link href={`/teachers/${t.id}`} className="font-semibold underline">{m.otherSlot}</Link></p>}
             <div className="flex gap-2">
-              <button type="button" className={buttonCls.ghost} disabled={create.isPending} onClick={() => setStep(1)}>{all.common.back}</button>
-              <button type="button" className={buttonCls.primary} disabled={create.isPending} onClick={confirm}>
-                {create.isPending ? m.booking : total ? <>{m.pay}<Money amount={total} currency={q.currency} /></> : m.confirm}
+              <button type="button" className={buttonCls.ghost} disabled={create.isPending || redirecting} onClick={() => setStep(1)}>{all.common.back}</button>
+              <button type="button" className={buttonCls.primary} disabled={create.isPending || redirecting || blocked} onClick={confirm}>
+                {redirecting ? m.redirecting : create.isPending ? m.booking : total ? <>{m.pay}<Money amount={total} currency={q.currency} /></> : m.confirm}
               </button>
             </div>
           </>}
