@@ -334,6 +334,7 @@ export const ar: Messages = {
     card: 'Visa، Mastercard',
     phone: 'التأكيد على هاتفك',
     simulated: 'دفع تجريبي: لا تُطلب أي بيانات بنكية.',
+    notOpen: 'الدفع الإلكتروني غير متاح بعد في بلدك: حجز الدروس المدفوعة قريبًا.',
     secure: 'دفع آمن عبر Bictorys: Wave أو Orange Money أو بطاقة بنكية. الموعد محجوز لك لمدة 30 دقيقة.',
     redirecting: 'جارٍ فتح صفحة الدفع الآمن…',
     payReturn: {

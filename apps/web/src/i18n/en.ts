@@ -329,6 +329,7 @@ export const en: Messages = {
     card: 'Visa, Mastercard',
     phone: 'Confirm on your phone',
     simulated: 'Simulated payment: no bank details are requested.',
+    notOpen: 'Online payment is not open in your country yet: booking paid lessons is coming soon.',
     secure: 'Secure payment by Bictorys: Wave, Orange Money or bank card. The slot is held for you for 30 minutes.',
     redirecting: 'Opening the secure payment…',
     payReturn: {

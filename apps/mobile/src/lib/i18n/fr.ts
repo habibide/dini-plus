@@ -264,6 +264,7 @@ export const fr = {
     card: 'Visa, Mastercard',
     phone: 'Validation sur le téléphone',
     simulated: 'Paiement simulé : aucune donnée bancaire n’est demandée.',
+    notOpen: 'Le paiement en ligne n’est pas encore ouvert dans votre pays : la réservation de cours payants arrive bientôt.',
     secure: 'Paiement sécurisé par Bictorys : Wave, Orange Money ou carte bancaire. Le créneau vous est réservé 30 minutes.',
     waiting: 'Nous attendons la confirmation du paiement…',
     payFailed: 'Le paiement n’a pas abouti et le créneau a été libéré.',

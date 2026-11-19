@@ -50,6 +50,8 @@ export default function BookScreen() {
   const q = quote.data
   const total = !q ? 0 : choice === 'trial' ? q.trial : choice === 'credit' ? 0 : q.plans.find((p) => p.id === choice)!.total
   const pay = method ?? q?.payments[0]
+  // Pays sans paiement réel : seules les séances prises sur un forfait déjà payé sont possibles.
+  const blocked = total > 0 && q?.provider !== 'bictorys'
   // Essai déjà fait avec cet enseignant : on propose le forfait en cours, sinon la première formule.
   if (q && !q.trialAvailable && choice === 'trial') setChoice(q.credit ? 'credit' : q.plans[0].id)
 
@@ -108,8 +110,9 @@ export default function BookScreen() {
 
         {step === 2 && q && <>
           <T tone="h2">{total ? m.payment : m.check}</T>
-          {total > 0 && q.payments.map((pm) => <Option key={pm} on={pay === pm} onPress={() => setMethod(pm)} title={m.payments[pm]} detail={pm === 'card' ? m.card : m.phone} />)}
-          {total > 0 && <T tone="muted">{q.provider === 'bictorys' ? m.secure : m.simulated}</T>}
+          {blocked && <T style={{ color: colors.warn, backgroundColor: colors.warnBg, padding: 10 }}>{m.notOpen}</T>}
+          {total > 0 && !blocked && q.payments.map((pm) => <Option key={pm} on={pay === pm} onPress={() => setMethod(pm)} title={m.payments[pm]} detail={pm === 'card' ? m.card : m.phone} />)}
+          {total > 0 && !blocked && <T tone="muted">{m.secure}</T>}
           {paymentId && (
             <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center', padding: 12, borderRadius: 12, backgroundColor: payState === 'failed' || payState === 'refund_due' ? colors.warnBg : colors.soft }}>
               {payState === 'pending' || !payState ? <ActivityIndicator color={colors.green} /> : null}
@@ -131,7 +134,7 @@ export default function BookScreen() {
             ? payState === 'pending' || !payState
               ? <Button title={m.reopen} disabled={startPayment.isPending} onPress={() => openPayment(paymentId)} style={{ flex: 1 }} />
               : <Button title={all.common.back} onPress={() => router.back()} style={{ flex: 1 }} />
-            : <Button title={create.isPending ? m.booking : total && q ? m.pay(fmt.money(total, q.currency)) : m.confirm} disabled={create.isPending} onPress={confirm} style={{ flex: 1 }} />}
+            : <Button title={create.isPending ? m.booking : total && q ? m.pay(fmt.money(total, q.currency)) : m.confirm} disabled={create.isPending || blocked} onPress={confirm} style={{ flex: 1 }} />}
       </View>
     </View>
   )
