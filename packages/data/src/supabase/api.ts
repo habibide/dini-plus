@@ -89,6 +89,10 @@ const MESSAGES_FR: Record<string, string> = {
   video_unavailable: 'Le service de visioconférence ne répond pas. Réessayez dans un instant.',
   oauth_cancelled: 'La connexion a été annulée.',
   booking_failed: 'La réservation n’a pas abouti. Réessayez.',
+  payment_not_configured: 'Le paiement en ligne n’est pas encore activé sur DINE.',
+  payment_unavailable: 'Le service de paiement ne répond pas. Réessayez dans un instant.',
+  payment_expired: 'Le délai de paiement est dépassé : le créneau a été libéré. Choisissez-en un autre.',
+  not_payable: 'Ce paiement n’est plus en attente.',
   incomplete_application: 'Il manque encore : {fields}.',
   name_required: 'Indiquez votre nom (2 caractères au moins).',
   invalid_media: 'Format non accepté : photo JPG, PNG ou WebP, vidéo MP4, MOV ou WebM.',
@@ -127,6 +131,10 @@ const MESSAGES_EN: Record<string, string> = {
   video_unavailable: 'The video service is not responding. Try again in a moment.',
   oauth_cancelled: 'Sign-in was cancelled.',
   booking_failed: 'The booking did not go through. Try again.',
+  payment_not_configured: 'Online payment is not enabled on DINE yet.',
+  payment_unavailable: 'The payment service is not responding. Try again in a moment.',
+  payment_expired: 'The payment window has passed and the slot was released. Pick another one.',
+  not_payable: 'This payment is no longer pending.',
   incomplete_application: 'Still missing: {fields}.',
   name_required: 'Enter your name (at least 2 characters).',
   invalid_media: 'Unsupported format: JPG, PNG or WebP photo, MP4, MOV or WebM video.',
@@ -165,6 +173,10 @@ const MESSAGES_AR: Record<string, string> = {
   video_unavailable: 'خدمة الفيديو لا تستجيب. أعد المحاولة بعد قليل.',
   oauth_cancelled: 'تم إلغاء تسجيل الدخول.',
   booking_failed: 'لم يكتمل الحجز. أعد المحاولة.',
+  payment_not_configured: 'الدفع الإلكتروني غير مفعّل بعد على DINE.',
+  payment_unavailable: 'خدمة الدفع لا تستجيب. أعد المحاولة بعد لحظات.',
+  payment_expired: 'انتهت مهلة الدفع وتم تحرير الموعد. اختر موعدًا آخر.',
+  not_payable: 'هذا الدفع لم يعد معلّقًا.',
   incomplete_application: 'ما زال ينقص: {fields}.',
   name_required: 'أدخل اسمك (حرفان على الأقل).',
   invalid_media: 'صيغة غير مقبولة: صورة JPG أو PNG أو WebP، فيديو MP4 أو MOV أو WebM.',
@@ -208,6 +220,8 @@ function must<T>(res: { data: T; error: PostgrestError | null }): NonNullable<T>
   if (res.error) fail(res.error)
   return res.data as NonNullable<T>
 }
+
+export type PaymentState = { status: 'pending' | 'paid' | 'failed' | 'refund_due'; bookingId: string | null }
 
 const ms = (iso: string | null) => (iso ? Date.parse(iso) : null)
 
@@ -486,6 +500,7 @@ export function createSupabaseApi(client: DiniClient, storage: KeyValueStorage, 
       const q = must(await client.rpc('quote', { p_family: id, p_teacher: teacherId, p_learner: learnerId })) as {
         currency: CurrencyCode; session: number; trial: number; trialAvailable: boolean; minutes: { course: number; trial: number }
         credit: { remaining: number; of: number } | null; payments: PaymentMethod[]; plans: { id: string; sessions: number; total: number }[]
+        provider?: 'simulated' | 'bictorys'
       }
       return {
         currency: q.currency,
@@ -496,6 +511,8 @@ export function createSupabaseApi(client: DiniClient, storage: KeyValueStorage, 
         plans: PLANS.map((p) => ({ id: p.id, sessions: p.sessions, label: p.label, usage: p.usage, total: Number(q.plans.find((x) => x.id === p.id)?.total ?? 0) })),
         credit: q.credit,
         payments: q.payments,
+        /** bictorys : paiement réel sur la page Bictorys ; simulated : aucun encaissement. */
+        provider: q.provider ?? 'simulated',
       }
     },
 
@@ -504,10 +521,38 @@ export function createSupabaseApi(client: DiniClient, storage: KeyValueStorage, 
       const res = must(await client.rpc('book_session', {
         p_family: id, p_learner: draft.learnerId, p_teacher: draft.teacherId, p_subject: draft.subject,
         p_starts_at: new Date(draft.startsAt).toISOString(), p_choice: draft.choice, ...(draft.method ? { p_method: draft.method } : {}),
-      })) as { booking_id: string; charged: number; currency: CurrencyCode }
+      })) as { booking_id: string; charged: number; currency: CurrencyCode; payment_id: string | null; needs_payment: boolean }
       const booking = await bookingRow(res.booking_id)
       if (!booking) throw new Error(msg('booking_failed'))
-      return { booking, charged: { amount: Number(res.charged), currency: res.currency } }
+      return {
+        booking, charged: { amount: Number(res.charged), currency: res.currency },
+        /** Paiement Bictorys à régler avant que la séance soit confirmée (créneau bloqué 30 minutes). */
+        payment: res.needs_payment && res.payment_id ? { id: res.payment_id } : null,
+      }
+    },
+
+    /** Adresse de la page de paiement Bictorys ; `returnUrl` : page de retour (https, sur le site DINE). */
+    async startPayment(paymentId: string, returnUrl?: string): Promise<{ url: string }> {
+      const { data, error } = await client.functions.invoke('create-payment', { body: { paymentId, returnUrl, locale: dataLocale() } })
+      if (error) {
+        const ctx = (error as { context?: Response }).context
+        const body = ctx && typeof ctx.json === 'function' ? await ctx.json().catch(() => null) : null
+        fail({ message: body?.error ?? error.message })
+      }
+      return data as { url: string }
+    },
+
+    /** Où en est un paiement : en attente, confirmé (séance réservée), échoué, ou payé mais créneau perdu. */
+    async paymentStatus(paymentId: string): Promise<PaymentState> {
+      const pay = must(await client.from('payments').select('status, booking_id').eq('id', paymentId).maybeSingle())
+      if (!pay.booking_id) return { status: pay.status === 'succeeded' ? 'paid' : pay.status === 'pending' ? 'pending' : 'failed', bookingId: null }
+      const b = must(await client.from('bookings').select('status').eq('id', pay.booking_id).maybeSingle())
+      const status: PaymentState['status'] =
+        pay.status === 'pending' ? 'pending'
+        : pay.status === 'succeeded' && b.status !== 'cancelled' && b.status !== 'pending_payment' ? 'paid'
+        : pay.status === 'refund_due' ? 'refund_due'
+        : 'failed'
+      return { status, bookingId: pay.booking_id }
     },
 
     async cancelBooking(id: string) {
@@ -531,7 +576,7 @@ export function createSupabaseApi(client: DiniClient, storage: KeyValueStorage, 
       const ids = learners.map((l) => l.id)
       const [bookings, subs] = await Promise.all([
         client.from('bookings').select('*, session_reports (*)').in('learner_id', ids).order('starts_at').then(must),
-        client.from('subscriptions').select('*').in('learner_id', ids).order('renews_at').then(must),
+        client.from('subscriptions').select('*').in('learner_id', ids).eq('active', true).order('renews_at').then(must),
       ])
       return buildDashboard(learners, (bookings as unknown as BookingRow[]).map(toBooking), subs.map(toSubscription), Date.now())
     },

@@ -29,7 +29,7 @@ export function planPrice(sessionPrice: number, planId: PlanId) {
   return { sessions: plan.sessions, total: sessionPrice * plan.sessions }
 }
 
-export type BookingStatus = 'scheduled' | 'delivered' | 'validated' | 'disputed' | 'cancelled' | 'refunded' | 'missed'
+export type BookingStatus = 'pending_payment' | 'scheduled' | 'delivered' | 'validated' | 'disputed' | 'cancelled' | 'refunded' | 'missed'
 
 /** Une séance effectuée et non contestée est validée 48 h après sa fin. */
 export function escrowState(b: { status: BookingStatus; deliveredAt?: number }, now: number): { status: BookingStatus; releaseAt?: number } {
