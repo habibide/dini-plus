@@ -19,7 +19,7 @@ export function PaymentReturnScreen() {
   const r = m.payReturn
   const status = usePaymentStatus(paymentId && /^[0-9a-f-]{36}$/.test(paymentId) ? paymentId : null)
   const retry = useStartPayment()
-  const [error, setError] = useState<string | null>(params.get('error') || null)
+  const [error, setError] = useState<string | null>(null)
   const state = status.data?.status
 
   // Paiement confirmé : direction le suivi, avec la séance mise en avant.

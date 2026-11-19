@@ -65,10 +65,10 @@ export function BookingScreen() {
       try {
         const { url } = await startPayment.mutateAsync({ paymentId: payment.id, returnUrl: `${window.location.origin}/book/return` })
         window.location.assign(url)
-      } catch (e) {
+      } catch {
         // Le créneau reste bloqué : la page de retour permet de relancer le paiement.
         setRedirecting(false)
-        router.push(`/book/return?payment=${payment.id}&failed=1&error=${encodeURIComponent(e instanceof Error ? e.message : '')}`)
+        router.push(`/book/return?payment=${payment.id}&failed=1`)
       }
     } catch (e) {
       setError(e instanceof SlotTakenError ? e.message : e instanceof Error && e.message ? e.message : m.failed)

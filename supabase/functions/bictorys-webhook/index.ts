@@ -8,7 +8,8 @@ import { createClient } from 'npm:@supabase/supabase-js@2.119.0'
 const ok = (result: string) => new Response(JSON.stringify({ result }), { status: 200, headers: { 'Content-Type': 'application/json' } })
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 
-const SUCCEEDED = new Set(['succeeded', 'successful', 'success', 'authorized', 'réussi', 'reussi'])
+// « authorized » n'est pas un encaissement (une autorisation carte peut encore ne pas être capturée) : on attend.
+const SUCCEEDED = new Set(['succeeded', 'successful', 'success', 'réussi', 'reussi'])
 const FAILED = new Set(['failed', 'cancelled', 'canceled', 'expired', 'échoué', 'echoue', 'expiré', 'expire'])
 
 /** Comparaison en temps constant, pour ne rien laisser deviner du secret. */
