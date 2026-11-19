@@ -213,8 +213,10 @@ function TeacherCardView({ t }: { t: TeacherCard }) {
   const from = countryOf(t.countryLabel)
   const open = () => router.push(`/teacher/${t.id}`)
   return (
-    <View style={{ marginHorizontal: 20, marginBottom: 14, padding: 16, gap: 12, borderRadius: 16, borderWidth: 1.5, borderColor: colors.line, backgroundColor: colors.white }}>
-      <Pressable accessibilityRole="button" accessibilityLabel={m.viewProfile(t.name)} onPress={open} style={{ flexDirection: 'row', gap: 14 }}>
+    // Toute la carte s'ouvre au toucher ; les boutons gardent leur propre action.
+    <Pressable accessibilityRole="button" accessibilityLabel={m.viewProfile(t.name)} onPress={open}
+      style={({ pressed }) => ({ marginHorizontal: 20, marginBottom: 14, padding: 16, gap: 12, borderRadius: 16, borderWidth: 1.5, borderColor: pressed ? colors.ink : colors.line, backgroundColor: colors.white })}>
+      <View style={{ flexDirection: 'row', gap: 14 }}>
         <Monogram name={t.name} size={84} square photo={t.photoUrl} />
         <View style={{ flex: 1, gap: 6 }}>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
@@ -226,7 +228,7 @@ function TeacherCardView({ t }: { t: TeacherCard }) {
           <T style={{ fontSize: 14, lineHeight: 19 }}>🎓 {t.subjects.map((s) => fmt.label(subject(s).label)).join(', ')}</T>
           <T style={{ fontSize: 14, lineHeight: 19 }}>{m.speaks} {t.languages.map((l) => fmt.label(LANGUAGES.find((x) => x.id === l)!.label)).join(', ')}</T>
         </View>
-      </Pressable>
+      </View>
       {t.videoUrl ? <IntroVideo src={t.videoUrl} poster={t.photoUrl} compact /> : null}
       <T numberOfLines={3} style={{ fontSize: 15, lineHeight: 21 }}><T style={{ fontFamily: font.bold }}>{t.headline}</T>{t.bio ? ` — ${t.bio}` : ''}</T>
       <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 18 }}>
@@ -243,6 +245,6 @@ function TeacherCardView({ t }: { t: TeacherCard }) {
         <Button title={m.book} onPress={open} />
         <MessageButton name={t.name} onBook={open} />
       </View>
-    </View>
+    </Pressable>
   )
 }
