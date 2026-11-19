@@ -43,21 +43,23 @@ Deno.serve(async (req) => {
   const { data: who } = await asUser.auth.getUser()
   if (!who.user) return json({ error: 'not_signed_in' }, 401)
 
+  // Le rôle serveur n'a pas accès direct aux tables : tout passe par des fonctions réservées au serveur.
   const admin = createClient(url, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
-  const { data: pay } = await admin.from('payments')
-    .select('id, amount, currency, method, provider, status, checkout_url, booking_id, families!inner(owner_id), bookings(status, hold_until)')
-    .eq('id', paymentId).maybeSingle()
-  const p = pay as null | {
-    id: string; amount: number; currency: string; method: string; provider: string; status: string; checkout_url: string | null; booking_id: string
-    families: { owner_id: string }; bookings: { status: string; hold_until: string | null } | null
+  const { data: ctx, error: ctxError } = await admin.rpc('bictorys_checkout_context', { p_payment: paymentId, p_user: who.user.id })
+  if (ctxError) {
+    console.error('bictorys_checkout_context failed', ctxError.message)
+    return json({ error: 'payment_unavailable' }, 502)
   }
-  if (!p || p.families.owner_id !== who.user.id) return json({ error: 'forbidden' }, 403)
-  if (p.provider !== 'bictorys' || p.status !== 'pending' || p.bookings?.status !== 'pending_payment') return json({ error: 'not_payable' }, 409)
-  if (p.bookings.hold_until && Date.parse(p.bookings.hold_until) < Date.now()) return json({ error: 'payment_expired' }, 409)
+  const p = ctx as null | {
+    id: string; amount: number; currency: string; method: string; provider: string; status: string; checkout_url: string | null
+    booking_id: string; booking_status: string | null; hold_until: string | null; full_name: string | null
+  }
+  if (!p) return json({ error: 'forbidden' }, 403)
+  if (p.provider !== 'bictorys' || p.status !== 'pending' || p.booking_status !== 'pending_payment') return json({ error: 'not_payable' }, 409)
+  if (p.hold_until && Date.parse(p.hold_until) < Date.now()) return json({ error: 'payment_expired' }, 409)
   if (p.checkout_url) return json({ url: p.checkout_url })
 
   const base = returnBase(returnUrl)
-  const { data: profile } = await admin.from('profiles').select('full_name').eq('id', who.user.id).maybeSingle()
   const res = await fetch(`${API}/pay/v1/charges`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-Api-Key': secret },
@@ -69,22 +71,26 @@ Deno.serve(async (req) => {
       successRedirectUrl: `${base}?payment=${p.id}`,
       errorRedirectUrl: `${base}?payment=${p.id}&failed=1`,
       customerObject: {
-        name: (profile as { full_name?: string } | null)?.full_name || undefined,
+        name: p.full_name || undefined,
         email: who.user.email && !who.user.email.endsWith('privaterelay.appleid.com') ? who.user.email : undefined,
         locale: LOCALES[String(locale)] ?? 'fr-FR',
       },
       allowUpdateCustomer: false,
     }),
   })
-  const body = await res.json().catch(() => null) as { link?: string; chargeId?: string; id?: string; message?: string } | null
+  const text = await res.text()
+  let body: { link?: string; chargeId?: string; id?: string } | null = null
+  try { body = JSON.parse(text) } catch { /* réponse non JSON */ }
   if (!res.ok || !body?.link) {
-    console.error('bictorys charge failed', res.status, body?.message)
+    // Diagnostic sans révéler la clé : seulement sa forme (préfixe, longueur, espaces).
+    const shape = { kind: /^(public|secret|private|test|live|sk|pk)[-_]/i.exec(secret)?.[1] ?? 'other', length: secret.length, spaces: /\s/.test(secret), api: API }
+    console.error('bictorys charge failed', res.status, text.slice(0, 300), JSON.stringify(shape))
     return json({ error: 'payment_unavailable' }, 502)
   }
 
   // Ouvre directement le bon onglet (carte ou Mobile Money) selon le moyen choisi dans DINE.
   const link = new URL(body.link)
   link.searchParams.set('payment_category', p.method === 'card' ? 'card' : 'mobile_money')
-  await admin.from('payments').update({ checkout_url: link.toString(), provider_ref: body.chargeId ?? body.id ?? null, updated_at: new Date().toISOString() }).eq('id', p.id)
+  await admin.rpc('bictorys_save_checkout', { p_payment: p.id, p_url: link.toString(), p_ref: body.chargeId ?? body.id ?? null })
   return json({ url: link.toString() })
 })
