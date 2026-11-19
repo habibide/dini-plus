@@ -453,7 +453,11 @@ export function createSupabaseApi(client: DiniClient, storage: KeyValueStorage, 
     async signOut() {
       family = null
       const { error } = await client.auth.signOut()
-      if (error) fail(error)
+      // Session déjà fermée côté serveur : on efface quand même le jeton local, sinon on resterait « connecté ».
+      if (error) {
+        await client.auth.signOut({ scope: 'local' }).catch(() => {})
+        if (!/session/i.test(error.message)) fail(error)
+      }
     },
 
     // Catalogue -------------------------------------------------------------------
@@ -540,6 +544,8 @@ export function createSupabaseApi(client: DiniClient, storage: KeyValueStorage, 
       if (error) {
         const ctx = (error as { context?: Response }).context
         const body = ctx && typeof ctx.json === 'function' ? await ctx.json().catch(() => null) : null
+        // Session fermée côté serveur (déconnexion ailleurs) : on oublie le jeton local pour renvoyer vers la connexion.
+        if (body?.error === 'not_signed_in') await client.auth.signOut({ scope: 'local' }).catch(() => {})
         fail({ message: body?.error ?? error.message })
       }
       return data as { url: string }
