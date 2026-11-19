@@ -78,9 +78,13 @@ Deno.serve(async (req) => {
       allowUpdateCustomer: false,
     }),
   })
-  const body = await res.json().catch(() => null) as { link?: string; chargeId?: string; id?: string; message?: string } | null
+  const text = await res.text()
+  let body: { link?: string; chargeId?: string; id?: string } | null = null
+  try { body = JSON.parse(text) } catch { /* réponse non JSON */ }
   if (!res.ok || !body?.link) {
-    console.error('bictorys charge failed', res.status, body?.message)
+    // Diagnostic sans révéler la clé : seulement sa forme (préfixe, longueur, espaces).
+    const shape = { kind: /^(public|secret|private|test|live|sk|pk)[-_]/i.exec(secret)?.[1] ?? 'other', length: secret.length, spaces: /\s/.test(secret), api: API }
+    console.error('bictorys charge failed', res.status, text.slice(0, 300), JSON.stringify(shape))
     return json({ error: 'payment_unavailable' }, 502)
   }
 
