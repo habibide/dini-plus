@@ -39,9 +39,14 @@ Deno.serve(async (req) => {
   if (typeof paymentId !== 'string' || !/^[0-9a-f-]{36}$/.test(paymentId)) return json({ error: 'invalid_request' }, 400)
 
   const url = Deno.env.get('SUPABASE_URL')!
-  const asUser = createClient(url, Deno.env.get('SUPABASE_ANON_KEY')!, { global: { headers: { Authorization: authorization } } })
-  const { data: who } = await asUser.auth.getUser()
-  if (!who.user) return json({ error: 'not_signed_in' }, 401)
+  // Qui appelle : on demande directement au service d'authentification, avec le jeton reçu.
+  const authRes = await fetch(`${url}/auth/v1/user`, { headers: { Authorization: authorization, apikey: Deno.env.get('SUPABASE_ANON_KEY')! } })
+  const user = authRes.ok ? await authRes.json() as { id?: string; email?: string } : null
+  if (!user?.id) {
+    console.error('create-payment: user not resolved', authRes.status, (await authRes.text().catch(() => '')).slice(0, 200))
+    return json({ error: 'not_signed_in' }, 401)
+  }
+  const who = { user: { id: user.id, email: user.email } }
 
   // Le rôle serveur n'a pas accès direct aux tables : tout passe par des fonctions réservées au serveur.
   const admin = createClient(url, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
