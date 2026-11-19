@@ -453,7 +453,11 @@ export function createSupabaseApi(client: DiniClient, storage: KeyValueStorage, 
     async signOut() {
       family = null
       const { error } = await client.auth.signOut()
-      if (error) fail(error)
+      // Session déjà fermée côté serveur : on efface quand même le jeton local, sinon on resterait « connecté ».
+      if (error) {
+        await client.auth.signOut({ scope: 'local' }).catch(() => {})
+        if (!/session/i.test(error.message)) fail(error)
+      }
     },
 
     // Catalogue -------------------------------------------------------------------
