@@ -559,7 +559,9 @@ export function createSupabaseApi(client: DiniClient, storage: KeyValueStorage, 
       const path = `${id}/${kind}-${Date.now()}.${ext}`
       const up = await client.storage.from(MEDIA_BUCKET).upload(path, file, { contentType, upsert: false, cacheControl: '31536000' })
       if (up.error) throw new Error(msg('upload_failed'))
-      must(await client.rpc('set_teacher_media', { p_kind: kind, p_path: path }))
+      const saved = await client.rpc('set_teacher_media', { p_kind: kind, p_path: path })
+      // Refusé par le serveur (type, taille) : on ne laisse pas le fichier traîner dans le stockage.
+      if (saved.error) { await client.storage.from(MEDIA_BUCKET).remove([path]); fail(saved.error) }
       if (previous) await client.storage.from(MEDIA_BUCKET).remove([previous])
       return mediaUrl(path)
     },
