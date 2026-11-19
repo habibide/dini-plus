@@ -332,12 +332,13 @@ function TeacherCardView({ t }: { t: TeacherCard }) {
   const place = countryOf(t.countryLabel)
   const href = `/teachers/${t.id}`
   return (
-    <article className="grid gap-5 rounded-md border-[1.5px] border-line bg-white p-5 transition hover:border-ink md:grid-cols-[minmax(0,1fr)_240px] md:p-6">
+    // Toute la carte est cliquable : le lien du nom la recouvre ; les boutons restent au-dessus et gardent leur action.
+    <article className="group relative grid cursor-pointer gap-5 rounded-md border-[1.5px] border-line bg-white p-5 transition hover:border-ink md:grid-cols-[minmax(0,1fr)_240px] md:p-6">
       <div className="flex min-w-0 gap-4 sm:gap-5">
         <Link href={href} tabIndex={-1} aria-hidden className="shrink-0"><Monogram name={t.name} size="xl" square photo={t.photoUrl} /></Link>
         <div className="flex min-w-0 flex-col gap-2">
           <h2 className="flex flex-wrap items-center gap-2 font-display text-2xl">
-            <Link href={href} className="hover:underline">{t.name}</Link>
+            <Link href={href} className="after:absolute after:inset-0 after:rounded-md after:content-[''] group-hover:underline">{t.name}</Link>
             {t.verification.identity && <VerifiedShield title={all.badges.identity.label} />}
             {place.flag && <span className="text-xl" role="img" aria-label={place.name}>{place.flag}</span>}
           </h2>
@@ -345,8 +346,8 @@ function TeacherCardView({ t }: { t: TeacherCard }) {
           <p className="flex items-start gap-2 text-[15px]"><LineIcon d={LINE_ICONS.cap} className="mt-0.5 size-[18px] text-muted" />{t.subjects.map((s) => fmt.label(subject(s).label)).join(', ')}</p>
           <p className="flex items-start gap-2 text-[15px]"><LineIcon d={LINE_ICONS.languages} className="mt-0.5 size-[18px] text-muted" />{m.speaks} {t.languages.map((l) => fmt.label(LANGUAGES.find((x) => x.id === l)!.label)).join(', ')}</p>
           <p className="line-clamp-3 text-[15px] leading-relaxed"><strong>{t.headline}</strong>{t.bio && <> — {t.bio}</>}</p>
-          <Link href={href} className="self-start text-[15px] font-semibold underline">{m.more}</Link>
-          {t.videoUrl && <div className="mt-1"><IntroVideoButton src={t.videoUrl} poster={t.photoUrl} name={t.name} /></div>}
+          <Link href={href} className="relative z-10 self-start text-[15px] font-semibold underline">{m.more}</Link>
+          {t.videoUrl && <div className="relative z-10 mt-1 self-start"><IntroVideoButton src={t.videoUrl} poster={t.photoUrl} name={t.name} /></div>}
         </div>
       </div>
       <div className="flex flex-col gap-4">
@@ -361,8 +362,8 @@ function TeacherCardView({ t }: { t: TeacherCard }) {
           {t.hoursTaught >= 1 && <div><div className="font-display text-lg leading-tight">{Math.round(t.hoursTaught)}</div><div className="text-xs text-muted">{m.hoursN}</div></div>}
         </div>
         <div className="mt-auto flex flex-col gap-2">
-          <Link href={`${href}#agenda`} className={cx(buttonCls.primary, 'w-full')}>{m.book}</Link>
-          <MessageButton name={t.name} bookHref={`${href}#agenda`} />
+          <Link href={`${href}#agenda`} className={cx(buttonCls.primary, 'relative z-10 w-full')}>{m.book}</Link>
+          <MessageButton name={t.name} bookHref={`${href}#agenda`} className="relative z-10" />
         </div>
       </div>
       <span className="sr-only">{place.name}</span>
