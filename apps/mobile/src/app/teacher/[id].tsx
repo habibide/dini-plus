@@ -4,7 +4,7 @@ import { Stack, router, useLocalSearchParams } from 'expo-router'
 import { useRef, useState } from 'react'
 import { ActivityIndicator, Pressable, ScrollView, Share, View, type ScrollViewInstance } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { Button, MessageButton, Monogram, Sanad, T, VerifiedMark, font, useCountryOf } from '@/lib/ui'
+import { Button, IntroVideo, MessageButton, Monogram, Sanad, T, VerifiedMark, font, useCountryOf } from '@/lib/ui'
 import { useFormat, useT } from '@/lib/i18n'
 import { SITE_URL } from '@/lib/api'
 
@@ -53,9 +53,11 @@ export default function TeacherScreen() {
     <ScrollView ref={scroll} style={{ backgroundColor: colors.paper }} contentContainerStyle={{ paddingBottom: insets.bottom + 30 }}>
       <Stack.Screen options={{ title: t.name }} />
 
+      {/* Vidéo de présentation du professeur, en tête du profil (comme sur le site). */}
+      {t.videoUrl ? <View style={{ paddingHorizontal: 20, paddingTop: 16 }}><IntroVideo src={t.videoUrl} poster={t.photoUrl} /></View> : null}
       <View style={{ padding: 20, gap: 14 }}>
         <View style={{ flexDirection: 'row', gap: 16, alignItems: 'center' }}>
-          <Monogram name={t.name} size={84} square />
+          <Monogram name={t.name} size={84} square photo={t.photoUrl} />
           <View style={{ flex: 1, gap: 4 }}>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
               <T tone="h1" style={{ fontSize: 26, lineHeight: 31 }}>{t.name}</T>

@@ -46,6 +46,9 @@ export const TeacherSchema = z.object({
   credentials: z.array(CredentialSchema),
   availability: z.array(z.object({ weekday: z.number().int().min(0).max(6), start: z.number().int(), end: z.number().int() })),
   reviews: z.array(ReviewSchema),
+  /** Photo de profil et vidéo de présentation (adresses publiques), si le professeur les a ajoutées. */
+  photoUrl: z.string().url().optional(),
+  videoUrl: z.string().url().optional(),
 })
 export type Teacher = z.infer<typeof TeacherSchema>
 

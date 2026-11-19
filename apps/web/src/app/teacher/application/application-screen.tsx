@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation'
 import { useState, type ReactNode } from 'react'
 import { Field, FormError, inputCls } from '@/components/auth'
 import { AvailabilityEditor, ChipSet, StatusBanner } from '@/components/teacher'
+import { TeacherMedia } from '@/components/teacher-media'
 import { buttonCls, cx } from '@/components/ui'
 import { useFormat, useT } from '@/i18n/locale'
 
@@ -100,6 +101,8 @@ function ApplicationForm({ t }: { t: MyTeacher }) {
       <Link href="/teacher" className="text-sm text-muted hover:text-ink">{m.back}</Link>
       <h1 className="font-display text-4xl">{t.status === 'approved' ? m.titleApproved : m.title}</h1>
       <StatusBanner t={t} action={null} />
+      {/* Photo et vidéo : enregistrées tout de suite, modifiables même pendant l'examen de la candidature. */}
+      <TeacherMedia t={t} />
 
       <fieldset disabled={locked} className="flex flex-col gap-6 disabled:opacity-70">
         <Section title={m.you}>

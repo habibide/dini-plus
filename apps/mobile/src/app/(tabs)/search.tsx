@@ -8,7 +8,7 @@ import { router, useGlobalSearchParams } from 'expo-router'
 import { useEffect, useState, type ReactNode } from 'react'
 import { ActivityIndicator, FlatList, Modal, Pressable, ScrollView, Switch, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { Button, CategoryTags, Chip, MessageButton, Monogram, T, VerifiedMark, font, useCountryOf } from '@/lib/ui'
+import { Button, CategoryTags, Chip, IntroVideo, MessageButton, Monogram, T, VerifiedMark, font, useCountryOf } from '@/lib/ui'
 import { useFormat, useT } from '@/lib/i18n'
 
 // Recherche, comme sur le site : « Je veux apprendre », filtres (spécialisation selon la matière,
@@ -215,7 +215,7 @@ function TeacherCardView({ t }: { t: TeacherCard }) {
   return (
     <View style={{ marginHorizontal: 20, marginBottom: 14, padding: 16, gap: 12, borderRadius: 16, borderWidth: 1.5, borderColor: colors.line, backgroundColor: colors.white }}>
       <Pressable accessibilityRole="button" accessibilityLabel={m.viewProfile(t.name)} onPress={open} style={{ flexDirection: 'row', gap: 14 }}>
-        <Monogram name={t.name} size={84} square />
+        <Monogram name={t.name} size={84} square photo={t.photoUrl} />
         <View style={{ flex: 1, gap: 6 }}>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
             <T tone="title" style={{ fontSize: 19 }}>{t.name}</T>
@@ -227,6 +227,7 @@ function TeacherCardView({ t }: { t: TeacherCard }) {
           <T style={{ fontSize: 14, lineHeight: 19 }}>{m.speaks} {t.languages.map((l) => fmt.label(LANGUAGES.find((x) => x.id === l)!.label)).join(', ')}</T>
         </View>
       </Pressable>
+      {t.videoUrl ? <IntroVideo src={t.videoUrl} poster={t.photoUrl} compact /> : null}
       <T numberOfLines={3} style={{ fontSize: 15, lineHeight: 21 }}><T style={{ fontFamily: font.bold }}>{t.headline}</T>{t.bio ? ` — ${t.bio}` : ''}</T>
       <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 18 }}>
         <View style={{ flex: 1 }}>

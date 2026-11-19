@@ -161,7 +161,7 @@ export function BookingScreen() {
       </div>
 
       <aside className="flex flex-col gap-3 rounded-sm bg-leaf p-5 lg:sticky lg:top-4">
-        <div className="flex items-center gap-3"><Monogram name={t.name} size="sm" /><strong>{t.name}</strong></div>
+        <div className="flex items-center gap-3"><Monogram name={t.name} size="sm" photo={t.photoUrl} /><strong>{t.name}</strong></div>
         <dl className="flex flex-col gap-2 text-sm">
           <div className="flex justify-between gap-4"><dt className="text-muted">{m.date}</dt><dd className="text-end first-letter:uppercase">{fmt.day(at, tz)}</dd></div>
           <div className="flex justify-between gap-4"><dt className="text-muted">{m.time}</dt><dd>{m.timeIn(fmt.time(at, tz), tzLabel ?? '')}</dd></div>

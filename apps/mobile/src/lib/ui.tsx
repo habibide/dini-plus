@@ -1,6 +1,8 @@
 import { COUNTRIES, colors, isConfirmed, radius, type CurrencyCode, type Teacher } from '@dini/core'
 import { useDini } from '@dini/data/react'
 import type { ReactNode } from 'react'
+import { Image } from 'expo-image'
+import * as WebBrowser from 'expo-web-browser'
 import { Alert, Pressable, StyleSheet, Text, View, type TextProps, type ViewStyle } from 'react-native'
 import { useFormat, useT } from './i18n'
 
@@ -59,7 +61,9 @@ export function Option({ on, onPress, title, detail, right }: { on: boolean; onP
 
 export const Money = ({ amount, currency }: { amount: number; currency: CurrencyCode }) => useFormat().money(amount, currency)
 
-export function Monogram({ name, size = 56, square }: { name: string; size?: number; square?: boolean }) {
+/** Photo du professeur si elle existe, sinon ses initiales sur une couleur de la charte. */
+export function Monogram({ name, size = 56, square, photo }: { name: string; size?: number; square?: boolean; photo?: string }) {
+  if (photo) return <Image source={{ uri: photo }} contentFit="cover" transition={150} accessible={false} style={{ width: size, height: size, borderRadius: square ? 14 : size / 2, backgroundColor: colors.leaf }} />
   const initials = name.split(' ').map((w) => w[0]).slice(0, 2).join('')
   // Couleur stable par personne, dans la gamme de la charte (mêmes teintes que le site).
   const palette = ['#20915B', '#176B43', '#B8901F', '#2F7D6D', '#3B8B5A', '#8A6A1E']
@@ -173,5 +177,26 @@ export function MessageButton({ name, onBook, style }: { name: string; onBook: (
   return (
     <Button title={m.message} kind="ghost" style={style}
       onPress={() => Alert.alert(m.messageSoon.title, m.messageSoon.text(name.split(' ')[0]), [{ text: 'OK', style: 'cancel' }, { text: m.book, onPress: onBook }])} />
+  )
+}
+
+/** Vidéo de présentation : vignette (photo) avec bouton lecture ; la vidéo s'ouvre dans le lecteur du téléphone. */
+export function IntroVideo({ src, poster, compact }: { src: string; poster?: string; compact?: boolean }) {
+  const t = useT().search
+  const open = () => { WebBrowser.openBrowserAsync(src).catch(() => {}) }
+  if (compact) {
+    return (
+      <Pressable accessibilityRole="button" onPress={open} style={{ alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 6, paddingStart: 6, paddingEnd: 14, borderRadius: 999, backgroundColor: colors.soft }}>
+        <View style={{ width: 26, height: 26, borderRadius: 13, backgroundColor: colors.green, alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: colors.white, fontSize: 11 }}>▶</Text></View>
+        <Text style={{ fontFamily: font.semibold, color: colors.green2 }}>{t.introVideo}</Text>
+      </Pressable>
+    )
+  }
+  return (
+    <Pressable accessibilityRole="button" accessibilityLabel={t.introVideo} onPress={open} style={{ aspectRatio: 16 / 9, borderRadius: 16, overflow: 'hidden', backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center' }}>
+      {poster ? <Image source={{ uri: poster }} contentFit="cover" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.75 }} /> : null}
+      <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: 'rgba(255,255,255,0.92)', alignItems: 'center', justifyContent: 'center' }}><Text style={{ color: colors.green, fontSize: 24, marginStart: 4 }}>▶</Text></View>
+      <Text style={{ position: 'absolute', bottom: 12, left: 14, color: colors.white, fontFamily: font.semibold }}>{t.introVideo}</Text>
+    </Pressable>
   )
 }

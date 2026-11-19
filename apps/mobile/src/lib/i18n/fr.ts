@@ -134,6 +134,7 @@ export const fr = {
     newProfile: ['Nouveau', 'profil'] as [string, string],
     book: 'Réserver un cours d’essai',
     message: 'Envoyer un message',
+    introVideo: 'Vidéo de présentation',
     messageSoon: { title: 'Messagerie bientôt disponible', text: (first: string) => `Vous pourrez bientôt écrire directement à ${first}. En attendant, réservez une séance d’essai de 30 minutes à moitié prix : c’est le meilleur moyen de faire connaissance.` },
   },
   account: {

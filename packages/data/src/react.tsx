@@ -145,6 +145,8 @@ export const useSignIn = () => useWrite((api, a: { email: string; password: stri
 export const useSignUp = () => useWrite((api, a: { name?: string; email: string; password: string; asTeacher: boolean; redirectTo?: string }) => api.signUp(a))
 export const useSignOut = () => useWrite((api, _: void) => api.signOut())
 export const useUpdateName = () => useWrite((api, name: string) => api.updateName(name))
+export const useUploadTeacherMedia = () => useWrite((api, a: { kind: 'photo' | 'video'; file: Blob; contentType: string }) => api.uploadTeacherMedia(a.kind, a.file, a.contentType))
+export const useRemoveTeacherMedia = () => useWrite((api, kind: 'photo' | 'video') => api.removeTeacherMedia(kind))
 export const useSendPasswordReset = () => useWrite((api, a: { email: string; redirectTo: string }) => api.sendPasswordReset(a.email, a.redirectTo))
 export const useUpdatePassword = () => useWrite((api, password: string) => api.updatePassword(password))
 /** Fournisseurs de connexion activés (Google, Apple), lus une fois par session. */

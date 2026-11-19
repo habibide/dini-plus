@@ -136,6 +136,7 @@ export const en: Messages = {
     newProfile: ['New', 'profile'],
     book: 'Book a trial lesson',
     message: 'Send a message',
+    introVideo: 'Introduction video',
     messageSoon: { title: 'Messaging coming soon', text: (first) => `You will soon be able to write to ${first} directly. Meanwhile, book a 30-minute trial lesson at half price: it is the best way to get to know each other.` },
   },
   account: {
