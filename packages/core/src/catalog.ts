@@ -50,13 +50,15 @@ export const LANGUAGES: { id: LanguageId; label: Label }[] = [
   { id: 'mnk', label: { fr: 'Mandingue', en: 'Mandinka', ar: 'الماندينكية' } },
 ]
 
-export type SubjectId = 'quran' | 'hadith' | 'fiqh' | 'azkar' | 'tajwid' | 'arabic' | 'aqida' | 'history'
+export type SubjectId = 'quran' | 'hadith' | 'fiqh' | 'azkar' | 'tajwid' | 'arabic' | 'aqida' | 'history' | 'sirah' | 'tafsir'
 export type ArabicTrack = 'reading' | 'writing' | 'practice'
 export const SUBJECTS: { id: SubjectId; label: Label; ar: string; desc: Label }[] = [
   { id: 'quran', label: { fr: 'Al Qur’an', en: 'Qur’an', ar: 'القرآن' }, ar: 'القرآن', desc: { fr: 'Lecture et mémorisation du Coran', en: 'Reading and memorising the Qur’an', ar: 'قراءة القرآن وحفظه' } },
   { id: 'tajwid', label: { fr: 'At-Tajwid', en: 'Tajweed', ar: 'التجويد' }, ar: 'التجويد', desc: { fr: 'Règles de récitation', en: 'Rules of recitation', ar: 'أحكام التلاوة' } },
+  { id: 'tafsir', label: { fr: 'At-Tafsir', en: 'Tafsir', ar: 'التفسير' }, ar: 'التفسير', desc: { fr: 'Explication et sens du Coran', en: 'Explanation and meaning of the Qur’an', ar: 'شرح معاني القرآن الكريم' } },
   { id: 'arabic', label: { fr: 'Arabe', en: 'Arabic', ar: 'اللغة العربية' }, ar: 'اللغة العربية', desc: { fr: 'Lecture, écriture et pratique', en: 'Reading, writing and speaking', ar: 'القراءة والكتابة والمحادثة' } },
   { id: 'hadith', label: { fr: 'Al Hadith', en: 'Hadith', ar: 'الحديث' }, ar: 'الحديث', desc: { fr: 'Paroles et tradition du Prophète ﷺ', en: 'Sayings and tradition of the Prophet ﷺ', ar: 'أقوال النبي ﷺ وسنته' } },
+  { id: 'sirah', label: { fr: 'As-Sîrah', en: 'Seerah', ar: 'السيرة النبوية' }, ar: 'السيرة النبوية', desc: { fr: 'Vie du Prophète ﷺ', en: 'Life of the Prophet ﷺ', ar: 'حياة النبي ﷺ' } },
   { id: 'fiqh', label: { fr: 'Al Fiqh', en: 'Fiqh', ar: 'الفقه' }, ar: 'الفقه', desc: { fr: 'Jurisprudence, par madhhab', en: 'Jurisprudence, by madhhab', ar: 'الفقه حسب المذهب' } },
   { id: 'azkar', label: { fr: 'Al Azkaar', en: 'Adhkar', ar: 'الأذكار' }, ar: 'الأذكار', desc: { fr: 'Invocations du quotidien', en: 'Daily remembrance', ar: 'أذكار اليوم والليلة' } },
   { id: 'aqida', label: { fr: 'Al Aqidah', en: 'Aqeedah', ar: 'العقيدة' }, ar: 'العقيدة', desc: { fr: 'Croyance et fondements', en: 'Creed and foundations', ar: 'العقيدة وأصولها' } },

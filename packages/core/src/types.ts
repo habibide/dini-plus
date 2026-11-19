@@ -4,7 +4,7 @@ import { MADHAHIB, RIWAYAT } from './catalog'
 // Calqué sur le modèle de données du document (§10), en camelCase. Les mêmes schémas
 // valideront les réponses de Supabase quand le backend arrivera.
 
-const subjectId = z.enum(['quran', 'hadith', 'fiqh', 'azkar', 'tajwid', 'arabic', 'aqida', 'history'])
+const subjectId = z.enum(['quran', 'hadith', 'fiqh', 'azkar', 'tajwid', 'arabic', 'aqida', 'history', 'sirah', 'tafsir'])
 const languageId = z.enum(['fr', 'wo', 'ff', 'srr', 'bm', 'soce', 'mnk'])
 const currency = z.enum(['XOF', 'GMD', 'EUR', 'USD', 'CAD'])
 const countryCode = z.enum(['SN', 'GM', 'FR', 'US', 'CA'])
@@ -46,6 +46,9 @@ export const TeacherSchema = z.object({
   credentials: z.array(CredentialSchema),
   availability: z.array(z.object({ weekday: z.number().int().min(0).max(6), start: z.number().int(), end: z.number().int() })),
   reviews: z.array(ReviewSchema),
+  /** Photo de profil et vidéo de présentation (adresses publiques), si le professeur les a ajoutées. */
+  photoUrl: z.string().url().optional(),
+  videoUrl: z.string().url().optional(),
 })
 export type Teacher = z.infer<typeof TeacherSchema>
 

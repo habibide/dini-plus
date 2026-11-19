@@ -1,3 +1,4 @@
+import { SITE_URL } from '@/lib/api'
 import { colors } from '@dini/core'
 import { useSendPasswordReset } from '@dini/data/react'
 import { useState } from 'react'
@@ -7,7 +8,6 @@ import { Button, T } from '@/lib/ui'
 import { useT } from '@/lib/i18n'
 
 // Le lien reçu par e-mail ouvre le site web, où se choisit le nouveau mot de passe.
-const SITE_URL = process.env.EXPO_PUBLIC_SITE_URL ?? 'http://localhost:3000'
 
 export default function Forgot() {
   const send = useSendPasswordReset()

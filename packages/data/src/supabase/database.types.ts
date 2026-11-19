@@ -54,6 +54,7 @@ export type Database = {
         identity_verified: boolean; ijaza_verified: boolean; languages: string[]; levels: string[]; madhahib: string[]; name: string
         published: boolean; rate_eur: number | null; rate_xof: number | null; rating: number; riwayat: string[]; subjects: string[]; timezone: string
         user_id: string | null; status: string; review_note: string | null; submitted_at: string | null; reviewed_at: string | null
+        photo_path: string | null; video_path: string | null
       }>
     }
     Views: { [_ in never]: never }
@@ -80,6 +81,7 @@ export type Database = {
       credentials_to_review: { Args: Record<string, never>; Returns: Json }
       review_credential: { Args: { p_id: number; p_approve: boolean }; Returns: undefined }
       set_my_availability: { Args: { p_rules: Json }; Returns: undefined }
+      set_teacher_media: { Args: { p_kind: string; p_path: string | null }; Returns: undefined }
       start_teacher_application: { Args: Record<string, never>; Returns: string }
       submit_teacher_application: { Args: Record<string, never>; Returns: undefined }
     }

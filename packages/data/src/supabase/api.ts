@@ -48,7 +48,7 @@ export type PendingCredential = Teacher['credentials'][number] & { id: number; t
 
 const TEACHER_COLUMNS = `id, name, gender, city, country_label, timezone, headline, bio, subjects, arabic_tracks, languages, riwayat, madhahib,
   levels, age_groups, rate_xof, rate_eur, identity_verified, diploma_verified, ijaza_verified, hours_taught, rating, disputes, published,
-  status, review_note, submitted_at,
+  photo_path, video_path, status, review_note, submitted_at,
   teacher_credentials (kind, title, institution, year, riwaya, sanad, position, verified),
   availability_rules (weekday, start_min, end_min),
   reviews (author, rating, body, date_label, position)`
@@ -91,6 +91,10 @@ const MESSAGES_FR: Record<string, string> = {
   booking_failed: 'La réservation n’a pas abouti. Réessayez.',
   incomplete_application: 'Il manque encore : {fields}.',
   name_required: 'Indiquez votre nom (2 caractères au moins).',
+  invalid_media: 'Format non accepté : photo JPG, PNG ou WebP, vidéo MP4, MOV ou WebM.',
+  photo_too_big: 'La photo dépasse 5 Mo.',
+  video_too_big: 'La vidéo dépasse 50 Mo.',
+  upload_failed: 'L’envoi du fichier a échoué. Réessayez.',
   'Invalid login credentials': 'E-mail ou mot de passe incorrect.',
   'Email not confirmed': 'Confirmez d’abord votre adresse avec le lien reçu par e-mail.',
   'User already registered': 'Un compte existe déjà avec cette adresse. Connectez-vous.',
@@ -125,6 +129,10 @@ const MESSAGES_EN: Record<string, string> = {
   booking_failed: 'The booking did not go through. Try again.',
   incomplete_application: 'Still missing: {fields}.',
   name_required: 'Enter your name (at least 2 characters).',
+  invalid_media: 'Unsupported format: JPG, PNG or WebP photo, MP4, MOV or WebM video.',
+  photo_too_big: 'The photo is larger than 5 MB.',
+  video_too_big: 'The video is larger than 50 MB.',
+  upload_failed: 'The upload failed. Try again.',
   'Invalid login credentials': 'Incorrect email or password.',
   'Email not confirmed': 'First confirm your address with the link we emailed you.',
   'User already registered': 'An account already exists with this address. Sign in.',
@@ -159,6 +167,10 @@ const MESSAGES_AR: Record<string, string> = {
   booking_failed: 'لم يكتمل الحجز. أعد المحاولة.',
   incomplete_application: 'ما زال ينقص: {fields}.',
   name_required: 'أدخل اسمك (حرفان على الأقل).',
+  invalid_media: 'صيغة غير مقبولة: صورة JPG أو PNG أو WebP، فيديو MP4 أو MOV أو WebM.',
+  photo_too_big: 'حجم الصورة يتجاوز 5 ميغابايت.',
+  video_too_big: 'حجم الفيديو يتجاوز 50 ميغابايت.',
+  upload_failed: 'فشل رفع الملف. أعد المحاولة.',
   'Invalid login credentials': 'البريد الإلكتروني أو كلمة المرور غير صحيحة.',
   'Email not confirmed': 'أكّد عنوانك أولًا عبر الرابط المرسل إلى بريدك.',
   'User already registered': 'يوجد حساب بهذا العنوان. سجّل الدخول.',
@@ -199,6 +211,10 @@ function must<T>(res: { data: T; error: PostgrestError | null }): NonNullable<T>
 
 const ms = (iso: string | null) => (iso ? Date.parse(iso) : null)
 
+/** Espace public des photos et vidéos des professeurs, et adresse publique d'un fichier. */
+const MEDIA_BUCKET = 'teacher-media'
+let mediaUrl = (path: string) => path
+
 function toMyTeacher(r: TeacherRow): MyTeacher {
   return {
     id: r.id, name: r.name, gender: r.gender as Teacher['gender'] | null, city: r.city, countryLabel: r.country_label, timezone: r.timezone,
@@ -215,6 +231,7 @@ function toMyTeacher(r: TeacherRow): MyTeacher {
     availability: r.availability_rules.map((a) => ({ weekday: a.weekday, start: a.start_min, end: a.end_min })),
     reviews: [...r.reviews].sort((a, b) => a.position - b.position).map((v) => ({ author: v.author, rating: v.rating, text: v.body, date: v.date_label })),
     status: (r.status ?? 'approved') as TeacherStatus, reviewNote: r.review_note ?? null, published: r.published,
+    ...(r.photo_path ? { photoUrl: mediaUrl(r.photo_path) } : {}), ...(r.video_path ? { videoUrl: mediaUrl(r.video_path) } : {}),
   }
 }
 
@@ -254,6 +271,7 @@ const toSubscription = (r: Row<'subscriptions'>): Subscription => ({
 const INTENT_KEY = 'dini-signup-intent'
 
 export function createSupabaseApi(client: DiniClient, storage: KeyValueStorage, project: { url: string; key: string }) {
+  mediaUrl = (path) => client.storage.from(MEDIA_BUCKET).getPublicUrl(path).data.publicUrl
   let providers: Promise<OAuthProvider[]> | null = null
   let catalog: { at: number; teachers: Promise<Teacher[]> } | null = null
   let family: { userId: string; id: Promise<string> } | null = null
@@ -523,6 +541,38 @@ export function createSupabaseApi(client: DiniClient, storage: KeyValueStorage, 
     async getMyTeacher(): Promise<MyTeacher | null> {
       const row = await myTeacherRow()
       return row && toMyTeacher(row)
+    },
+
+    /**
+     * Ajoute (ou remplace) la photo ou la vidéo du professeur connecté : envoi du fichier dans son dossier,
+     * enregistrement sur le profil, puis suppression de l'ancien fichier.
+     */
+    async uploadTeacherMedia(kind: 'photo' | 'video', file: Blob, contentType: string) {
+      const id = must(await client.rpc('my_teacher_id')) as string | null
+      if (!id) throw new Error(msg('not_a_teacher'))
+      const limit = kind === 'photo' ? 5 * 1024 * 1024 : 50 * 1024 * 1024
+      if (file.size > limit) throw new Error(msg(kind === 'photo' ? 'photo_too_big' : 'video_too_big'))
+      if (!contentType.startsWith(kind === 'photo' ? 'image/' : 'video/')) throw new Error(msg('invalid_media'))
+      const ext = ({ 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'video/mp4': 'mp4', 'video/quicktime': 'mov', 'video/webm': 'webm' } as Record<string, string>)[contentType]
+      if (!ext) throw new Error(msg('invalid_media'))
+      const previous = (must(await client.from('teachers').select('photo_path, video_path').eq('id', id).single()) as { photo_path: string | null; video_path: string | null })[kind === 'photo' ? 'photo_path' : 'video_path']
+      const path = `${id}/${kind}-${Date.now()}.${ext}`
+      const up = await client.storage.from(MEDIA_BUCKET).upload(path, file, { contentType, upsert: false, cacheControl: '31536000' })
+      if (up.error) throw new Error(msg('upload_failed'))
+      const saved = await client.rpc('set_teacher_media', { p_kind: kind, p_path: path })
+      // Refusé par le serveur (type, taille) : on ne laisse pas le fichier traîner dans le stockage.
+      if (saved.error) { await client.storage.from(MEDIA_BUCKET).remove([path]); fail(saved.error) }
+      if (previous) await client.storage.from(MEDIA_BUCKET).remove([previous])
+      return mediaUrl(path)
+    },
+
+    /** Retire la photo ou la vidéo du professeur connecté. */
+    async removeTeacherMedia(kind: 'photo' | 'video') {
+      const id = must(await client.rpc('my_teacher_id')) as string | null
+      if (!id) throw new Error(msg('not_a_teacher'))
+      const previous = (must(await client.from('teachers').select('photo_path, video_path').eq('id', id).single()) as { photo_path: string | null; video_path: string | null })[kind === 'photo' ? 'photo_path' : 'video_path']
+      must(await client.rpc('set_teacher_media', { p_kind: kind, p_path: null }))
+      if (previous) await client.storage.from(MEDIA_BUCKET).remove([previous])
     },
 
     async startApplication() {

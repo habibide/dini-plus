@@ -12,9 +12,11 @@ export function Money({ amount, currency }: { amount: number; currency: Currency
   return <>{useFormat().money(amount, currency)}</>
 }
 
-export function Monogram({ name, size = 'md', square }: { name: string; size?: 'sm' | 'md' | 'lg' | 'xl'; square?: boolean }) {
+/** Photo du professeur si elle existe, sinon ses initiales sur une couleur de la charte. */
+export function Monogram({ name, size = 'md', square, photo }: { name: string; size?: 'sm' | 'md' | 'lg' | 'xl'; square?: boolean; photo?: string }) {
   const initials = name.split(' ').map((w) => w[0]).slice(0, 2).join('')
   const s = { sm: 'size-10 text-base', md: 'size-16 text-xl', lg: 'size-24 text-3xl', xl: 'size-28 text-4xl sm:size-32' }[size]
+  if (photo) return <img src={photo} alt="" loading="lazy" className={cx('shrink-0 bg-leaf object-cover', square ? 'rounded-md' : 'rounded-full', s)} />
   // Couleur stable par personne, dans la gamme de la charte.
   const palette = ['#20915B', '#176B43', '#B8901F', '#2F7D6D', '#3B8B5A', '#8A6A1E']
   const bg = palette[[...name].reduce((a, c) => a + c.charCodeAt(0), 0) % palette.length]
@@ -176,6 +178,26 @@ export function MessageButton({ name, bookHref, className }: { name: string; boo
           <a href={bookHref} onClick={() => setOpen(false)} className={buttonCls.primary}>{t.book}</a>
         </Modal>
       )}
+    </>
+  )
+}
+
+/** Vidéo de présentation du professeur (lecteur du navigateur), avec sa photo en vignette. */
+export function IntroVideo({ src, poster, className }: { src: string; poster?: string; className?: string }) {
+  return <video src={src} poster={poster} controls playsInline preload="metadata" className={cx('aspect-video w-full rounded-md bg-ink object-contain', className)} />
+}
+
+/** Bouton « Vidéo de présentation » qui ouvre la vidéo dans une fenêtre (carte de la recherche). */
+export function IntroVideoButton({ src, poster, name }: { src: string; poster?: string; name: string }) {
+  const t = useT().search
+  const [open, setOpen] = useState(false)
+  return (
+    <>
+      <button type="button" onClick={() => setOpen(true)} className="inline-flex cursor-pointer items-center gap-2 self-start rounded-full bg-soft py-1.5 pe-4 ps-1.5 text-sm font-semibold text-green2 hover:bg-[#d8eee2]">
+        <span className="grid size-7 place-items-center rounded-full bg-green text-white"><svg width="10" height="10" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 0l9 6-9 6z" fill="currentColor" /></svg></span>
+        {t.introVideo}
+      </button>
+      {open && <Modal title={`${t.introVideo} · ${name}`} onClose={() => setOpen(false)}><IntroVideo src={src} poster={poster} /></Modal>}
     </>
   )
 }

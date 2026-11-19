@@ -17,3 +17,6 @@ AppState.addEventListener('change', (state) => {
 })
 
 export const api = createSupabaseApi(client, storage, { url: SUPABASE_URL, key: SUPABASE_KEY })
+
+/** Adresse du site web (liens de partage, retour des e-mails de mot de passe). */
+export const SITE_URL = process.env.EXPO_PUBLIC_SITE_URL ?? 'https://dine-ivory.vercel.app'

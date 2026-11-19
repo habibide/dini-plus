@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useFormat, useT } from '@/i18n/locale'
-import { LINE_ICONS, LineIcon, MessageButton, Modal, Money, Monogram, RecitationPreview, VerifiedShield, buttonCls, cx, useCountryOf } from '@/components/ui'
+import { IntroVideoButton, LINE_ICONS, LineIcon, MessageButton, Modal, Money, Monogram, VerifiedShield, buttonCls, cx, useCountryOf } from '@/components/ui'
 
 /** La riwaya ne concerne que la récitation : Coran, tajwid, ou toutes matières confondues. */
 const showsRiwaya = (s?: SubjectId) => !s || s === 'quran' || s === 'tajwid'
@@ -334,7 +334,7 @@ function TeacherCardView({ t }: { t: TeacherCard }) {
   return (
     <article className="grid gap-5 rounded-md border-[1.5px] border-line bg-white p-5 transition hover:border-ink md:grid-cols-[minmax(0,1fr)_240px] md:p-6">
       <div className="flex min-w-0 gap-4 sm:gap-5">
-        <Link href={href} tabIndex={-1} aria-hidden className="shrink-0"><Monogram name={t.name} size="xl" square /></Link>
+        <Link href={href} tabIndex={-1} aria-hidden className="shrink-0"><Monogram name={t.name} size="xl" square photo={t.photoUrl} /></Link>
         <div className="flex min-w-0 flex-col gap-2">
           <h2 className="flex flex-wrap items-center gap-2 font-display text-2xl">
             <Link href={href} className="hover:underline">{t.name}</Link>
@@ -346,7 +346,7 @@ function TeacherCardView({ t }: { t: TeacherCard }) {
           <p className="flex items-start gap-2 text-[15px]"><LineIcon d={LINE_ICONS.languages} className="mt-0.5 size-[18px] text-muted" />{m.speaks} {t.languages.map((l) => fmt.label(LANGUAGES.find((x) => x.id === l)!.label)).join(', ')}</p>
           <p className="line-clamp-3 text-[15px] leading-relaxed"><strong>{t.headline}</strong>{t.bio && <> — {t.bio}</>}</p>
           <Link href={href} className="self-start text-[15px] font-semibold underline">{m.more}</Link>
-          <div className="mt-1 max-w-80"><RecitationPreview seed={t.id} /></div>
+          {t.videoUrl && <div className="mt-1"><IntroVideoButton src={t.videoUrl} poster={t.photoUrl} name={t.name} /></div>}
         </div>
       </div>
       <div className="flex flex-col gap-4">

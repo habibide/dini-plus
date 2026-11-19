@@ -7,7 +7,7 @@ import { useParams } from 'next/navigation'
 import { useState } from 'react'
 import { useFormat, useT } from '@/i18n/locale'
 import {
-  LINE_ICONS, LineIcon, MessageButton, Modal, Money, Monogram, RecitationPreview, Sanad, Stars, VerifiedShield,
+  IntroVideo, LINE_ICONS, LineIcon, MessageButton, Modal, Money, Monogram, Sanad, Stars, VerifiedShield,
   buttonCls, cx, useCountryOf, type BadgeKey,
 } from '@/components/ui'
 
@@ -80,11 +80,12 @@ export function ProfileScreen() {
     <div className="mx-auto grid max-w-6xl items-start gap-10 px-5 py-8 lg:grid-cols-[minmax(0,1fr)_380px]">
       <div className="flex min-w-0 flex-col gap-10">
         <Link href="/teachers" className="-mb-4 text-sm text-muted hover:text-ink">{m.backToResults}</Link>
-        <RecitationPreview seed={t.id} large />
+        {/* Vidéo de présentation du professeur, à la place de l'ancien extrait de récitation simulé. */}
+        {t.videoUrl && <IntroVideo src={t.videoUrl} poster={t.photoUrl} />}
 
         <header className="flex flex-col gap-5">
           <div className="flex items-center gap-5">
-            <Monogram name={t.name} size="lg" square />
+            <Monogram name={t.name} size="lg" square photo={t.photoUrl} />
             <div className="flex min-w-0 flex-col gap-1.5">
               <h1 className="flex flex-wrap items-center gap-2 font-display text-4xl md:text-5xl">
                 {t.name}{t.verification.identity && <button type="button" onClick={() => setBadge('identity')} className="cursor-pointer"><VerifiedShield title={all.badges.identity.label} /></button>}
