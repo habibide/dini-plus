@@ -75,7 +75,7 @@ function NavLinks({ path }: { path: string }) {
   const t = useT()
   return navFor(account, t).map((n) => (
     <Link key={n.href} href={n.href} aria-current={path === n.href ? 'page' : undefined}
-      className={cx('rounded-sm px-3 py-2 text-[15px] font-semibold transition', path === n.href || path.startsWith(`${n.href}/`) ? 'bg-soft text-green2' : 'text-muted hover:bg-leaf hover:text-ink')}>{n.label}</Link>
+      className={cx('rounded-sm px-3 py-2 text-[15px] font-bold transition', path === n.href || path.startsWith(`${n.href}/`) ? 'bg-soft text-green2' : 'text-ink hover:bg-leaf')}>{n.label}</Link>
   ))
 }
 
