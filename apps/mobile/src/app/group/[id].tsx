@@ -61,12 +61,13 @@ export default function GroupScreen() {
       setPaying(false)
     }
   }
-  const quit = () => Alert.alert(g.isOrganizer ? m.confirmCancel : m.confirmLeave, undefined, [
+  const quit = () => Alert.alert(g.isOrganizer && !g.startsOn ? m.confirmCancel : m.confirmLeave, undefined, [
     { text: m.no, style: 'cancel' },
-    { text: m.yes, style: 'destructive', onPress: () => leave.mutate(g.id, { onSuccess: () => { if (!g.isOrganizer) router.back() } }) },
+    { text: m.yes, style: 'destructive', onPress: () => leave.mutate(g.id, { onSuccess: () => { if (!g.isOrganizer || g.startsOn) router.back() } }) },
   ])
 
   const statusText = g.status === 'forming' ? m.formingText(g.min)
+    : g.status === 'payment' && g.renewal ? m.renewalText(g.paymentDeadline ? fmt.dateTime(g.paymentDeadline, tz) : '')
     : g.status === 'payment' ? m.paymentText(g.paymentDeadline ? fmt.dateTime(g.paymentDeadline, tz) : '')
     : g.status === 'active' ? m.activeText : g.status === 'cancelled' ? m.cancelledText : m.endedText
 
@@ -129,8 +130,8 @@ export default function GroupScreen() {
         ))}
       </Section>
 
-      {open && (g.isOrganizer || g.members.some((x) => x.mine && x.status === 'joined')) && (
-        <Button title={g.isOrganizer ? m.cancelGroup : m.leave} kind="ghost" disabled={leave.isPending} onPress={quit} style={{ marginHorizontal: 20, alignSelf: 'flex-start' }} />
+      {open && ((g.isOrganizer && !g.startsOn) || g.members.some((x) => x.mine && x.status === 'joined')) && (
+        <Button title={g.isOrganizer && !g.startsOn ? m.cancelGroup : m.leave} kind="ghost" disabled={leave.isPending} onPress={quit} style={{ marginHorizontal: 20, alignSelf: 'flex-start' }} />
       )}
     </ScrollView>
   )

@@ -61,11 +61,12 @@ export function GroupScreen() {
     }
   }
   function quit() {
-    if (!window.confirm(g!.isOrganizer ? m.confirmCancel : m.confirmLeave)) return
-    leave.mutate(g!.id, { onSuccess: () => { if (!g!.isOrganizer) router.push('/progress') } })
+    if (!window.confirm(g!.isOrganizer && !g!.startsOn ? m.confirmCancel : m.confirmLeave)) return
+    leave.mutate(g!.id, { onSuccess: () => { if (!g!.isOrganizer || g!.startsOn) router.push('/progress') } })
   }
 
   const statusText = g.status === 'forming' ? m.formingText(g.min)
+    : g.status === 'payment' && g.renewal ? m.renewalText(g.paymentDeadline ? fmt.dateTime(g.paymentDeadline, tz) : '')
     : g.status === 'payment' ? m.paymentText(g.paymentDeadline ? fmt.dateTime(g.paymentDeadline, tz) : '')
     : g.status === 'active' ? m.activeText : g.status === 'cancelled' ? m.cancelledText : m.endedText
 
@@ -142,9 +143,9 @@ export function GroupScreen() {
         )}
       </section>
 
-      {open && (g.isOrganizer || g.members.some((x) => x.mine && x.status === 'joined')) && (
+      {open && ((g.isOrganizer && !g.startsOn) || g.members.some((x) => x.mine && x.status === 'joined')) && (
         <button type="button" className="cursor-pointer self-start text-sm text-muted underline disabled:opacity-40" disabled={leave.isPending} onClick={quit}>
-          {g.isOrganizer ? m.cancelGroup : m.leave}
+          {g.isOrganizer && !g.startsOn ? m.cancelGroup : m.leave}
         </button>
       )}
     </div>

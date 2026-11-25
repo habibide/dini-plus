@@ -258,6 +258,8 @@ export type GroupDetail = {
   id: string; teacherId: string; teacherName: string; teacherTimezone: string; subject: SubjectId; planId: PlanId; slots: GroupSlot[]
   status: GroupStatus; paymentDeadline: number | null; startsOn: number | null; endsOn: number | null; inviteCode: string | null
   isOrganizer: boolean; isTeacher: boolean; share: { amount: number; currency: CurrencyCode } | null; min: number; max: number
+  /** Période de paiement du mois suivant (le groupe a déjà des séances). */
+  renewal: boolean; cycle: number
   members: GroupMember[]; sessions: { id: string; startsAt: number; minutes: number; status: string }[]
 }
 export type GroupInvite = {

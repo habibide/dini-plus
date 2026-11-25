@@ -326,6 +326,7 @@ export const fr = {
     members: (n: number, max: number) => `${n} élève${n > 1 ? 's' : ''} sur ${max}`,
     formingText: (min: number) => `Le groupe passe au paiement dès ${min} élèves inscrits. Partagez le lien d’invitation.`,
     paymentText: (deadline: string) => `Chaque membre paie sa part avant le ${deadline}. Le groupe démarre avec ceux qui ont payé, s’ils sont 3 au moins.`,
+    renewalText: (deadline: string) => `Le mois en cours se termine le ${deadline}. Pour continuer, chaque membre paie le mois suivant avant cette date. Le groupe continue avec ceux qui ont payé, s’ils sont 3 au moins.`,
     activeText: 'Le groupe a démarré : les séances apparaissent dans votre suivi.',
     cancelledText: 'Ce groupe a été annulé. Les parts déjà payées seront remboursées.',
     endedText: 'Ce mois de cours est terminé.',
