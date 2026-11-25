@@ -1,6 +1,6 @@
 import {
   DAY, PLANS, country,
-  type Booking, type Country, type CurrencyCode, type Family, type Learner, type Locale, type PaymentMethod, type Report, type Subscription, type Teacher,
+  type Booking, type Country, type CurrencyCode, type Family, type Learner, type Locale, type PaymentMethod, type PlanId, type Report, type SubjectId, type Subscription, type Teacher,
 } from '@dini/core'
 import type { PostgrestError, SupabaseClient } from '@supabase/supabase-js'
 import type { KeyValueStorage } from '../api'
@@ -89,6 +89,12 @@ const MESSAGES_FR: Record<string, string> = {
   video_unavailable: 'Le service de visioconférence ne répond pas. Réessayez dans un instant.',
   oauth_cancelled: 'La connexion a été annulée.',
   booking_failed: 'La réservation n’a pas abouti. Réessayez.',
+  group_not_found: 'Ce lien d’invitation ne correspond à aucun groupe.',
+  group_closed: 'Ce groupe n’accepte plus de nouveaux membres.',
+  group_full: 'Ce groupe est complet (10 élèves).',
+  invalid_slots: 'Choisissez un créneau différent pour chaque séance de la semaine, dans les disponibilités du professeur.',
+  not_member: 'Vous ne faites pas partie de ce groupe.',
+  group_session: 'Une séance de groupe ne s’annule pas seule : écrivez-nous si besoin.',
   payment_not_available: 'Le paiement en ligne n’est pas encore ouvert dans votre pays : la réservation de cours payants arrive bientôt.',
   payment_not_configured: 'Le paiement en ligne n’est pas encore activé sur DINE.',
   payment_unavailable: 'Le service de paiement ne répond pas. Réessayez dans un instant.',
@@ -135,6 +141,12 @@ const MESSAGES_EN: Record<string, string> = {
   video_unavailable: 'The video service is not responding. Try again in a moment.',
   oauth_cancelled: 'Sign-in was cancelled.',
   booking_failed: 'The booking did not go through. Try again.',
+  group_not_found: 'This invitation link does not match any group.',
+  group_closed: 'This group no longer accepts new members.',
+  group_full: 'This group is full (10 students).',
+  invalid_slots: 'Pick a different slot for each weekly session, within the teacher’s availability.',
+  not_member: 'You are not part of this group.',
+  group_session: 'A group session cannot be cancelled on its own: contact us if needed.',
   payment_not_available: 'Online payment is not open in your country yet: booking paid lessons is coming soon.',
   payment_not_configured: 'Online payment is not enabled on DINE yet.',
   payment_unavailable: 'The payment service is not responding. Try again in a moment.',
@@ -181,6 +193,12 @@ const MESSAGES_AR: Record<string, string> = {
   video_unavailable: 'خدمة الفيديو لا تستجيب. أعد المحاولة بعد قليل.',
   oauth_cancelled: 'تم إلغاء تسجيل الدخول.',
   booking_failed: 'لم يكتمل الحجز. أعد المحاولة.',
+  group_not_found: 'رابط الدعوة هذا لا يطابق أي مجموعة.',
+  group_closed: 'هذه المجموعة لم تعد تقبل أعضاء جددًا.',
+  group_full: 'هذه المجموعة مكتملة (10 طلاب).',
+  invalid_slots: 'اختر موعدًا مختلفًا لكل حصة أسبوعية، ضمن أوقات توفر المعلم.',
+  not_member: 'أنت لست عضوًا في هذه المجموعة.',
+  group_session: 'لا يمكن إلغاء حصة جماعية بمفردها: راسلنا عند الحاجة.',
   payment_not_available: 'الدفع الإلكتروني غير متاح بعد في بلدك: حجز الدروس المدفوعة قريبًا.',
   payment_not_configured: 'الدفع الإلكتروني غير مفعّل بعد على DINE.',
   payment_unavailable: 'خدمة الدفع لا تستجيب. أعد المحاولة بعد لحظات.',
@@ -233,11 +251,35 @@ function must<T>(res: { data: T; error: PostgrestError | null }): NonNullable<T>
   return res.data as NonNullable<T>
 }
 
+export type GroupSlot = { weekday: number; start: number }
+export type GroupStatus = 'forming' | 'payment' | 'active' | 'cancelled' | 'ended'
+export type GroupMember = { id: string; name: string; status: 'joined' | 'paid'; mine: boolean; paying: boolean }
+export type GroupDetail = {
+  id: string; teacherId: string; teacherName: string; teacherTimezone: string; subject: SubjectId; planId: PlanId; slots: GroupSlot[]
+  status: GroupStatus; paymentDeadline: number | null; startsOn: number | null; endsOn: number | null; inviteCode: string | null
+  isOrganizer: boolean; isTeacher: boolean; share: { amount: number; currency: CurrencyCode } | null; min: number; max: number
+  members: GroupMember[]; sessions: { id: string; startsAt: number; minutes: number; status: string }[]
+}
+export type GroupInvite = {
+  id: string; teacherId: string; teacherName: string; teacherTimezone: string; subject: SubjectId; planId: PlanId; slots: GroupSlot[]
+  status: GroupStatus; paymentDeadline: number | null; members: number; min: number; max: number; isMember: boolean
+  share: { amount: number; currency: CurrencyCode } | null
+}
+export type GroupSummary = {
+  id: string; teacherName: string; subject: SubjectId; planId: PlanId; status: GroupStatus; members: number
+  paymentDeadline: number | null; nextSession: number | null; asTeacher: boolean
+}
+export type GroupSession = { id: string; groupId: string; subject: SubjectId; startsAt: number; minutes: number; status: string; learners: string[] }
+
 export type TeacherDocument = { id: number; fileName: string; contentType: string; size: number; createdAt: number; path: string }
 
 export type PaymentState = { status: 'pending' | 'paid' | 'failed' | 'refund_due'; bookingId: string | null }
 
 const ms = (iso: string | null) => (iso ? Date.parse(iso) : null)
+const toShare = (x: unknown) => {
+  const v = x as { amount: number | string; currency: CurrencyCode } | null
+  return v ? { amount: Number(v.amount), currency: v.currency } : null
+}
 
 /** Espace public des photos et vidéos des professeurs, et adresse publique d'un fichier. */
 const MEDIA_BUCKET = 'teacher-media'
@@ -633,6 +675,48 @@ export function createSupabaseApi(client: DiniClient, storage: KeyValueStorage, 
     },
 
     /** Retire la photo ou la vidéo du professeur connecté. */
+    // Abonnements de groupe ----------------------------------------------------------
+
+    async createGroup(a: { learnerId: string; teacherId: string; subject: SubjectId; planId: PlanId; slots: GroupSlot[] }) {
+      await familyId()
+      return must(await client.rpc('create_group', { p_learner: a.learnerId, p_teacher: a.teacherId, p_subject: a.subject, p_plan: a.planId, p_slots: a.slots as never })) as string
+    },
+    async groupByCode(code: string): Promise<GroupInvite> {
+      const g = must(await client.rpc('group_by_code', { p_code: code })) as Record<string, unknown>
+      return { ...(g as unknown as GroupInvite), paymentDeadline: ms((g.paymentDeadline as string) ?? null), share: toShare(g.share) }
+    },
+    async joinGroup(code: string, learnerId: string) {
+      await familyId()
+      return must(await client.rpc('join_group', { p_code: code, p_learner: learnerId })) as string
+    },
+    async leaveGroup(groupId: string) {
+      must(await client.rpc('leave_group', { p_group: groupId }))
+    },
+    async groupDetail(groupId: string): Promise<GroupDetail> {
+      const g = must(await client.rpc('group_detail', { p_group: groupId })) as Record<string, unknown>
+      const sessions = (g.sessions as { id: string; startsAt: string; minutes: number; status: string }[]).map((x) => ({ ...x, startsAt: Date.parse(x.startsAt) }))
+      return {
+        ...(g as unknown as GroupDetail), sessions, share: toShare(g.share),
+        paymentDeadline: ms((g.paymentDeadline as string) ?? null), startsOn: ms((g.startsOn as string) ?? null), endsOn: ms((g.endsOn as string) ?? null),
+      }
+    },
+    async myGroups(): Promise<GroupSummary[]> {
+      const rows = must(await client.rpc('my_groups')) as (Omit<GroupSummary, 'paymentDeadline' | 'nextSession'> & { paymentDeadline: string | null; nextSession: string | null })[]
+      return rows.map((r) => ({ ...r, paymentDeadline: ms(r.paymentDeadline), nextSession: ms(r.nextSession) }))
+    },
+    /** Prépare la part d'un membre : renvoie le paiement Bictorys à ouvrir avec startPayment. */
+    async startGroupPayment(memberId: string, method?: PaymentMethod) {
+      const r = must(await client.rpc('start_group_payment', { p_member: memberId, ...(method ? { p_method: method } : {}) })) as { payment_id: string }
+      return { paymentId: r.payment_id }
+    },
+    async myGroupSessions(): Promise<GroupSession[]> {
+      const rows = must(await client.rpc('my_group_sessions')) as (Omit<GroupSession, 'startsAt'> & { startsAt: string })[]
+      return rows.map((r) => ({ ...r, startsAt: Date.parse(r.startsAt) }))
+    },
+    async deliverGroupSession(sessionId: string, report: Report) {
+      must(await client.rpc('deliver_group_session', { p_session: sessionId, p_report: report as never }))
+    },
+
     // Justificatifs privés (diplômes, ijaza) : lus seulement par le professeur et les modérateurs.
 
     async listTeacherDocuments(teacherId?: string): Promise<TeacherDocument[]> {

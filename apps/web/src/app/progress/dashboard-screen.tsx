@@ -1,13 +1,14 @@
 'use client'
 
-import { HOUR, PLANS, surah, type Booking } from '@dini/core'
+import { HOUR, PLANS, subject, surah, type Booking } from '@dini/core'
 import type { LearnerDashboard } from '@dini/data'
-import { useCancelBooking, useDashboard, useDini, useDisputeBooking, useFamily } from '@dini/data/react'
+import { useCancelBooking, useDashboard, useDini, useDisputeBooking, useFamily, useMyGroups } from '@dini/data/react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 import { Modal, Money, Monogram, buttonCls, cx } from '@/components/ui'
 import { JoinButton } from '@/components/video'
+import { GroupStatusBadge } from '@/components/groups'
 import { useFormat, useT } from '@/i18n/locale'
 
 export function DashboardScreen() {
@@ -34,8 +35,35 @@ export function DashboardScreen() {
           <Link href="/teachers" className={buttonCls.primary}>{m.choose}</Link>
         </div>
       )}
+      <MyGroups tz={fam.timezone} />
       {dash.data.map((d) => <LearnerBlock key={d.learner.id} d={d} tz={fam.timezone} />)}
     </div>
+  )
+}
+
+/** Groupes dont la famille fait partie : état, membres et prochaine séance. */
+function MyGroups({ tz }: { tz: string }) {
+  const groups = useMyGroups()
+  const all = useT()
+  const m = all.groups
+  const fmt = useFormat()
+  const list = (groups.data ?? []).filter((g) => !g.asTeacher)
+  if (!list.length) return null
+  return (
+    <section className="flex flex-col gap-3 overflow-hidden rounded-md border-[1.5px] border-line bg-white p-6">
+      <h2 className="font-display text-xl">{m.myGroups}</h2>
+      <ul className="flex flex-col divide-y divide-line">
+        {list.map((g) => (
+          <li key={g.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+            <div className="flex min-w-0 flex-col gap-1">
+              <span className="flex flex-wrap items-center gap-2 font-semibold">{fmt.label(subject(g.subject).label)} · {g.teacherName} <GroupStatusBadge status={g.status} /></span>
+              <span className="text-sm text-muted">{m.members(g.members, 10)}{g.nextSession ? ` · ${m.next(fmt.dateTime(g.nextSession, tz))}` : ''}</span>
+            </div>
+            <Link href={`/groups/${g.id}`} className={cx(buttonCls.ghost, 'min-h-10')}>{m.open}</Link>
+          </li>
+        ))}
+      </ul>
+    </section>
   )
 }
 
@@ -45,7 +73,8 @@ function LearnerBlock({ d, tz }: { d: LearnerDashboard; tz: string }) {
   const dispute = useDisputeBooking()
   const [toCancel, setToCancel] = useState<Booking | null>(null)
   const [toDispute, setToDispute] = useState<Booking | null>(null)
-  const m = useT().dashboard
+  const all = useT()
+  const m = all.dashboard
   const fmt = useFormat()
   const now = api.now()
   const plan = d.subscription && PLANS.find((p) => p.id === d.subscription!.planId)
@@ -65,10 +94,10 @@ function LearnerBlock({ d, tz }: { d: LearnerDashboard; tz: string }) {
           <h3 className="text-sm font-semibold text-muted">{m.next}</h3>
           {d.next ? <>
             <p className="font-display text-xl first-letter:uppercase">{fmt.dateTime(d.next.startsAt, tz)}</p>
-            <p className="text-sm text-muted">{d.next.kind === 'trial' ? m.trialPrefix : ''}{m.yourTz}</p>
+            <p className="text-sm text-muted">{d.next.kind === 'trial' ? m.trialPrefix : d.next.kind === 'group' ? `${all.groups.badge} · ` : ''}{m.yourTz}</p>
             <div className="mt-1 flex flex-wrap gap-2">
               <JoinButton booking={d.next} tz={tz} />
-              <button type="button" className={cx(buttonCls.ghost, 'min-h-10')} onClick={() => setToCancel(d.next!)}>{m.cancelOrMove}</button>
+              {d.next.kind !== 'group' && <button type="button" className={cx(buttonCls.ghost, 'min-h-10')} onClick={() => setToCancel(d.next!)}>{m.cancelOrMove}</button>}
             </div>
           </> : <><p className="text-muted">{m.noneNext}</p><Link href="/teachers" className={cx(buttonCls.primary, 'min-h-10 self-start')}>{m.book}</Link></>}
         </section>

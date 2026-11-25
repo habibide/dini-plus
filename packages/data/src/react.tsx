@@ -1,4 +1,4 @@
-import { COUNTRIES, type Report, type Teacher } from '@dini/core'
+import { COUNTRIES, type PaymentMethod, type Report, type Teacher } from '@dini/core'
 import { MutationCache, QueryCache, QueryClient, QueryClientProvider, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { KeyValueStorage } from './api'
@@ -159,6 +159,34 @@ export const useSignUp = () => useWrite((api, a: { name?: string; email: string;
 export const useSignOut = () => useWrite((api, _: void) => api.signOut())
 export const useUpdateName = () => useWrite((api, name: string) => api.updateName(name))
 export const useUploadTeacherMedia = () => useWrite((api, a: { kind: 'photo' | 'video'; file: Blob; contentType: string }) => api.uploadTeacherMedia(a.kind, a.file, a.contentType))
+// Abonnements de groupe -------------------------------------------------------------------
+
+export function useMyGroups() {
+  const { api, account } = useDini()
+  return useQuery({ queryKey: ['groups', account?.userId], queryFn: () => api.myGroups(), enabled: !!account })
+}
+export function useGroup(groupId: string | undefined) {
+  const { api, account } = useDini()
+  return useQuery({
+    queryKey: ['group', groupId], queryFn: () => api.groupDetail(groupId!), enabled: !!account && !!groupId,
+    // Pendant la période de paiement, l'état change à chaque part payée : on relit régulièrement.
+    refetchInterval: (q) => (q.state.data?.status === 'payment' ? 5000 : false),
+  })
+}
+export function useGroupInvite(code: string | undefined) {
+  const { api, account } = useDini()
+  return useQuery({ queryKey: ['group-invite', code, account?.userId], queryFn: () => api.groupByCode(code!), enabled: !!code && !!account })
+}
+export function useMyGroupSessions() {
+  const { api, account } = useDini()
+  return useQuery({ queryKey: ['group-sessions', account?.userId], queryFn: () => api.myGroupSessions(), enabled: !!account })
+}
+export const useCreateGroup = () => useWrite((api, a: Parameters<DiniApi['createGroup']>[0]) => api.createGroup(a))
+export const useJoinGroup = () => useWrite((api, a: { code: string; learnerId: string }) => api.joinGroup(a.code, a.learnerId))
+export const useLeaveGroup = () => useWrite((api, id: string) => api.leaveGroup(id))
+export const useStartGroupPayment = () => useWrite((api, a: { memberId: string; method?: PaymentMethod }) => api.startGroupPayment(a.memberId, a.method))
+export const useDeliverGroupSession = () => useWrite((api, a: { id: string; report: Report }) => api.deliverGroupSession(a.id, a.report))
+
 export function useTeacherDocuments(teacherId?: string) {
   const { api, account } = useDini()
   return useQuery({ queryKey: ['teacher-documents', teacherId ?? 'me'], queryFn: () => api.listTeacherDocuments(teacherId), enabled: !!account })

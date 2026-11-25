@@ -100,7 +100,7 @@ export const BookingSchema = z.object({
   learnerId: z.string(),
   teacherId: z.string(),
   subscriptionId: z.string().optional(),
-  kind: z.enum(['trial', 'plan']),
+  kind: z.enum(['trial', 'plan', 'group']),
   subject: subjectId,
   startsAt: z.number(),
   minutes: z.number().int(),

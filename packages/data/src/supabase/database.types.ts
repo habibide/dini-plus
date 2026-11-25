@@ -12,7 +12,7 @@ export type Database = {
       availability_rules: Table<{ end_min: number; id: number; start_min: number; teacher_id: string; weekday: number }>
       bookings: Table<{
         amount: number; created_at: string; currency: string; delivered_at: string | null; id: string; kind: string; learner_id: string; video_room: string | null
-        minutes: number; starts_at: string; status: string; subject: string; subscription_id: string | null; teacher_id: string; hold_until: string | null
+        minutes: number; starts_at: string; status: string; subject: string; subscription_id: string | null; teacher_id: string; hold_until: string | null; group_session_id: string | null
       }>
       countries: Table<{ code: string; currency: string; payments: string[]; payment_provider: string }>
       disputes: Table<{ booking_id: string; created_at: string; id: string; reason: string; status: string }>
@@ -28,7 +28,7 @@ export type Database = {
       payments: Table<{
         amount: number; booking_id: string | null; created_at: string; currency: string; family_id: string; id: string; method: string
         provider: string; provider_ref: string | null; status: string; subscription_id: string | null
-        checkout_url: string | null; paid_at: string | null; provider_payload: Json | null; updated_at: string
+        checkout_url: string | null; paid_at: string | null; provider_payload: Json | null; updated_at: string; group_member_id: string | null
       }>
       plans: Table<{ id: string; sessions: number }>
       pricing_settings: Table<{
@@ -45,6 +45,12 @@ export type Database = {
         created_at: string; currency: string; id: string; learner_id: string; plan_id: string; price: number; renews_at: string
         sessions_per_month: number; sessions_remaining: number; teacher_id: string; active: boolean
       }>
+      groups: Table<{
+        id: string; teacher_id: string; organizer_family: string; subject: string; plan_id: string; slots: Json; invite_code: string
+        status: string; payment_deadline: string | null; starts_on: string | null; ends_on: string | null; created_at: string
+      }>
+      group_members: Table<{ id: string; group_id: string; family_id: string; learner_id: string; status: string; joined_at: string }>
+      group_sessions: Table<{ id: string; group_id: string; teacher_id: string; subject: string; starts_at: string; minutes: number; status: string; delivered_at: string | null }>
       teacher_documents: Table<{ id: number; teacher_id: string; path: string; file_name: string; content_type: string; size: number; created_at: string }>
       teacher_credentials: Table<{
         id: number; institution: string; kind: string; position: number; riwaya: string | null; sanad: string[] | null
@@ -61,6 +67,15 @@ export type Database = {
     }
     Views: { [_ in never]: never }
     Functions: {
+      create_group: { Args: { p_learner: string; p_teacher: string; p_subject: string; p_plan: string; p_slots: Json }; Returns: string }
+      join_group: { Args: { p_code: string; p_learner: string }; Returns: string }
+      leave_group: { Args: { p_group: string }; Returns: undefined }
+      start_group_payment: { Args: { p_member: string; p_method?: string }; Returns: Json }
+      group_detail: { Args: { p_group: string }; Returns: Json }
+      group_by_code: { Args: { p_code: string }; Returns: Json }
+      my_groups: { Args: Record<string, never>; Returns: Json }
+      my_group_sessions: { Args: Record<string, never>; Returns: Json }
+      deliver_group_session: { Args: { p_session: string; p_report: Json }; Returns: undefined }
       add_teacher_document: { Args: { p_path: string; p_file_name: string }; Returns: number }
       remove_teacher_document: { Args: { p_id: number }; Returns: string }
       book_session: {

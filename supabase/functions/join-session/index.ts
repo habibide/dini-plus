@@ -42,17 +42,17 @@ Deno.serve(async (req) => {
 
   let roomUrl = access.room
   if (!roomUrl) {
-    const name = `dini-${bookingId.replaceAll('-', '').slice(0, 24)}`
+    // Nom de salle tiré de la séance renvoyée par la base : pour un cours de groupe, c'est la séance de groupe,
+    // donc tous les membres et le professeur arrivent dans la même salle (jusqu'à 10 élèves et le professeur).
+    const name = `dini-${access.booking_id.replaceAll('-', '').slice(0, 24)}`
     let res = await daily('/rooms', {
       method: 'POST',
-      body: { name, privacy: 'private', properties: { nbf, exp, eject_at_room_exp: true, max_participants: 6, enable_prejoin_ui: true, enable_chat: true, enable_screenshare: true } },
+      body: { name, privacy: 'private', properties: { nbf, exp, eject_at_room_exp: true, max_participants: 11, enable_prejoin_ui: true, enable_chat: true, enable_screenshare: true } },
     })
-    // Les deux participants peuvent arriver en même temps : si la salle existe déjà, on la relit.
+    // Les participants peuvent arriver en même temps : si la salle existe déjà, on la relit.
     if (!res.ok) res = await daily(`/rooms/${name}`)
     if (!res.ok) return json({ error: 'video_unavailable' }, 502)
     roomUrl = (await res.json()).url as string
-    const admin = createClient(url, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
-    await admin.from('bookings').update({ video_room: roomUrl }).eq('id', bookingId)
   }
 
   const roomName = new URL(roomUrl).pathname.slice(1)
