@@ -362,6 +362,8 @@ export const en: Messages = {
     next: (when: string) => `Next session: ${when}`,
     joinTitle: (teacher: string) => `Join ${teacher}’s group`,
     joinAs: 'Enrol',
+    studentName: 'Who will attend? Student’s first and last name',
+    studentPlaceholder: 'Yourself or your child',
     join: 'Join the group',
     joining: 'Joining…',
     alreadyMember: 'You are already part of this group.',

@@ -309,6 +309,8 @@ export const ar: Messages = {
     findGroup: 'عرض المجموعة',
     joinTitle: (teacher: string) => `مجموعة ${teacher}`,
     joinAs: 'تسجيل',
+    studentName: 'من سيحضر الدروس؟ اسم الطالب ولقبه',
+    studentPlaceholder: 'أنت أو طفلك',
     join: 'الانضمام إلى المجموعة',
     joining: 'جارٍ التسجيل…',
     alreadyMember: 'أنت عضو في هذه المجموعة بالفعل.',
