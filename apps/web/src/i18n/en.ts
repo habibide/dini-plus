@@ -307,6 +307,12 @@ export const en: Messages = {
     share: 'Share profile',
     copied: 'Link copied',
   },
+  payDone: {
+    title: 'Payment complete',
+    text: 'You can go back to the DINE app: your payment is confirmed there within a few seconds.',
+    failed: 'The payment did not go through. Go back to the DINE app to try again.',
+    site: 'Continue on the website',
+  },
   groups: {
     cta: 'Group lessons',
     ctaHint: '3 to 10 students, −40% per person',

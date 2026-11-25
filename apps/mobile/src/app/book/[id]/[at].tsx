@@ -74,7 +74,7 @@ export default function BookScreen() {
   async function openPayment(id: string) {
     setError(undefined)
     try {
-      const { url } = await startPayment.mutateAsync({ paymentId: id, returnUrl: `${SITE_URL}/book/return` })
+      const { url } = await startPayment.mutateAsync({ paymentId: id, returnUrl: `${SITE_URL}/pay/done` })
       await WebBrowser.openBrowserAsync(url)
       payment.refetch()
     } catch (e) {
