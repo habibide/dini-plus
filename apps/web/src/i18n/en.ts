@@ -364,6 +364,7 @@ export const en: Messages = {
     joinAs: 'Enrol',
     studentName: 'Who will attend? Student’s first and last name',
     studentPlaceholder: 'Yourself or your child',
+    asSelf: (n: string) => `You will be enrolled under your name: ${n}`,
     join: 'Join the group',
     joining: 'Joining…',
     alreadyMember: 'You are already part of this group.',

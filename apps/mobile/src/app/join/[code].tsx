@@ -25,7 +25,7 @@ export default function JoinGroup() {
   // Sans aucun élève (compte tout neuf), on demande le nom de celui qui suivra les cours.
   const learners = invite.data && family.data ? family.data.learners.filter((l) => !(invite.data!.myLearners ?? []).includes(l.id)) : []
   const learner = learnerId ?? learners[0]?.id
-  const student = useEnsureLearner(learner)
+  const student = useEnsureLearner(learner, family.data?.family.parentName)
 
   if (account === null) return <SignInPrompt title={all.groups.cta} text={all.groups.newIntro} next={`/join/${code}`} />
   if (invite.isError) return <T style={{ margin: 20, color: colors.warn }}>{invite.error.message}</T>
@@ -68,6 +68,7 @@ export default function JoinGroup() {
               {learners.map((l) => <Chip key={l.id} label={l.name} on={learner === l.id} onPress={() => setLearnerId(l.id)} />)}
             </View>
           </>}
+          {student.asSelf && <T tone="muted">{m.asSelf(student.self)}</T>}
           {student.needName && <Input label={m.studentName} value={student.name} onChangeText={student.setName} placeholder={m.studentPlaceholder} />}
           {join.error || student.error ? <T style={{ color: colors.warn, backgroundColor: colors.warnBg, padding: 10 }}>{(join.error ?? student.error)!.message}</T> : null}
           <Button title={join.isPending || student.pending ? m.joining : m.join} disabled={join.isPending || student.pending || !student.ready} onPress={submit} />

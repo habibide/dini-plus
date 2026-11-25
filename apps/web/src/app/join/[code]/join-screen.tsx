@@ -27,7 +27,7 @@ export function JoinGroupScreen() {
   // Sans aucun élève (compte tout neuf), on demande le nom de celui qui suivra les cours.
   const learners = invite.data && family.data ? family.data.learners.filter((l) => !(invite.data!.myLearners ?? []).includes(l.id)) : []
   const learner = learnerId ?? learners[0]?.id
-  const student = useEnsureLearner(learner)
+  const student = useEnsureLearner(learner, family.data?.family.parentName)
 
   if (invite.isError) return <div className="mx-auto max-w-xl px-5 py-10"><FormError message={invite.error.message} /></div>
   const g = invite.data
@@ -73,6 +73,7 @@ export function JoinGroupScreen() {
               </select>
             </label>
           )}
+          {student.asSelf && <p className="text-sm text-muted">{m.asSelf(student.self)}</p>}
           {student.needName && (
             <label className="flex flex-col gap-1 text-sm font-semibold">{m.studentName}
               <input value={student.name} onChange={(e) => student.setName(e.target.value)} placeholder={m.studentPlaceholder} className="min-h-11 rounded-sm border border-line px-3 font-normal" />

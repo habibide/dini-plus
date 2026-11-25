@@ -362,6 +362,7 @@ export const fr = {
     joinAs: 'Inscrire',
     studentName: 'Qui suivra les cours ? Prénom et nom de l’élève',
     studentPlaceholder: 'Vous-même ou votre enfant',
+    asSelf: (n: string) => `Vous serez inscrit à votre nom : ${n}`,
     join: 'Rejoindre le groupe',
     joining: 'Inscription…',
     alreadyMember: 'Vous faites déjà partie de ce groupe.',
