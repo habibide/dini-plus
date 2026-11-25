@@ -1,12 +1,13 @@
-import { HOUR, colors, surah } from '@dini/core'
+import { HOUR, colors, subject, surah } from '@dini/core'
 import type { LearnerDashboard } from '@dini/data'
-import { useAccount, useDashboard, useDini, useDisputeBooking, useFamily } from '@dini/data/react'
+import { useAccount, useDashboard, useDini, useDisputeBooking, useFamily, useMyGroups } from '@dini/data/react'
 import { router } from 'expo-router'
 import { useState } from 'react'
 import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { SignInPrompt } from '@/lib/auth'
 import { JoinButton } from '@/lib/video'
+import { GroupStatusBadge } from '@/lib/groups'
 import { Button, Section, T, font } from '@/lib/ui'
 import { useFormat, useT } from '@/lib/i18n'
 
@@ -56,6 +57,7 @@ function LearnerView({ d, tz }: { d: LearnerDashboard; tz: string }) {
   const fmt = useFormat()
   return (
     <ScrollView contentInsetAdjustmentBehavior="never" contentContainerStyle={{ paddingBottom: 110 }}>
+      <MyGroups tz={tz} />
       {d.awaitingValidation.map((b) => (
         <View key={b.id} style={{ padding: 16, paddingHorizontal: 20, gap: 10, backgroundColor: colors.leaf, borderBottomWidth: 1, borderColor: colors.line }}>
           {b.status === 'missed'
@@ -70,7 +72,7 @@ function LearnerView({ d, tz }: { d: LearnerDashboard; tz: string }) {
       <Section title={m.next}>
         {d.next ? <>
           <T style={{ fontFamily: font.display, fontSize: 20, textTransform: 'capitalize' }}>{fmt.dateTime(d.next.startsAt, tz)}</T>
-          <T tone="muted">{d.next.kind === 'trial' ? m.trialPrefix : ''}{m.yourTime}</T>
+          <T tone="muted">{d.next.kind === 'trial' ? m.trialPrefix : d.next.kind === 'group' ? `${t.groups.badge} · ` : ''}{m.yourTime}</T>
           <JoinButton booking={d.next} tz={tz} />
         </> : <>
           <T tone="muted">{m.noneNext}</T>
@@ -117,5 +119,29 @@ function LearnerView({ d, tz }: { d: LearnerDashboard; tz: string }) {
         ) : <T tone="muted">{m.noReport}</T>}
       </Section>
     </ScrollView>
+  )
+}
+
+/** Groupes de la famille et accès par code d'invitation. */
+function MyGroups({ tz }: { tz: string }) {
+  const groups = useMyGroups()
+  const all = useT()
+  const m = all.groups
+  const fmt = useFormat()
+  const list = (groups.data ?? []).filter((g) => !g.asTeacher)
+  return (
+    <Section title={list.length ? m.myGroups : undefined}>
+      {list.map((g) => (
+        <Pressable key={g.id} accessibilityRole="button" onPress={() => router.push({ pathname: '/group/[id]', params: { id: g.id } })}
+          style={({ pressed }) => ({ padding: 12, gap: 4, borderRadius: 12, borderWidth: 1.5, borderColor: colors.line, backgroundColor: pressed ? colors.leaf : colors.white })}>
+          <T style={{ fontFamily: font.semibold }}>{fmt.label(subject(g.subject).label)} · {g.teacherName}</T>
+          <GroupStatusBadge status={g.status} />
+          <T tone="muted" style={{ fontSize: 13 }}>{m.members(g.members, 10)}{g.nextSession ? ` · ${m.next(fmt.dateTime(g.nextSession, tz))}` : ''}</T>
+        </Pressable>
+      ))}
+      <Pressable accessibilityRole="link" onPress={() => router.push('/join')}>
+        <T style={{ fontFamily: font.semibold, color: colors.green2, textDecorationLine: 'underline' }}>{m.haveCode}</T>
+      </Pressable>
+    </Section>
   )
 }
