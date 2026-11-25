@@ -30,7 +30,7 @@ export default function NewGroup() {
   const [planId, setPlanId] = useState<PlanId>('discovery')
   const [picked, setPicked] = useState<GroupSlot[]>([])
   const learner = learnerId ?? family.data?.learners[0]?.id
-  const student = useEnsureLearner(learner)
+  const student = useEnsureLearner(learner, family.data?.family.parentName)
 
   const t = teacher.data
   const options = useMemo(() => {
@@ -69,6 +69,7 @@ export default function NewGroup() {
             {learners.map((l) => <Chip key={l.id} label={l.name} on={learner === l.id} onPress={() => setLearnerId(l.id)} />)}
           </View>
         </>}
+        {student.asSelf && <T tone="muted">{m.asSelf(student.self)}</T>}
         {student.needName && <Input label={m.studentName} value={student.name} onChangeText={student.setName} placeholder={m.studentPlaceholder} />}
         {t.subjects.length > 1 && <>
           <T style={{ fontFamily: font.semibold }}>{m.subject}</T>

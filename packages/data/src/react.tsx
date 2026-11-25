@@ -154,20 +154,25 @@ export const useAddLearner = () => useWrite((api, a: { name: string; birthYear: 
 
 /**
  * Élève à inscrire quand la famille n'en a encore aucun (compte tout neuf arrivé par un lien
- * d'invitation, par exemple) : on demande son nom, et l'élève est créé au moment de valider.
+ * d'invitation, par exemple) : c'est le titulaire du compte lui-même, à son nom, créé au moment
+ * de valider. On ne demande un nom que si le compte n'en a pas.
  */
-export function useEnsureLearner(learnerId: string | undefined) {
+export function useEnsureLearner(learnerId: string | undefined, selfName: string | undefined) {
   const add = useAddLearner()
-  const [name, setName] = useState('')
-  const needName = !learnerId
-  const ready = !needName || name.trim().length > 0
+  const [typed, setName] = useState('')
+  const self = selfName?.trim() ?? ''
+  const asSelf = !learnerId && !!self
+  const needName = !learnerId && !self
+  const name = asSelf ? self : typed.trim()
+  const ready = !!learnerId || name.length > 0
   const ensure = async (): Promise<string | null> => {
     if (learnerId) return learnerId
-    if (!name.trim()) return null
-    const l = await add.mutateAsync({ name: name.trim(), birthYear: new Date().getFullYear() - 8 }).catch(() => null)
+    if (!name) return null
+    // Le titulaire du compte est un adulte ; l'année n'est qu'indicative (affichage de l'âge).
+    const l = await add.mutateAsync({ name, birthYear: new Date().getFullYear() - 25 }).catch(() => null)
     return l?.id ?? null
   }
-  return { needName, name, setName, ready, ensure, pending: add.isPending, error: add.error }
+  return { asSelf, self, needName, name: typed, setName, ready, ensure, pending: add.isPending, error: add.error }
 }
 
 // Connexion -----------------------------------------------------------------------------

@@ -34,7 +34,7 @@ export function NewGroupScreen() {
   const [planId, setPlanId] = useState<PlanId>('discovery')
   const [picked, setPicked] = useState<GroupSlot[]>([])
   const learner = learnerId ?? family.data?.learners[0]?.id
-  const student = useEnsureLearner(learner)
+  const student = useEnsureLearner(learner, family.data?.family.parentName)
 
   const t = teacher.data
   // Créneaux de la semaine à venir, ramenés à un jour et une heure fixes dans le fuseau du professeur.
@@ -79,6 +79,7 @@ export function NewGroupScreen() {
               </select>
             </label>
           )}
+          {student.asSelf && <p className="text-sm text-muted">{m.asSelf(student.self)}</p>}
           {student.needName && (
             <label className="flex flex-col gap-1 text-sm font-semibold">{m.studentName}
               <input value={student.name} onChange={(e) => student.setName(e.target.value)} placeholder={m.studentPlaceholder} className="min-h-11 rounded-sm border border-line px-3 font-normal" />

@@ -311,6 +311,7 @@ export const ar: Messages = {
     joinAs: 'تسجيل',
     studentName: 'من سيحضر الدروس؟ اسم الطالب ولقبه',
     studentPlaceholder: 'أنت أو طفلك',
+    asSelf: (n: string) => `سيتم تسجيلك باسمك: ${n}`,
     join: 'الانضمام إلى المجموعة',
     joining: 'جارٍ التسجيل…',
     alreadyMember: 'أنت عضو في هذه المجموعة بالفعل.',
