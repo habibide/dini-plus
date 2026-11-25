@@ -270,6 +270,7 @@ export const en: Messages = {
     members: (n: number, max: number) => `${n} student${n > 1 ? 's' : ''} of ${max}`,
     formingText: (min: number) => `Payment opens once ${min} students have joined. Share the invitation link.`,
     paymentText: (deadline: string) => `Each member pays their share before ${deadline}. The group starts with those who paid, if there are at least 3.`,
+    renewalText: (deadline: string) => `The current month ends on ${deadline}. To continue, each member pays for next month before then. The group continues with those who paid, if there are at least 3.`,
     activeText: 'The group has started: sessions appear in your progress tab.',
     cancelledText: 'This group was cancelled. Shares already paid will be refunded.',
     endedText: 'This month of lessons is over.',

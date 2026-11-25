@@ -333,6 +333,7 @@ export const ar: Messages = {
     members: (n: number, max: number) => `${n} من ${max} طلاب`,
     formingText: (min: number) => `يُفتح الدفع عند انضمام ${min} طلاب. شارك رابط الدعوة.`,
     paymentText: (deadline: string) => `يدفع كل عضو حصته قبل ${deadline}. تبدأ المجموعة مع من دفعوا، إذا كانوا 3 على الأقل.`,
+    renewalText: (deadline: string) => `ينتهي الشهر الحالي في ${deadline}. للاستمرار، يدفع كل عضو الشهر التالي قبل هذا التاريخ. تستمر المجموعة مع من دفعوا، إذا كانوا 3 على الأقل.`,
     activeText: 'بدأت المجموعة: تظهر الحصص في صفحة المتابعة.',
     cancelledText: 'أُلغيت هذه المجموعة. ستُعاد الحصص المدفوعة.',
     endedText: 'انتهى شهر الدروس هذا.',
