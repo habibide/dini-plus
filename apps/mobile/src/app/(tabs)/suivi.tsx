@@ -1,8 +1,8 @@
 import { HOUR, colors, subject, surah } from '@dini/core'
 import type { LearnerDashboard } from '@dini/data'
 import { useAccount, useDashboard, useDini, useDisputeBooking, useFamily, useMyGroups } from '@dini/data/react'
-import { router } from 'expo-router'
-import { useState } from 'react'
+import { router, useFocusEffect } from 'expo-router'
+import { useCallback, useState } from 'react'
 import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { SignInPrompt } from '@/lib/auth'
@@ -11,10 +11,19 @@ import { GroupStatusBadge } from '@/lib/groups'
 import { Button, Section, T, font } from '@/lib/ui'
 import { useFormat, useT } from '@/lib/i18n'
 
+/** Prénom seul, sauf s'il est partagé par plusieurs élèves de la famille : alors le nom complet. */
+function shortName(name: string, all: string[]) {
+  const first = name.split(' ')[0]
+  return all.filter((n) => n.split(' ')[0] === first).length > 1 ? name : first
+}
+
 export default function Suivi() {
   const account = useAccount()
   const family = useFamily()
   const dash = useDashboard()
+  const groups = useMyGroups()
+  // Retour sur l'onglet (après un paiement par exemple) : on relit le suivi et les groupes.
+  useFocusEffect(useCallback(() => { dash.refetch(); groups.refetch() }, [dash.refetch, groups.refetch]))
   const [tab, setTab] = useState(0)
   const insets = useSafeAreaInsets()
   const t = useT()
@@ -33,7 +42,7 @@ export default function Suivi() {
           {dash.data.map((x, i) => (
             <Pressable key={x.learner.id} accessibilityRole="tab" accessibilityState={{ selected: i === tab }} onPress={() => setTab(i)}
               style={{ minHeight: 44, justifyContent: 'center', borderBottomWidth: 2, borderColor: i === tab ? colors.ochre : 'transparent' }}>
-              <T style={{ fontFamily: font.semibold, color: i === tab ? colors.ink : colors.muted }}>{x.learner.name.split(' ')[0]}</T>
+              <T style={{ fontFamily: font.semibold, color: i === tab ? colors.ink : colors.muted }}>{shortName(x.learner.name, dash.data!.map((y) => y.learner.name))}</T>
             </Pressable>
           ))}
         </View>

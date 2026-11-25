@@ -305,6 +305,12 @@ export const fr = {
     share: 'Partager le profil',
     copied: 'Lien copié',
   },
+  payDone: {
+    title: 'Paiement terminé',
+    text: 'Vous pouvez revenir dans l’application DINE : votre paiement y est confirmé en quelques secondes.',
+    failed: 'Le paiement n’a pas abouti. Revenez dans l’application DINE pour réessayer.',
+    site: 'Continuer sur le site',
+  },
   groups: {
     cta: 'Cours en groupe',
     ctaHint: 'De 3 à 10 élèves, −40 % par personne',

@@ -3,7 +3,7 @@ import { useAccount, useFamily, useGroup, useLeaveGroup, useStartGroupPayment, u
 import { SignInPrompt } from '@/lib/auth'
 import { router, useLocalSearchParams } from 'expo-router'
 import * as WebBrowser from 'expo-web-browser'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ActivityIndicator, Alert, RefreshControl, ScrollView, Share, View } from 'react-native'
 import { SITE_URL } from '@/lib/api'
 import { Button, Chip, Section, T, font } from '@/lib/ui'
@@ -29,6 +29,12 @@ export default function GroupScreen() {
   const [paying, setPaying] = useState(false)
   // Spinner seulement quand l'utilisateur tire l'écran : la relecture automatique (toutes les 5 s) ne doit pas faire sauter la page.
   const [pulling, setPulling] = useState(false)
+  // Part en cours de paiement : dès que le serveur la confirme, on referme la page Bictorys.
+  const payingFor = useRef<string | null>(null)
+  const paidNow = group.data?.members.find((x) => x.id === payingFor.current)?.status === 'paid'
+  useEffect(() => {
+    if (paidNow) { payingFor.current = null; WebBrowser.dismissBrowser().catch(() => {}) }
+  }, [paidNow])
 
   if (account === null) return <SignInPrompt title={all.groups.cta} text={all.groups.newIntro} next={`/group/${id}`} />
   if (group.isError) return <T style={{ margin: 20, color: colors.warn }}>{group.error.message}</T>
@@ -50,8 +56,9 @@ export default function GroupScreen() {
     setError(null)
     setPaying(true)
     try {
+      payingFor.current = memberId
       const { paymentId } = await startShare.mutateAsync({ memberId, method: pay })
-      const { url } = await startPayment.mutateAsync({ paymentId, returnUrl: `${SITE_URL}/groups/${g!.id}` })
+      const { url } = await startPayment.mutateAsync({ paymentId, returnUrl: `${SITE_URL}/pay/done` })
       // Page de paiement Bictorys dans le navigateur intégré ; au retour, le groupe se relit.
       await WebBrowser.openBrowserAsync(url)
       group.refetch()
