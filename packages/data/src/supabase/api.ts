@@ -263,6 +263,8 @@ export type GroupDetail = {
 export type GroupInvite = {
   id: string; teacherId: string; teacherName: string; teacherTimezone: string; subject: SubjectId; planId: PlanId; slots: GroupSlot[]
   status: GroupStatus; paymentDeadline: number | null; members: number; min: number; max: number; isMember: boolean
+  /** Élèves de la famille déjà inscrits : la famille peut encore en inscrire d'autres. */
+  myLearners: string[]
   share: { amount: number; currency: CurrencyCode } | null
 }
 export type GroupSummary = {
@@ -683,7 +685,7 @@ export function createSupabaseApi(client: DiniClient, storage: KeyValueStorage, 
     },
     async groupByCode(code: string): Promise<GroupInvite> {
       const g = must(await client.rpc('group_by_code', { p_code: code })) as Record<string, unknown>
-      return { ...(g as unknown as GroupInvite), paymentDeadline: ms((g.paymentDeadline as string) ?? null), share: toShare(g.share) }
+      return { ...(g as unknown as GroupInvite), myLearners: (g.myLearners as string[] | undefined) ?? [], paymentDeadline: ms((g.paymentDeadline as string) ?? null), share: toShare(g.share) }
     },
     async joinGroup(code: string, learnerId: string) {
       await familyId()

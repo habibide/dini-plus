@@ -122,7 +122,7 @@ export function GroupScreen() {
                 {redirecting ? m.paying : <>{m.payShare}{toPay.length > 1 ? ` (${x.name})` : ''} · <Money amount={g.share!.amount} currency={g.share!.currency} /></>}
               </button>
             ))}
-            <p className="text-xs text-muted">{all.booking.secure}</p>
+            <p className="text-xs text-muted">{m.secureNote}</p>
           </div>
         )}
         <FormError message={error ?? leave.error?.message} />

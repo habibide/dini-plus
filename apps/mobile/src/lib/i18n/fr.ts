@@ -283,6 +283,7 @@ export const fr = {
     payShare: (amount: string) => `Payer ma part · ${amount}`,
     paying: 'Ouverture du paiement…',
     waiting: 'Nous attendons la confirmation du paiement…',
+    secureNote: 'Paiement sécurisé par Bictorys : Wave, Orange Money ou carte bancaire.',
     howPay: 'Moyen de paiement',
     leave: 'Quitter le groupe',
     cancelGroup: 'Annuler le groupe',

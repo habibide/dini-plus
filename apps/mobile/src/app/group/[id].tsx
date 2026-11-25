@@ -27,6 +27,8 @@ export default function GroupScreen() {
   const [method, setMethod] = useState<PaymentMethod>()
   const [error, setError] = useState<string | null>(null)
   const [paying, setPaying] = useState(false)
+  // Spinner seulement quand l'utilisateur tire l'écran : la relecture automatique (toutes les 5 s) ne doit pas faire sauter la page.
+  const [pulling, setPulling] = useState(false)
 
   if (account === null) return <SignInPrompt title={all.groups.cta} text={all.groups.newIntro} next={`/group/${id}`} />
   if (group.isError) return <T style={{ margin: 20, color: colors.warn }}>{group.error.message}</T>
@@ -70,7 +72,7 @@ export default function GroupScreen() {
 
   return (
     <ScrollView style={{ backgroundColor: colors.paper }} contentContainerStyle={{ paddingBottom: 40 }}
-      refreshControl={<RefreshControl refreshing={group.isRefetching} onRefresh={() => { group.refetch() }} />}>
+      refreshControl={<RefreshControl refreshing={pulling} onRefresh={() => { setPulling(true); group.refetch().finally(() => setPulling(false)) }} />}>
       <View style={{ padding: 20, gap: 8 }}>
         <T tone="h1" style={{ fontSize: 24, lineHeight: 30 }}>{fmt.label(subject(g.subject).label)} · {g.teacherName}</T>
         <GroupStatusBadge status={g.status} />
@@ -116,7 +118,7 @@ export default function GroupScreen() {
             <Button key={x.id} title={paying ? m.paying : `${m.payShare(fmt.money(g.share!.amount, g.share!.currency))}${toPay.length > 1 ? ` (${x.name})` : ''}`}
               disabled={paying} onPress={() => payShare(x.id)} />
           ))}
-          <T tone="muted" style={{ fontSize: 13 }}>{all.book.secure}</T>
+          <T tone="muted" style={{ fontSize: 13 }}>{m.secureNote}</T>
         </>}
         {error || leave.error ? <T style={{ color: colors.warn, backgroundColor: colors.warnBg, padding: 10 }}>{error ?? leave.error?.message}</T> : null}
       </Section>

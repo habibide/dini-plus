@@ -342,6 +342,7 @@ export const en: Messages = {
     yourShare: 'Your share',
     payShare: 'Pay my share',
     paying: 'Opening payment…',
+    secureNote: 'Secure payment by Bictorys: Wave, Orange Money or bank card.',
     howPay: 'Payment method',
     leave: 'Leave the group',
     cancelGroup: 'Cancel the group',

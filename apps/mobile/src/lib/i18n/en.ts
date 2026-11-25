@@ -285,6 +285,7 @@ export const en: Messages = {
     payShare: (amount: string) => `Pay my share · ${amount}`,
     paying: 'Opening payment…',
     waiting: 'Waiting for payment confirmation…',
+    secureNote: 'Secure payment by Bictorys: Wave, Orange Money or bank card.',
     howPay: 'Payment method',
     leave: 'Leave the group',
     cancelGroup: 'Cancel the group',

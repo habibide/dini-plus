@@ -27,7 +27,8 @@ export default function JoinGroup() {
   const g = invite.data
   if (!g || !family.data) return <ActivityIndicator style={{ marginTop: 40 }} color={colors.green} />
   const plan = PLANS.find((p) => p.id === g.planId)!
-  const learners = family.data.learners
+  // Une famille peut inscrire plusieurs enfants : on propose ceux qui ne sont pas encore dans le groupe.
+  const learners = family.data.learners.filter((l) => !(g.myLearners ?? []).includes(l.id))
   const learner = learnerId ?? learners[0]?.id
   const open = (g.status === 'forming' || g.status === 'payment') && g.members < g.max
 
@@ -51,12 +52,13 @@ export default function JoinGroup() {
         {g.share && <T style={{ fontFamily: font.display, fontSize: 20, color: colors.green }}>{fmt.money(g.share.amount, g.share.currency)}{m.perMonth}</T>}
       </Section>
       <View style={{ padding: 20, gap: 12 }}>
-        {g.isMember ? <>
+        {g.isMember && !learners.length ? <>
           <T style={{ backgroundColor: colors.soft, color: colors.green2, padding: 12 }}>{m.alreadyMember}</T>
           <Button title={m.openGroup} onPress={() => router.replace({ pathname: '/group/[id]', params: { id: g.id } })} />
         </> : !open ? (
           <T style={{ backgroundColor: colors.warnBg, color: colors.warn, padding: 12 }}>{m.closed}</T>
         ) : <>
+          {g.isMember && <Button title={m.openGroup} kind="ghost" onPress={() => router.replace({ pathname: '/group/[id]', params: { id: g.id } })} />}
           {learners.length > 1 && <>
             <T style={{ fontFamily: font.semibold }}>{m.joinAs}</T>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>

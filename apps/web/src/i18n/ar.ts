@@ -347,6 +347,7 @@ export const ar: Messages = {
     yourShare: 'حصتك',
     payShare: 'ادفع حصتي',
     paying: 'جارٍ فتح الدفع…',
+    secureNote: 'دفع آمن عبر Bictorys: Wave أو Orange Money أو بطاقة بنكية.',
     howPay: 'طريقة الدفع',
     leave: 'مغادرة المجموعة',
     cancelGroup: 'إلغاء المجموعة',
