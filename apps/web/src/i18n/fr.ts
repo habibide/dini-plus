@@ -340,6 +340,7 @@ export const fr = {
     yourShare: 'Votre part',
     payShare: 'Payer ma part',
     paying: 'Ouverture du paiement…',
+    secureNote: 'Paiement sécurisé par Bictorys : Wave, Orange Money ou carte bancaire.',
     howPay: 'Moyen de paiement',
     leave: 'Quitter le groupe',
     cancelGroup: 'Annuler le groupe',

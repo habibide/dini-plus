@@ -91,6 +91,11 @@ export default function TeacherScreen() {
         <View style={{ gap: 8 }}>
           <Button title={`⚡ ${s.book}`} onPress={toAgenda} />
           <MessageButton name={t.name} onBook={toAgenda} />
+          <Pressable accessibilityRole="button" onPress={() => account ? router.push({ pathname: '/group/new', params: { teacher: t.id } }) : router.push({ pathname: '/login', params: { next: `/group/new?teacher=${t.id}` } })}
+            style={({ pressed }) => ({ minHeight: 52, alignItems: 'center', justifyContent: 'center', paddingVertical: 8, borderRadius: 14, borderWidth: 1.5, borderColor: colors.line, backgroundColor: pressed ? colors.leaf : colors.white })}>
+            <T style={{ fontFamily: font.semibold }}>👥 {all.groups.cta}</T>
+            <T tone="muted" style={{ fontSize: 12.5 }}>{all.groups.ctaHint}</T>
+          </Pressable>
           <Button title={m.share} kind="ghost" onPress={() => Share.share({ message: `${m.shareText(t.name)} : ${SITE_URL}/teachers/${t.id}`, url: `${SITE_URL}/teachers/${t.id}` }).catch(() => {})} />
         </View>
         <T tone="muted" style={{ fontSize: 14 }}>{m.trial(fmt.money(trialPrice(t.price.amount, t.price.currency), t.price.currency))}</T>

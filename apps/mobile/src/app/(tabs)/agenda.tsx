@@ -1,11 +1,14 @@
 import { COMMISSION_TIERS, colors, commissionRate, subject } from '@dini/core'
 import type { AgendaItem } from '@dini/data/supabase'
-import { useAccount, useAgenda, useEarnings, useMyTeacher } from '@dini/data/react'
+import { useAccount, useAgenda, useDeliverGroupSession, useEarnings, useMyGroupSessions, useMyTeacher } from '@dini/data/react'
+import type { GroupSession } from '@dini/data/supabase'
+import { useState } from 'react'
+import { TextInput } from 'react-native'
 import { router } from 'expo-router'
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { SignInPrompt } from '@/lib/auth'
-import { Section, T, font } from '@/lib/ui'
+import { Button, Section, T, font } from '@/lib/ui'
 import { JoinButton } from '@/lib/video'
 import { useFormat, useT } from '@/lib/i18n'
 
@@ -21,7 +24,8 @@ export default function Agenda() {
   if (me.isPending || !account) return <ActivityIndicator style={{ marginTop: 80 }} color={colors.green} />
   const t = me.data
   const now = Date.now()
-  const items = agenda.data ?? []
+  // Les séances de groupe sont listées à part (une ligne par séance, pas par élève).
+  const items = (agenda.data ?? []).filter((b) => b.kind !== 'group')
   const toComplete = items.filter((b) => b.status === 'scheduled' && b.startsAt <= now)
   const upcoming = items.filter((b) => b.status === 'scheduled' && b.startsAt > now)
   const hours = earnings.data?.hoursTaught ?? t?.hoursTaught ?? 0
@@ -48,6 +52,7 @@ export default function Agenda() {
             {toComplete.map((b) => <Row key={b.id} b={b} highlight />)}
           </Section>
         )}
+        <GroupSessions tz={t.timezone} />
         <Section title={m.upcoming}>
           {agenda.isPending ? <ActivityIndicator color={colors.green} />
             : upcoming.length ? upcoming.map((b) => <Row key={b.id} b={b} />)
@@ -76,5 +81,44 @@ function Row({ b, highlight }: { b: AgendaItem; highlight?: boolean }) {
       {highlight && <T style={{ color: colors.green, fontFamily: font.semibold }}>{m.writeReport}</T>}
       {!highlight && b.startsAt - now < 60 * 60_000 && <JoinButton booking={b} tz={tz} style={{ marginTop: 6 }} />}
     </Pressable>
+  )
+}
+
+/** Séances de groupe : salle partagée et compte rendu commun à tout le groupe. */
+function GroupSessions({ tz }: { tz: string }) {
+  const sessions = useMyGroupSessions()
+  const m = useT().groups
+  const list = sessions.data ?? []
+  if (!list.length) return null
+  return (
+    <Section title={m.teacherSessions}>
+      {list.map((g) => <GroupSessionRow key={g.id} g={g} tz={tz} />)}
+    </Section>
+  )
+}
+
+function GroupSessionRow({ g, tz }: { g: GroupSession; tz: string }) {
+  const m = useT().groups
+  const fmt = useFormat()
+  const deliver = useDeliverGroupSession()
+  const [open, setOpen] = useState(false)
+  const [covered, setCovered] = useState('')
+  const [homework, setHomework] = useState('')
+  const field = { minHeight: 70, borderWidth: 1.5, borderColor: colors.line, borderRadius: 12, padding: 10, backgroundColor: colors.white, fontFamily: font.body, textAlignVertical: 'top' as const }
+  return (
+    <View style={{ gap: 8, paddingVertical: 10, borderBottomWidth: 1, borderColor: colors.line }}>
+      <T style={{ fontFamily: font.semibold, textTransform: 'capitalize' }}>{fmt.dateTime(g.startsAt, tz)}</T>
+      <T tone="muted">{m.badge} · {fmt.label(subject(g.subject).label)} · {g.learners.join(', ')}</T>
+      <JoinButton booking={g} tz={tz} />
+      {g.startsAt <= Date.now() && !open && <Button title={m.deliver} kind="ghost" onPress={() => setOpen(true)} style={{ alignSelf: 'flex-start', minHeight: 40 }} />}
+      {open && <>
+        <T style={{ fontFamily: font.semibold }}>{m.covered}</T>
+        <TextInput multiline value={covered} onChangeText={setCovered} style={field} />
+        <T style={{ fontFamily: font.semibold }}>{m.homework}</T>
+        <TextInput multiline value={homework} onChangeText={setHomework} style={field} />
+        {deliver.error ? <T style={{ color: colors.warn }}>{deliver.error.message}</T> : null}
+        <Button title={m.save} disabled={deliver.isPending || !covered.trim()} onPress={() => deliver.mutate({ id: g.id, report: { covered, homework, tajwidNotes: '', comment: '' } })} />
+      </>}
+    </View>
   )
 }

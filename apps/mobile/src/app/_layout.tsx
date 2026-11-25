@@ -31,6 +31,10 @@ export default function RootLayout() {
         <Stack.Screen name="book/[id]/[at]" options={{ title: t.titles.booking }} />
         <Stack.Screen name="report/[id]" options={{ title: t.titles.report }} />
         <Stack.Screen name="session/[id]" options={{ title: t.titles.session }} />
+        <Stack.Screen name="group/new" options={{ title: t.titles.groupNew }} />
+        <Stack.Screen name="group/[id]" options={{ title: t.titles.group }} />
+        <Stack.Screen name="join/index" options={{ title: t.titles.join }} />
+        <Stack.Screen name="join/[code]" options={{ title: t.titles.join }} />
         <Stack.Screen name="login" options={{ title: t.titles.login, presentation: 'modal' }} />
         <Stack.Screen name="signup" options={{ title: t.titles.signup, presentation: 'modal' }} />
         <Stack.Screen name="forgot" options={{ title: t.titles.forgot }} />

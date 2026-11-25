@@ -28,7 +28,8 @@ export function JoinGroupScreen() {
   const g = invite.data
   if (!g || !family.data) return <p className="mx-auto max-w-xl px-5 py-10 text-muted">{all.common.loading}</p>
   const plan = PLANS.find((p) => p.id === g.planId)!
-  const learners = family.data.learners
+  // Une famille peut inscrire plusieurs enfants : on propose ceux qui ne sont pas encore dans le groupe.
+  const learners = family.data.learners.filter((l) => !(g.myLearners ?? []).includes(l.id))
   const learner = learnerId ?? learners[0]?.id
   const open = (g.status === 'forming' || g.status === 'payment') && g.members < g.max
 
@@ -52,7 +53,7 @@ export function JoinGroupScreen() {
         {g.share && <div className="flex justify-between gap-4 border-t border-line pt-2"><dt className="font-semibold">{m.pricePer}</dt><dd className="font-bold"><Money amount={g.share.amount} currency={g.share.currency} />{m.perMonth}</dd></div>}
       </dl>
 
-      {g.isMember ? (
+      {g.isMember && !learners.length ? (
         <>
           <p className="rounded-sm bg-soft px-3 py-2 text-green2">{m.alreadyMember}</p>
           <Link href={`/groups/${g.id}`} className={cx(buttonCls.primary, 'self-start')}>{m.openGroup}</Link>
@@ -61,6 +62,7 @@ export function JoinGroupScreen() {
         <p className="rounded-sm bg-warnbg px-3 py-2 text-warn">{m.closed}</p>
       ) : (
         <>
+          {g.isMember && <Link href={`/groups/${g.id}`} className="text-sm underline">{m.openGroup}</Link>}
           {learners.length > 1 && (
             <label className="flex flex-col gap-1 text-sm font-semibold">{m.joinAs}
               <select value={learner} onChange={(e) => setLearnerId(e.target.value)} className="min-h-11 rounded-sm border border-line bg-white px-2 font-normal">
