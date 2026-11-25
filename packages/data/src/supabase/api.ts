@@ -1,6 +1,6 @@
 import {
   DAY, PLANS, country,
-  type Booking, type Country, type CurrencyCode, type Family, type Learner, type Locale, type PaymentMethod, type Report, type Subscription, type Teacher,
+  type Booking, type Country, type CurrencyCode, type Family, type Learner, type Locale, type PaymentMethod, type PlanId, type Report, type SubjectId, type Subscription, type Teacher,
 } from '@dini/core'
 import type { PostgrestError, SupabaseClient } from '@supabase/supabase-js'
 import type { KeyValueStorage } from '../api'
@@ -89,6 +89,12 @@ const MESSAGES_FR: Record<string, string> = {
   video_unavailable: 'Le service de visioconférence ne répond pas. Réessayez dans un instant.',
   oauth_cancelled: 'La connexion a été annulée.',
   booking_failed: 'La réservation n’a pas abouti. Réessayez.',
+  group_not_found: 'Ce lien d’invitation ne correspond à aucun groupe.',
+  group_closed: 'Ce groupe n’accepte plus de nouveaux membres.',
+  group_full: 'Ce groupe est complet (10 élèves).',
+  invalid_slots: 'Choisissez un créneau différent pour chaque séance de la semaine, dans les disponibilités du professeur.',
+  not_member: 'Vous ne faites pas partie de ce groupe.',
+  group_session: 'Une séance de groupe ne s’annule pas seule : écrivez-nous si besoin.',
   payment_not_available: 'Le paiement en ligne n’est pas encore ouvert dans votre pays : la réservation de cours payants arrive bientôt.',
   payment_not_configured: 'Le paiement en ligne n’est pas encore activé sur DINE.',
   payment_unavailable: 'Le service de paiement ne répond pas. Réessayez dans un instant.',
@@ -98,6 +104,9 @@ const MESSAGES_FR: Record<string, string> = {
   name_required: 'Indiquez votre nom (2 caractères au moins).',
   invalid_media: 'Format non accepté : photo JPG, PNG ou WebP, vidéo MP4, MOV ou WebM.',
   photo_too_big: 'La photo dépasse 5 Mo.',
+  document_too_big: 'Le document dépasse 10 Mo.',
+  invalid_document: 'Format non accepté : PDF, JPG, PNG ou WebP.',
+  too_many_documents: 'Vous avez déjà 10 justificatifs : retirez-en un pour en ajouter un autre.',
   video_too_big: 'La vidéo dépasse 50 Mo.',
   upload_failed: 'L’envoi du fichier a échoué. Réessayez.',
   'Invalid login credentials': 'E-mail ou mot de passe incorrect.',
@@ -132,6 +141,12 @@ const MESSAGES_EN: Record<string, string> = {
   video_unavailable: 'The video service is not responding. Try again in a moment.',
   oauth_cancelled: 'Sign-in was cancelled.',
   booking_failed: 'The booking did not go through. Try again.',
+  group_not_found: 'This invitation link does not match any group.',
+  group_closed: 'This group no longer accepts new members.',
+  group_full: 'This group is full (10 students).',
+  invalid_slots: 'Pick a different slot for each weekly session, within the teacher’s availability.',
+  not_member: 'You are not part of this group.',
+  group_session: 'A group session cannot be cancelled on its own: contact us if needed.',
   payment_not_available: 'Online payment is not open in your country yet: booking paid lessons is coming soon.',
   payment_not_configured: 'Online payment is not enabled on DINE yet.',
   payment_unavailable: 'The payment service is not responding. Try again in a moment.',
@@ -141,6 +156,9 @@ const MESSAGES_EN: Record<string, string> = {
   name_required: 'Enter your name (at least 2 characters).',
   invalid_media: 'Unsupported format: JPG, PNG or WebP photo, MP4, MOV or WebM video.',
   photo_too_big: 'The photo is larger than 5 MB.',
+  document_too_big: 'The document is larger than 10 MB.',
+  invalid_document: 'Format not accepted: PDF, JPG, PNG or WebP.',
+  too_many_documents: 'You already have 10 documents: remove one to add another.',
   video_too_big: 'The video is larger than 50 MB.',
   upload_failed: 'The upload failed. Try again.',
   'Invalid login credentials': 'Incorrect email or password.',
@@ -175,6 +193,12 @@ const MESSAGES_AR: Record<string, string> = {
   video_unavailable: 'خدمة الفيديو لا تستجيب. أعد المحاولة بعد قليل.',
   oauth_cancelled: 'تم إلغاء تسجيل الدخول.',
   booking_failed: 'لم يكتمل الحجز. أعد المحاولة.',
+  group_not_found: 'رابط الدعوة هذا لا يطابق أي مجموعة.',
+  group_closed: 'هذه المجموعة لم تعد تقبل أعضاء جددًا.',
+  group_full: 'هذه المجموعة مكتملة (10 طلاب).',
+  invalid_slots: 'اختر موعدًا مختلفًا لكل حصة أسبوعية، ضمن أوقات توفر المعلم.',
+  not_member: 'أنت لست عضوًا في هذه المجموعة.',
+  group_session: 'لا يمكن إلغاء حصة جماعية بمفردها: راسلنا عند الحاجة.',
   payment_not_available: 'الدفع الإلكتروني غير متاح بعد في بلدك: حجز الدروس المدفوعة قريبًا.',
   payment_not_configured: 'الدفع الإلكتروني غير مفعّل بعد على DINE.',
   payment_unavailable: 'خدمة الدفع لا تستجيب. أعد المحاولة بعد لحظات.',
@@ -184,6 +208,9 @@ const MESSAGES_AR: Record<string, string> = {
   name_required: 'أدخل اسمك (حرفان على الأقل).',
   invalid_media: 'صيغة غير مقبولة: صورة JPG أو PNG أو WebP، فيديو MP4 أو MOV أو WebM.',
   photo_too_big: 'حجم الصورة يتجاوز 5 ميغابايت.',
+  document_too_big: 'حجم المستند يتجاوز 10 ميغابايت.',
+  invalid_document: 'صيغة غير مقبولة: PDF أو JPG أو PNG أو WebP.',
+  too_many_documents: 'لديك 10 مستندات بالفعل: احذف واحدًا لإضافة آخر.',
   video_too_big: 'حجم الفيديو يتجاوز 50 ميغابايت.',
   upload_failed: 'فشل رفع الملف. أعد المحاولة.',
   'Invalid login credentials': 'البريد الإلكتروني أو كلمة المرور غير صحيحة.',
@@ -224,12 +251,39 @@ function must<T>(res: { data: T; error: PostgrestError | null }): NonNullable<T>
   return res.data as NonNullable<T>
 }
 
+export type GroupSlot = { weekday: number; start: number }
+export type GroupStatus = 'forming' | 'payment' | 'active' | 'cancelled' | 'ended'
+export type GroupMember = { id: string; name: string; status: 'joined' | 'paid'; mine: boolean; paying: boolean }
+export type GroupDetail = {
+  id: string; teacherId: string; teacherName: string; teacherTimezone: string; subject: SubjectId; planId: PlanId; slots: GroupSlot[]
+  status: GroupStatus; paymentDeadline: number | null; startsOn: number | null; endsOn: number | null; inviteCode: string | null
+  isOrganizer: boolean; isTeacher: boolean; share: { amount: number; currency: CurrencyCode } | null; min: number; max: number
+  members: GroupMember[]; sessions: { id: string; startsAt: number; minutes: number; status: string }[]
+}
+export type GroupInvite = {
+  id: string; teacherId: string; teacherName: string; teacherTimezone: string; subject: SubjectId; planId: PlanId; slots: GroupSlot[]
+  status: GroupStatus; paymentDeadline: number | null; members: number; min: number; max: number; isMember: boolean
+  share: { amount: number; currency: CurrencyCode } | null
+}
+export type GroupSummary = {
+  id: string; teacherName: string; subject: SubjectId; planId: PlanId; status: GroupStatus; members: number
+  paymentDeadline: number | null; nextSession: number | null; asTeacher: boolean
+}
+export type GroupSession = { id: string; groupId: string; subject: SubjectId; startsAt: number; minutes: number; status: string; learners: string[] }
+
+export type TeacherDocument = { id: number; fileName: string; contentType: string; size: number; createdAt: number; path: string }
+
 export type PaymentState = { status: 'pending' | 'paid' | 'failed' | 'refund_due'; bookingId: string | null }
 
 const ms = (iso: string | null) => (iso ? Date.parse(iso) : null)
+const toShare = (x: unknown) => {
+  const v = x as { amount: number | string; currency: CurrencyCode } | null
+  return v ? { amount: Number(v.amount), currency: v.currency } : null
+}
 
 /** Espace public des photos et vidéos des professeurs, et adresse publique d'un fichier. */
 const MEDIA_BUCKET = 'teacher-media'
+const DOCUMENTS_BUCKET = 'teacher-documents'
 let mediaUrl = (path: string) => path
 
 function toMyTeacher(r: TeacherRow): MyTeacher {
@@ -621,6 +675,78 @@ export function createSupabaseApi(client: DiniClient, storage: KeyValueStorage, 
     },
 
     /** Retire la photo ou la vidéo du professeur connecté. */
+    // Abonnements de groupe ----------------------------------------------------------
+
+    async createGroup(a: { learnerId: string; teacherId: string; subject: SubjectId; planId: PlanId; slots: GroupSlot[] }) {
+      await familyId()
+      return must(await client.rpc('create_group', { p_learner: a.learnerId, p_teacher: a.teacherId, p_subject: a.subject, p_plan: a.planId, p_slots: a.slots as never })) as string
+    },
+    async groupByCode(code: string): Promise<GroupInvite> {
+      const g = must(await client.rpc('group_by_code', { p_code: code })) as Record<string, unknown>
+      return { ...(g as unknown as GroupInvite), paymentDeadline: ms((g.paymentDeadline as string) ?? null), share: toShare(g.share) }
+    },
+    async joinGroup(code: string, learnerId: string) {
+      await familyId()
+      return must(await client.rpc('join_group', { p_code: code, p_learner: learnerId })) as string
+    },
+    async leaveGroup(groupId: string) {
+      must(await client.rpc('leave_group', { p_group: groupId }))
+    },
+    async groupDetail(groupId: string): Promise<GroupDetail> {
+      const g = must(await client.rpc('group_detail', { p_group: groupId })) as Record<string, unknown>
+      const sessions = (g.sessions as { id: string; startsAt: string; minutes: number; status: string }[]).map((x) => ({ ...x, startsAt: Date.parse(x.startsAt) }))
+      return {
+        ...(g as unknown as GroupDetail), sessions, share: toShare(g.share),
+        paymentDeadline: ms((g.paymentDeadline as string) ?? null), startsOn: ms((g.startsOn as string) ?? null), endsOn: ms((g.endsOn as string) ?? null),
+      }
+    },
+    async myGroups(): Promise<GroupSummary[]> {
+      const rows = must(await client.rpc('my_groups')) as (Omit<GroupSummary, 'paymentDeadline' | 'nextSession'> & { paymentDeadline: string | null; nextSession: string | null })[]
+      return rows.map((r) => ({ ...r, paymentDeadline: ms(r.paymentDeadline), nextSession: ms(r.nextSession) }))
+    },
+    /** Prépare la part d'un membre : renvoie le paiement Bictorys à ouvrir avec startPayment. */
+    async startGroupPayment(memberId: string, method?: PaymentMethod) {
+      const r = must(await client.rpc('start_group_payment', { p_member: memberId, ...(method ? { p_method: method } : {}) })) as { payment_id: string }
+      return { paymentId: r.payment_id }
+    },
+    async myGroupSessions(): Promise<GroupSession[]> {
+      const rows = must(await client.rpc('my_group_sessions')) as (Omit<GroupSession, 'startsAt'> & { startsAt: string })[]
+      return rows.map((r) => ({ ...r, startsAt: Date.parse(r.startsAt) }))
+    },
+    async deliverGroupSession(sessionId: string, report: Report) {
+      must(await client.rpc('deliver_group_session', { p_session: sessionId, p_report: report as never }))
+    },
+
+    // Justificatifs privés (diplômes, ijaza) : lus seulement par le professeur et les modérateurs.
+
+    async listTeacherDocuments(teacherId?: string): Promise<TeacherDocument[]> {
+      const id = teacherId ?? (must(await client.rpc('my_teacher_id')) as string | null)
+      if (!id) return []
+      const rows = must(await client.from('teacher_documents').select('id, file_name, content_type, size, created_at, path').eq('teacher_id', id).order('created_at'))
+      return rows.map((r) => ({ id: r.id, fileName: r.file_name, contentType: r.content_type, size: Number(r.size), createdAt: Date.parse(r.created_at), path: r.path }))
+    },
+    async uploadTeacherDocument(file: Blob, fileName: string, contentType: string) {
+      const id = must(await client.rpc('my_teacher_id')) as string | null
+      if (!id) throw new Error(msg('not_a_teacher'))
+      if (file.size > 10 * 1024 * 1024) throw new Error(msg('document_too_big'))
+      const ext = ({ 'application/pdf': 'pdf', 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' } as Record<string, string>)[contentType]
+      if (!ext) throw new Error(msg('invalid_document'))
+      const path = `${id}/doc-${Date.now()}.${ext}`
+      const up = await client.storage.from(DOCUMENTS_BUCKET).upload(path, file, { contentType, upsert: false })
+      if (up.error) throw new Error(msg('upload_failed'))
+      const saved = await client.rpc('add_teacher_document', { p_path: path, p_file_name: fileName })
+      if (saved.error) { await client.storage.from(DOCUMENTS_BUCKET).remove([path]); fail(saved.error) }
+    },
+    async removeTeacherDocument(docId: number) {
+      const path = must(await client.rpc('remove_teacher_document', { p_id: docId })) as string
+      await client.storage.from(DOCUMENTS_BUCKET).remove([path])
+    },
+    /** Lien temporaire (5 minutes) pour ouvrir un justificatif. */
+    async teacherDocumentUrl(path: string) {
+      const { data, error } = await client.storage.from(DOCUMENTS_BUCKET).createSignedUrl(path, 300)
+      if (error || !data) throw new Error(msg('upload_failed'))
+      return data.signedUrl
+    },
     async removeTeacherMedia(kind: 'photo' | 'video') {
       const id = must(await client.rpc('my_teacher_id')) as string | null
       if (!id) throw new Error(msg('not_a_teacher'))

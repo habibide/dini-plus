@@ -39,7 +39,7 @@ export const PAYMENT_LABELS: Record<PaymentMethod, string> = {
   afrimoney: 'Afrimoney',
 }
 
-export type LanguageId = 'fr' | 'wo' | 'ff' | 'srr' | 'bm' | 'soce' | 'mnk'
+export type LanguageId = 'fr' | 'wo' | 'ff' | 'srr' | 'bm' | 'soce' | 'mnk' | 'snk'
 export const LANGUAGES: { id: LanguageId; label: Label }[] = [
   { id: 'fr', label: { fr: 'Français', en: 'French', ar: 'الفرنسية' } },
   { id: 'wo', label: { fr: 'Wolof', en: 'Wolof', ar: 'الولوفية' } },
@@ -48,6 +48,7 @@ export const LANGUAGES: { id: LanguageId; label: Label }[] = [
   { id: 'bm', label: { fr: 'Bambara', en: 'Bambara', ar: 'البمبارية' } },
   { id: 'soce', label: { fr: 'Soosé', en: 'Soce', ar: 'السوسية' } },
   { id: 'mnk', label: { fr: 'Mandingue', en: 'Mandinka', ar: 'الماندينكية' } },
+  { id: 'snk', label: { fr: 'Soninké (Sarakholé)', en: 'Soninke (Sarakhole)', ar: 'السوننكية (السراخولية)' } },
 ]
 
 export type SubjectId = 'quran' | 'hadith' | 'fiqh' | 'azkar' | 'tajwid' | 'arabic' | 'aqida' | 'history' | 'sirah' | 'tafsir'

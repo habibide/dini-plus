@@ -11,6 +11,7 @@ import { useState, type ReactNode } from 'react'
 import { Field, FormError, inputCls } from '@/components/auth'
 import { AvailabilityEditor, ChipSet, StatusBanner } from '@/components/teacher'
 import { TeacherMedia } from '@/components/teacher-media'
+import { TeacherDocuments } from '@/components/teacher-documents'
 import { buttonCls, cx } from '@/components/ui'
 import { useFormat, useT } from '@/i18n/locale'
 
@@ -235,6 +236,7 @@ function Credentials({ approved, verified, credentials, onChange }: {
     return (
       <Section title={m.credTitle} hint={m.credApprovedHint}>
         {list}
+        <TeacherDocuments />
       </Section>
     )
   }
@@ -246,6 +248,7 @@ function Credentials({ approved, verified, credentials, onChange }: {
       </summary>
       <p className="mt-2 mb-4 text-muted">{m.credOptionalHint}</p>
       {list}
+      <TeacherDocuments />
     </details>
   )
 }

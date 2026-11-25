@@ -69,6 +69,9 @@ export function ProfileScreen() {
       <div className="flex flex-col gap-2.5">
         <a href="#agenda" className={cx(buttonCls.primary, 'w-full')}><LineIcon d={LINE_ICONS.bolt} />{s.book}</a>
         <MessageButton name={t.name} bookHref="#agenda" />
+        <a href={`/groups/new?teacher=${t.id}`} className={cx(buttonCls.ghost, 'w-full flex-col gap-0 py-2')}>
+          <span>👥 {all.groups.cta}</span><span className="text-xs font-normal text-muted">{all.groups.ctaHint}</span>
+        </a>
         <button type="button" onClick={share} className={cx(buttonCls.ghost, 'w-full')}><LineIcon d={LINE_ICONS.share} />{copied ? m.copied : m.share}</button>
       </div>
       <p className="flex items-start gap-2 text-sm"><LineIcon d={LINE_ICONS.info} className="mt-0.5 size-4 text-muted" />
