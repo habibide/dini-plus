@@ -45,6 +45,7 @@ export type Database = {
         created_at: string; currency: string; id: string; learner_id: string; plan_id: string; price: number; renews_at: string
         sessions_per_month: number; sessions_remaining: number; teacher_id: string; active: boolean
       }>
+      teacher_documents: Table<{ id: number; teacher_id: string; path: string; file_name: string; content_type: string; size: number; created_at: string }>
       teacher_credentials: Table<{
         id: number; institution: string; kind: string; position: number; riwaya: string | null; sanad: string[] | null
         teacher_id: string; title: string; verified: boolean; year: number
@@ -60,6 +61,8 @@ export type Database = {
     }
     Views: { [_ in never]: never }
     Functions: {
+      add_teacher_document: { Args: { p_path: string; p_file_name: string }; Returns: number }
+      remove_teacher_document: { Args: { p_id: number }; Returns: string }
       book_session: {
         Args: { p_choice: string; p_family: string; p_learner: string; p_method?: string; p_starts_at: string; p_subject: string; p_teacher: string }
         Returns: Json

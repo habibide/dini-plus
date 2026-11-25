@@ -5,7 +5,7 @@ import { MADHAHIB, RIWAYAT } from './catalog'
 // valideront les réponses de Supabase quand le backend arrivera.
 
 const subjectId = z.enum(['quran', 'hadith', 'fiqh', 'azkar', 'tajwid', 'arabic', 'aqida', 'history', 'sirah', 'tafsir'])
-const languageId = z.enum(['fr', 'wo', 'ff', 'srr', 'bm', 'soce', 'mnk'])
+const languageId = z.enum(['fr', 'wo', 'ff', 'srr', 'bm', 'soce', 'mnk', 'snk'])
 const currency = z.enum(['XOF', 'GMD', 'EUR', 'USD', 'CAD'])
 const countryCode = z.enum(['SN', 'GM', 'FR', 'US', 'CA'])
 

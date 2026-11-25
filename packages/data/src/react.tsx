@@ -159,6 +159,12 @@ export const useSignUp = () => useWrite((api, a: { name?: string; email: string;
 export const useSignOut = () => useWrite((api, _: void) => api.signOut())
 export const useUpdateName = () => useWrite((api, name: string) => api.updateName(name))
 export const useUploadTeacherMedia = () => useWrite((api, a: { kind: 'photo' | 'video'; file: Blob; contentType: string }) => api.uploadTeacherMedia(a.kind, a.file, a.contentType))
+export function useTeacherDocuments(teacherId?: string) {
+  const { api, account } = useDini()
+  return useQuery({ queryKey: ['teacher-documents', teacherId ?? 'me'], queryFn: () => api.listTeacherDocuments(teacherId), enabled: !!account })
+}
+export const useUploadTeacherDocument = () => useWrite((api, a: { file: Blob; fileName: string; contentType: string }) => api.uploadTeacherDocument(a.file, a.fileName, a.contentType))
+export const useRemoveTeacherDocument = () => useWrite((api, id: number) => api.removeTeacherDocument(id))
 export const useRemoveTeacherMedia = () => useWrite((api, kind: 'photo' | 'video') => api.removeTeacherMedia(kind))
 export const useSendPasswordReset = () => useWrite((api, a: { email: string; redirectTo: string }) => api.sendPasswordReset(a.email, a.redirectTo))
 export const useUpdatePassword = () => useWrite((api, password: string) => api.updatePassword(password))

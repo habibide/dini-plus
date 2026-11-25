@@ -8,6 +8,7 @@ import { FormError, inputCls } from '@/components/auth'
 import { hm } from '@/components/teacher'
 import { useFormat, useT } from '@/i18n/locale'
 import { Monogram, Sanad, buttonCls } from '@/components/ui'
+import { TeacherDocumentLinks } from '@/components/teacher-documents'
 
 export function ModerationScreen() {
   const list = useApplications()
@@ -51,6 +52,7 @@ function PendingCredentialRow({ c, busy, onDecide }: { c: PendingCredential; bus
         <strong>{c.title} ({c.year})</strong>
         <span className="text-sm text-muted">{[c.kind === 'ijaza' ? a.ijaza : a.diploma, c.riwaya && m.riwayaOf(c.riwaya), c.institution].filter(Boolean).join(' · ')}</span>
         <a href={`/teachers/${c.teacherId}`} className="text-sm underline">{c.teacherName}</a>
+        <TeacherDocumentLinks teacherId={c.teacherId} />
       </div>
       <div className="flex flex-wrap gap-2">
         <button type="button" className={buttonCls.primary} disabled={busy} onClick={() => onDecide(true)}>{m.verify}</button>
@@ -102,6 +104,8 @@ function Review({ a }: { a: Application }) {
             {c.sanad?.length ? <Sanad chain={c.sanad} /> : null}
           </div>
         ))}
+        <h3 className="font-semibold">{all.application.documents.title}</h3>
+        <TeacherDocumentLinks teacherId={a.id} />
       </div>
 
       <fieldset className="flex flex-col gap-2 rounded-sm bg-leaf p-4">
