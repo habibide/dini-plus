@@ -2,7 +2,7 @@
 
 import { PLANS, roundMoney, subject, type PlanId, type SubjectId } from '@dini/core'
 import type { GroupSlot } from '@dini/data/supabase'
-import { useCreateGroup, useFamily, useSlots, useTeacher } from '@dini/data/react'
+import { useCreateGroup, useEnsureLearner, useFamily, useSlots, useTeacher } from '@dini/data/react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useMemo, useState } from 'react'
@@ -33,6 +33,8 @@ export function NewGroupScreen() {
   const [subj, setSubj] = useState<SubjectId>()
   const [planId, setPlanId] = useState<PlanId>('discovery')
   const [picked, setPicked] = useState<GroupSlot[]>([])
+  const learner = learnerId ?? family.data?.learners[0]?.id
+  const student = useEnsureLearner(learner)
 
   const t = teacher.data
   // Créneaux de la semaine à venir, ramenés à un jour et une heure fixes dans le fuseau du professeur.
@@ -48,7 +50,6 @@ export function NewGroupScreen() {
 
   if (!t || !family.data) return <p className="mx-auto max-w-6xl px-5 py-10 text-muted">{all.common.loading}</p>
   const { learners } = family.data
-  const learner = learnerId ?? learners[0]?.id
   const subjectId = subj ?? t.subjects[0]
   const plan = PLANS.find((p) => p.id === planId)!
   const need = perWeek(plan.sessions)
@@ -57,8 +58,9 @@ export function NewGroupScreen() {
   const toggle = (s: GroupSlot) => setPicked((cur) => cur.some((x) => key(x) === key(s)) ? cur.filter((x) => key(x) !== key(s)) : cur.length < need ? [...cur, s] : cur)
 
   async function submit() {
-    if (!learner) return
-    const id = await create.mutateAsync({ learnerId: learner, teacherId: t!.id, subject: subjectId, planId, slots: picked }).catch(() => null)
+    const learnerId = await student.ensure()
+    if (!learnerId) return
+    const id = await create.mutateAsync({ learnerId, teacherId: t!.id, subject: subjectId, planId, slots: picked }).catch(() => null)
     if (id) router.push(`/groups/${id}`)
   }
 
@@ -75,6 +77,11 @@ export function NewGroupScreen() {
               <select value={learner} onChange={(e) => setLearnerId(e.target.value)} className="min-h-11 rounded-sm border border-line bg-white px-2 font-normal">
                 {learners.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
               </select>
+            </label>
+          )}
+          {student.needName && (
+            <label className="flex flex-col gap-1 text-sm font-semibold">{m.studentName}
+              <input value={student.name} onChange={(e) => student.setName(e.target.value)} placeholder={m.studentPlaceholder} className="min-h-11 rounded-sm border border-line px-3 font-normal" />
             </label>
           )}
           {t.subjects.length > 1 && (
@@ -112,9 +119,9 @@ export function NewGroupScreen() {
                 </div>
               )}
           </fieldset>
-          <FormError message={create.error?.message} />
-          <button type="button" className={cx(buttonCls.primary, 'self-start')} disabled={create.isPending || !learner || picked.length !== need} onClick={submit}>
-            {create.isPending ? m.creating : m.create}
+          <FormError message={create.error?.message ?? student.error?.message} />
+          <button type="button" className={cx(buttonCls.primary, 'self-start')} disabled={create.isPending || student.pending || !student.ready || picked.length !== need} onClick={submit}>
+            {create.isPending || student.pending ? m.creating : m.create}
           </button>
         </section>
       </div>

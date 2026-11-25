@@ -302,6 +302,8 @@ export const fr = {
     findGroup: 'Voir le groupe',
     joinTitle: (teacher: string) => `Groupe de ${teacher}`,
     joinAs: 'Inscrire',
+    studentName: 'Qui suivra les cours ? Prénom et nom de l’élève',
+    studentPlaceholder: 'Vous-même ou votre enfant',
     join: 'Rejoindre le groupe',
     joining: 'Inscription…',
     alreadyMember: 'Vous faites déjà partie de ce groupe.',

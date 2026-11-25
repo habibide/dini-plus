@@ -1,7 +1,7 @@
 'use client'
 
 import { PLANS, subject } from '@dini/core'
-import { useFamily, useGroupInvite, useJoinGroup } from '@dini/data/react'
+import { useEnsureLearner, useFamily, useGroupInvite, useJoinGroup } from '@dini/data/react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { useState } from 'react'
@@ -23,19 +23,22 @@ export function JoinGroupScreen() {
   const fmt = useFormat()
   const slotLabel = useSlotLabel()
   const [learnerId, setLearnerId] = useState<string>()
+  // Une famille peut inscrire plusieurs enfants : on propose ceux qui ne sont pas encore dans le groupe.
+  // Sans aucun élève (compte tout neuf), on demande le nom de celui qui suivra les cours.
+  const learners = invite.data && family.data ? family.data.learners.filter((l) => !(invite.data!.myLearners ?? []).includes(l.id)) : []
+  const learner = learnerId ?? learners[0]?.id
+  const student = useEnsureLearner(learner)
 
   if (invite.isError) return <div className="mx-auto max-w-xl px-5 py-10"><FormError message={invite.error.message} /></div>
   const g = invite.data
   if (!g || !family.data) return <p className="mx-auto max-w-xl px-5 py-10 text-muted">{all.common.loading}</p>
   const plan = PLANS.find((p) => p.id === g.planId)!
-  // Une famille peut inscrire plusieurs enfants : on propose ceux qui ne sont pas encore dans le groupe.
-  const learners = family.data.learners.filter((l) => !(g.myLearners ?? []).includes(l.id))
-  const learner = learnerId ?? learners[0]?.id
   const open = (g.status === 'forming' || g.status === 'payment') && g.members < g.max
 
   async function submit() {
-    if (!learner) return
-    const id = await join.mutateAsync({ code, learnerId: learner }).catch(() => null)
+    const learnerId = await student.ensure()
+    if (!learnerId) return
+    const id = await join.mutateAsync({ code, learnerId }).catch(() => null)
     if (id) router.push(`/groups/${id}`)
   }
 
@@ -70,9 +73,14 @@ export function JoinGroupScreen() {
               </select>
             </label>
           )}
-          <FormError message={join.error?.message} />
-          <button type="button" className={cx(buttonCls.primary, 'self-start')} disabled={join.isPending || !learner} onClick={submit}>
-            {join.isPending ? m.joining : m.join}
+          {student.needName && (
+            <label className="flex flex-col gap-1 text-sm font-semibold">{m.studentName}
+              <input value={student.name} onChange={(e) => student.setName(e.target.value)} placeholder={m.studentPlaceholder} className="min-h-11 rounded-sm border border-line px-3 font-normal" />
+            </label>
+          )}
+          <FormError message={join.error?.message ?? student.error?.message} />
+          <button type="button" className={cx(buttonCls.primary, 'self-start')} disabled={join.isPending || student.pending || !student.ready} onClick={submit}>
+            {join.isPending || student.pending ? m.joining : m.join}
           </button>
           <p className="text-sm text-muted">{m.discount}</p>
         </>

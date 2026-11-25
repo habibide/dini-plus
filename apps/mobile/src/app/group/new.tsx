@@ -1,7 +1,7 @@
 import { PLANS, colors, roundMoney, subject, type PlanId, type SubjectId } from '@dini/core'
 import type { GroupSlot } from '@dini/data/supabase'
-import { useAccount, useCreateGroup, useFamily, useSlots, useTeacher } from '@dini/data/react'
-import { SignInPrompt } from '@/lib/auth'
+import { useAccount, useCreateGroup, useEnsureLearner, useFamily, useSlots, useTeacher } from '@dini/data/react'
+import { Input, SignInPrompt } from '@/lib/auth'
 import { router, useLocalSearchParams } from 'expo-router'
 import { useMemo, useState } from 'react'
 import { ActivityIndicator, ScrollView, View } from 'react-native'
@@ -29,6 +29,8 @@ export default function NewGroup() {
   const [subj, setSubj] = useState<SubjectId>()
   const [planId, setPlanId] = useState<PlanId>('discovery')
   const [picked, setPicked] = useState<GroupSlot[]>([])
+  const learner = learnerId ?? family.data?.learners[0]?.id
+  const student = useEnsureLearner(learner)
 
   const t = teacher.data
   const options = useMemo(() => {
@@ -41,16 +43,16 @@ export default function NewGroup() {
   if (account === null) return <SignInPrompt title={all.groups.cta} text={all.groups.newIntro} next={`/group/new?teacher=${teacherId}`} />
   if (!t || !family.data) return <ActivityIndicator style={{ marginTop: 40 }} color={colors.green} />
   const learners = family.data.learners
-  const learner = learnerId ?? learners[0]?.id
   const subjectId = subj ?? t.subjects[0]
   const plan = PLANS.find((p) => p.id === planId)!
   const need = Math.ceil(plan.sessions / 4)
   const share = roundMoney(t.price.amount * plan.sessions * (1 - GROUP_DISCOUNT), t.price.currency)
   const toggle = (s: GroupSlot) => setPicked((cur) => cur.some((x) => key(x) === key(s)) ? cur.filter((x) => key(x) !== key(s)) : cur.length < need ? [...cur, s] : cur)
 
-  const submit = () => {
-    if (!learner) return
-    create.mutate({ learnerId: learner, teacherId: t.id, subject: subjectId, planId, slots: picked }, {
+  const submit = async () => {
+    const learnerId = await student.ensure()
+    if (!learnerId) return
+    create.mutate({ learnerId, teacherId: t.id, subject: subjectId, planId, slots: picked }, {
       onSuccess: (id) => router.replace({ pathname: '/group/[id]', params: { id } }),
     })
   }
@@ -67,6 +69,7 @@ export default function NewGroup() {
             {learners.map((l) => <Chip key={l.id} label={l.name} on={learner === l.id} onPress={() => setLearnerId(l.id)} />)}
           </View>
         </>}
+        {student.needName && <Input label={m.studentName} value={student.name} onChangeText={student.setName} placeholder={m.studentPlaceholder} />}
         {t.subjects.length > 1 && <>
           <T style={{ fontFamily: font.semibold }}>{m.subject}</T>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
@@ -98,10 +101,10 @@ export default function NewGroup() {
           <T style={{ fontFamily: font.display, fontSize: 22, color: colors.green }}>{fmt.money(share, t.price.currency)}{m.perMonth}</T>
           <T tone="muted" style={{ fontSize: 13 }}>{m.discount}</T>
         </View>
-        {create.error ? <T style={{ color: colors.warn, backgroundColor: colors.warnBg, padding: 10 }}>{create.error.message}</T> : null}
+        {create.error || student.error ? <T style={{ color: colors.warn, backgroundColor: colors.warnBg, padding: 10 }}>{(create.error ?? student.error)!.message}</T> : null}
       </ScrollView>
       <View style={{ padding: 16, paddingBottom: 30, borderTopWidth: 1, borderColor: colors.line, backgroundColor: colors.white }}>
-        <Button title={create.isPending ? m.creating : m.create} disabled={create.isPending || !learner || picked.length !== need} onPress={submit} />
+        <Button title={create.isPending || student.pending ? m.creating : m.create} disabled={create.isPending || student.pending || !student.ready || picked.length !== need} onPress={submit} />
       </View>
     </View>
   )

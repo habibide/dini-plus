@@ -152,6 +152,24 @@ export const useCancelBooking = () => useWrite((api, id: string) => api.cancelBo
 export const useDisputeBooking = () => useWrite((api, id: string) => api.disputeBooking(id))
 export const useAddLearner = () => useWrite((api, a: { name: string; birthYear: number }) => api.addLearner(a.name, a.birthYear))
 
+/**
+ * Élève à inscrire quand la famille n'en a encore aucun (compte tout neuf arrivé par un lien
+ * d'invitation, par exemple) : on demande son nom, et l'élève est créé au moment de valider.
+ */
+export function useEnsureLearner(learnerId: string | undefined) {
+  const add = useAddLearner()
+  const [name, setName] = useState('')
+  const needName = !learnerId
+  const ready = !needName || name.trim().length > 0
+  const ensure = async (): Promise<string | null> => {
+    if (learnerId) return learnerId
+    if (!name.trim()) return null
+    const l = await add.mutateAsync({ name: name.trim(), birthYear: new Date().getFullYear() - 8 }).catch(() => null)
+    return l?.id ?? null
+  }
+  return { needName, name, setName, ready, ensure, pending: add.isPending, error: add.error }
+}
+
 // Connexion -----------------------------------------------------------------------------
 
 export const useSignIn = () => useWrite((api, a: { email: string; password: string }) => api.signIn(a.email, a.password))

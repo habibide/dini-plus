@@ -367,6 +367,8 @@ export const ar: Messages = {
     next: (when: string) => `الحصة القادمة: ${when}`,
     joinTitle: (teacher: string) => `الانضمام إلى مجموعة ${teacher}`,
     joinAs: 'تسجيل',
+    studentName: 'من سيحضر الدروس؟ اسم الطالب ولقبه',
+    studentPlaceholder: 'أنت أو طفلك',
     join: 'الانضمام إلى المجموعة',
     joining: 'جارٍ التسجيل…',
     alreadyMember: 'أنت عضو في هذه المجموعة بالفعل.',
