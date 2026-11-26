@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { cancellationOutcome, commissionRate, escrowState, formatMoney, generateSlots, HOUR, sessionPrice, teacherNet, trialPrice, tzOffsetMinutes, zonedParts, zonedToUtc } from './index'
+import { cancellationOutcome, COMMISSION_RATE, escrowState, formatMoney, generateSlots, HOUR, sessionPrice, teacherNet, teacherShare, trialPrice, tzOffsetMinutes, zonedParts, zonedToUtc } from './index'
 
 describe('fuseaux horaires', () => {
   it('donne le bon décalage de part et d’autre du changement d’heure à Paris', () => {
@@ -52,12 +52,11 @@ describe('prix', () => {
 })
 
 describe('commission et séquestre', () => {
-  it('applique la commission dégressive', () => {
-    expect(commissionRate(0)).toBe(0.3)
-    expect(commissionRate(20)).toBe(0.25)
-    expect(commissionRate(199)).toBe(0.2)
-    expect(commissionRate(200)).toBe(0.15)
-    expect(teacherNet(10, 142).net).toBeCloseTo(8)
+  it('prend 15 % fixes, quelles que soient les heures enseignées', () => {
+    expect(COMMISSION_RATE).toBe(0.15)
+    expect(teacherShare(5000)).toBe(4250)
+    expect(teacherNet(10).net).toBeCloseTo(8.5)
+    expect(teacherNet(10).commission).toBeCloseTo(1.5)
   })
   it('valide une séance 48 h après sa fin', () => {
     const b = { status: 'delivered' as const, deliveredAt: 0 }

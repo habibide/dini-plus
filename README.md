@@ -49,12 +49,12 @@ Le schéma vit dans `supabase/migrations/` (appliqué au projet « Dine App »).
 - **Comptes** : e-mail et mot de passe, Google, Apple (à activer dans Supabase, Authentication, Providers ; connexion Apple native sur iPhone). Un profil par compte, avec un rôle : famille, enseignant, modérateur, administrateur. Le rôle de modérateur se donne en base.
 - **Familles** : créées à la première connexion avec le pays et le fuseau choisis. Une famille ne lit que ses propres données.
 - **Enseignants** : candidature en ligne (profil, matières, tarifs, diplômes, ijaza et sanad, disponibilités), envoyée puis approuvée ou refusée par un modérateur. Seuls les profils approuvés sont publiés.
-- **Espace enseignant** : séances à venir, compte rendu après chaque séance (ou absence de l'élève), disponibilités, gains et palier de commission.
+- **Espace enseignant** : séances à venir, compte rendu après chaque séance (ou absence de l'élève), disponibilités, gains et commission (15 % fixe).
 - **Règles côté serveur (RPC)** : prix, créneaux libres, réservation, annulation, litige, candidature, modération, compte rendu. Une contrainte d'exclusion interdit deux séances qui se chevauchent chez un même enseignant.
 - **Visioconférence** : la fonction serveur `join-session` (`supabase/functions/`) vérifie que l'appelant est l'enseignant ou la famille de la séance, crée une salle Daily privée à la première entrée et remet à chacun une adresse nominative. La salle ouvre 10 minutes avant et ferme 15 minutes après la fin prévue. Secret requis : `DAILY_API_KEY` (Supabase, Edge Functions, Secrets).
 - **Formats** : cours de 50 minutes, au tarif fixé par l'enseignant ; séance d'essai de 30 minutes à moitié prix, une par élève et par enseignant. Durées dans `pricing_settings`.
 - **Absences** : l'enseignant signale l'absence de l'élève ; la séance lui est due, sauf contestation de la famille dans les 48 h.
-- **Séquestre** : `pg_cron` libère toutes les 10 minutes les séances non contestées depuis 48 h, et inscrit la part de l'enseignant (commission dégressive) au journal.
+- **Séquestre** : `pg_cron` libère toutes les 10 minutes les séances non contestées depuis 48 h, et inscrit la part de l'enseignant (85 %, après la commission fixe de 15 %) au journal.
 - **Paiements** : simulés (`provider = 'simulated'`) tant que Stripe, Wave, Orange Money et Afrimoney ne sont pas branchés.
 
 Le catalogue de départ (10 enseignants fictifs) est généré depuis `@dini/data` et doit être retiré avant l'ouverture au public :

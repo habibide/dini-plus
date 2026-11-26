@@ -1,6 +1,6 @@
 'use client'
 
-import { COMMISSION_TIERS, commissionRate, subject } from '@dini/core'
+import { COMMISSION_RATE, subject } from '@dini/core'
 import type { AgendaItem } from '@dini/data/supabase'
 import { useAgenda, useDeliverGroupSession, useEarnings, useMyGroupSessions, useMyTeacher, useStartApplication } from '@dini/data/react'
 import type { GroupSession } from '@dini/data/supabase'
@@ -40,8 +40,6 @@ export function TeacherHome() {
   const toComplete = items.filter((b) => b.status === 'scheduled' && b.startsAt <= now)
   const upcoming = items.filter((b) => b.status === 'scheduled' && b.startsAt > now)
   const hours = earnings.data?.hoursTaught ?? t.hoursTaught
-  const rate = commissionRate(hours)
-  const next = COMMISSION_TIERS.find((x) => hours < x.fromHours)
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6 px-5 py-8">
@@ -84,8 +82,8 @@ export function TeacherHome() {
           </div>
           <div className="flex flex-col gap-1 bg-white px-6 py-5">
             <h2 className="text-sm font-semibold text-muted">{m.commission}</h2>
-            <p className="font-display text-3xl">{pct(rate)}</p>
-            <p className="text-sm text-muted">{m.hours(Math.round(hours))}{next ? m.nextTier(Math.round(next.rate * 100), next.fromHours) : m.lowest}</p>
+            <p className="font-display text-3xl">{pct(COMMISSION_RATE)}</p>
+            <p className="text-sm text-muted">{m.hours(Math.round(hours))}{m.flat}</p>
           </div>
         </section>
       </>}

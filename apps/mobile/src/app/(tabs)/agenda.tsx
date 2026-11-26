@@ -1,4 +1,4 @@
-import { COMMISSION_TIERS, colors, commissionRate, subject } from '@dini/core'
+import { COMMISSION_RATE, colors, subject } from '@dini/core'
 import type { AgendaItem } from '@dini/data/supabase'
 import { useAccount, useAgenda, useDeliverGroupSession, useEarnings, useMyGroupSessions, useMyTeacher } from '@dini/data/react'
 import type { GroupSession } from '@dini/data/supabase'
@@ -29,7 +29,6 @@ export default function Agenda() {
   const toComplete = items.filter((b) => b.status === 'scheduled' && b.startsAt <= now)
   const upcoming = items.filter((b) => b.status === 'scheduled' && b.startsAt > now)
   const hours = earnings.data?.hoursTaught ?? t?.hoursTaught ?? 0
-  const next = COMMISSION_TIERS.find((x) => hours < x.fromHours)
 
   return (
     <ScrollView style={{ backgroundColor: colors.paper }} contentInsetAdjustmentBehavior="never" contentContainerStyle={{ paddingTop: insets.top, paddingBottom: 110 }}
@@ -61,7 +60,7 @@ export default function Agenda() {
         <Section title={m.earnings}>
           <T><T style={{ fontFamily: font.display, fontSize: 26, color: colors.green }}>{fmt.euros(earnings.data?.releasedEur ?? 0)}</T>{m.earned}</T>
           <T tone="muted">{m.pending(earnings.data?.pending.count ?? 0)}</T>
-          <T tone="muted">{m.commission(fmt.pct(commissionRate(hours)), Math.round(hours), next ? m.nextTier(fmt.pct(next.rate), next.fromHours) : '')}</T>
+          <T tone="muted">{m.commission(fmt.pct(COMMISSION_RATE), Math.round(hours))}</T>
         </Section>
       </>}
     </ScrollView>
