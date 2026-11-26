@@ -1,18 +1,18 @@
 'use client'
 
 import {
-  AGE_GROUPS, ARABIC_TRACKS, COUNTRIES, LANGUAGES, LEVELS, MADHAHIB, RIWAYAT, SUBJECTS, sessionPrice, type Teacher,
+  AGE_GROUPS, ARABIC_TRACKS, COUNTRIES, GROUP_DISCOUNT, LANGUAGES, LEVELS, MADHAHIB, RIWAYAT, SUBJECTS, sessionPrice, teacherShare, type Teacher,
 } from '@dini/core'
 import type { MyTeacher } from '@dini/data/supabase'
 import { useMyTeacher, useSaveApplication, useSetAvailability, useSubmitApplication } from '@dini/data/react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useState, type ReactNode } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
 import { Field, FormError, inputCls } from '@/components/auth'
 import { AvailabilityEditor, ChipSet, StatusBanner } from '@/components/teacher'
 import { TeacherMedia } from '@/components/teacher-media'
 import { TeacherDocuments } from '@/components/teacher-documents'
-import { buttonCls, cx } from '@/components/ui'
+import { Modal, buttonCls, cx } from '@/components/ui'
 import { useFormat, useT } from '@/i18n/locale'
 
 export function ApplicationScreen() {
@@ -66,6 +66,11 @@ function ApplicationForm({ t }: { t: MyTeacher }) {
   const rateOk = xof > 0
   // Tarif international facultatif : vide, il se déduit du tarif local (même calcul que la base).
   const eur = Number(f.eur) > 0 ? Number(f.eur) : rateOk ? eurFromXof(xof) : 0
+  // Transparence : avant d'enregistrer un nouveau tarif, on montre ce que l'enseignant recevra après les 15 %.
+  const [confirm, setConfirm] = useState<'save' | 'submit' | null>(null)
+  const rateInput = useRef<HTMLInputElement>(null)
+  const ratesChanged = rateOk && (xof !== (t.rates.XOF ?? 0) || (Number(f.eur) || 0) !== (t.rates.EUR ?? 0))
+  const ask = (action: 'save' | 'submit') => ratesChanged ? setConfirm(action) : action === 'save' ? onSave() : onSubmit()
 
   async function persist() {
     await save.mutateAsync({
@@ -157,7 +162,7 @@ function ApplicationForm({ t }: { t: MyTeacher }) {
 
         <Section title={m.rates} hint={m.ratesHint}>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label={m.localRate}>{(id) => <input id={id} type="number" min={500} step={50} inputMode="numeric" value={f.xof} onChange={(e) => set('xof', e.target.value)} placeholder="3000" className={inputCls} />}</Field>
+            <Field label={m.localRate}>{(id) => <input ref={rateInput} id={id} type="number" min={500} step={50} inputMode="numeric" value={f.xof} onChange={(e) => set('xof', e.target.value)} placeholder="3000" className={inputCls} />}</Field>
             <Field label={m.intlRate}>{(id) => <>
               <input id={id} type="number" min={0.5} step={0.5} inputMode="decimal" value={f.eur} onChange={(e) => set('eur', e.target.value)} placeholder={rateOk ? String(eurFromXof(xof)) : '5'} className={inputCls} />
               <span className="text-sm text-muted">{m.intlHint}</span>
@@ -166,6 +171,7 @@ function ApplicationForm({ t }: { t: MyTeacher }) {
           {rateOk && (
             <p className="text-sm text-muted">{m.pricesShown(COUNTRIES.map((c) => { const p = sessionPrice({ XOF: xof, EUR: eur }, c.code); return `${fmt.label(c.label)} ${fmt.money(p.amount, p.currency)}` }).join(' · '))}</p>
           )}
+          {rateOk && <p className="text-sm font-semibold text-green2">{m.youReceive(`${fmt.money(teacherShare(xof), 'XOF')} · ${fmt.money(teacherShare(eur), 'EUR')}`)}</p>}
         </Section>
 
         <Section title={m.availability} hint={m.availabilityHint}>
@@ -177,10 +183,28 @@ function ApplicationForm({ t }: { t: MyTeacher }) {
       <FormError message={error} />
       {!locked && (
         <div className="sticky bottom-0 flex flex-wrap items-center gap-3 border-t border-line bg-paper py-4">
-          <button type="button" className={buttonCls.ghost} disabled={busy} onClick={onSave}>{all.common.save}</button>
-          {t.status !== 'approved' && <button type="button" className={buttonCls.primary} disabled={busy} onClick={onSubmit}>{submit.isPending ? all.common.sending : m.send}</button>}
+          <button type="button" className={buttonCls.ghost} disabled={busy} onClick={() => ask('save')}>{all.common.save}</button>
+          {t.status !== 'approved' && <button type="button" className={buttonCls.primary} disabled={busy} onClick={() => ask('submit')}>{submit.isPending ? all.common.sending : m.send}</button>}
           {message && <span role="status" className="text-green">{message}</span>}
         </div>
+      )}
+
+      {confirm && (
+        <Modal title={m.confirmTitle} onClose={() => setConfirm(null)}>
+          <p>{m.confirmText}</p>
+          <table className="w-full text-sm">
+            <thead><tr className="text-muted"><th className="py-1 text-start font-normal" /><th className="py-1 text-end font-normal">{m.familyPays}</th><th className="py-1 text-end font-normal">{m.youGet}</th></tr></thead>
+            <tbody className="divide-y divide-line">
+              <tr><th className="py-2 text-start font-semibold">{m.confirmLocal}</th><td className="py-2 text-end">{fmt.money(xof, 'XOF')}</td><td className="py-2 text-end font-bold text-green2">{fmt.money(teacherShare(xof), 'XOF')}</td></tr>
+              <tr><th className="py-2 text-start font-semibold">{m.confirmIntl}</th><td className="py-2 text-end">{fmt.money(eur, 'EUR')}</td><td className="py-2 text-end font-bold text-green2">{fmt.money(teacherShare(eur), 'EUR')}</td></tr>
+            </tbody>
+          </table>
+          <p className="text-sm text-muted">{m.confirmGroup(fmt.money(teacherShare(3 * xof * (1 - GROUP_DISCOUNT)), 'XOF'))}</p>
+          <div className="flex flex-wrap gap-3">
+            <button type="button" className={buttonCls.primary} onClick={() => { const action = confirm; setConfirm(null); if (action === 'save') onSave(); else onSubmit() }}>{m.confirmOk}</button>
+            <button type="button" className={buttonCls.ghost} onClick={() => { setConfirm(null); setTimeout(() => rateInput.current?.focus(), 0) }}>{m.confirmAdjust}</button>
+          </div>
+        </Modal>
       )}
     </div>
   )

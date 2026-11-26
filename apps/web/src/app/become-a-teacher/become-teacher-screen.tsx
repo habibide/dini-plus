@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { COMMISSION_TIERS } from '@dini/core'
+import { COMMISSION_RATE } from '@dini/core'
 import { buttonCls, cx } from '@/components/styles'
 import { useLocale, useT } from '@/i18n/locale'
 
@@ -40,7 +40,7 @@ export function BecomeTeacherScreen() {
           </div>
           <div className="flex flex-col gap-3">
             <h2 className="font-display text-3xl">{t.earnTitle}</h2>
-            <p>{t.earnText(COMMISSION_TIERS.map((x) => pct(x.rate)).join(', '))}</p>
+            <p>{t.earnText(pct(COMMISSION_RATE))}</p>
           </div>
         </div>
       </section>

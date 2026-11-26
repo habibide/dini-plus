@@ -4,14 +4,14 @@ import { HOUR } from './time'
 
 // Règles du document de projet (§6). Une seule implémentation, partagée par le web et le mobile.
 
-export const COMMISSION_TIERS = [
-  { fromHours: 0, toHours: 20, rate: 0.3 },
-  { fromHours: 20, toHours: 50, rate: 0.25 },
-  { fromHours: 50, toHours: 200, rate: 0.2 },
-  { fromHours: 200, toHours: Infinity, rate: 0.15 },
-] as const
+/** Commission de DINE : 15 % de chaque paiement (séance, forfait ou part de groupe), pour tous les enseignants. */
+export const COMMISSION_RATE = 0.15
 
-export const commissionRate = (hoursTaught: number) => COMMISSION_TIERS.find((t) => hoursTaught < t.toHours)!.rate
+/** Ce que l'enseignant reçoit sur un montant payé par la famille, une fois la commission déduite. */
+export const teacherShare = (amount: number) => amount * (1 - COMMISSION_RATE)
+
+/** Remise de groupe : chaque élève d'un groupe paie le tarif de l'enseignant moins 40 %. */
+export const GROUP_DISCOUNT = 0.4
 
 /** Durées : le cours standard, et l'essai de découverte réservé aux nouveaux élèves (un par enseignant). */
 export const COURSE_MINUTES = 50
@@ -46,9 +46,8 @@ export function cancellationOutcome(startsAt: number, now: number): 'free' | 'du
   return startsAt - now >= FREE_CANCEL_HOURS * HOUR ? 'free' : 'due'
 }
 
-export function teacherNet(grossEur: number, hoursTaught: number) {
-  const rate = commissionRate(hoursTaught)
-  return { rate, commission: grossEur * rate, net: grossEur * (1 - rate) }
+export function teacherNet(grossEur: number) {
+  return { rate: COMMISSION_RATE, commission: grossEur * COMMISSION_RATE, net: teacherShare(grossEur) }
 }
 
 /** Badge « confirmé » : plus de 100 h, note > 4,5, aucun litige. */
